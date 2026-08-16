@@ -1,416 +1,461 @@
-const SITE_ORIGIN = (process.env.ODOO_SITE_URL || "https://edu-mig-for-agriculture.odoo.com").replace(/\/+$/, "");
+import { cleanText, normalizeAr, tokenize, fuzzyWordMatch } from "./utils.js";
 
-const PRODUCT_CACHE_TTL = 10 * 60 * 1000;
-const SEARCH_CACHE_TTL = 3 * 60 * 1000;
+const SITE_ORIGIN=(process.env.ODOO_SITE_URL || "https://edu-mig-for-agriculture.odoo.com").replace(/\/+$/,"");
+const CACHE_TTL=10*60*1000;
+const SEARCH_TTL=3*60*1000;
 
-const productCache = globalThis.__migProductCache || new Map();
-const searchCache = globalThis.__migSearchCache || new Map();
-globalThis.__migProductCache = productCache;
-globalThis.__migSearchCache = searchCache;
+const globalCache=globalThis.__migSiteWideCache || {
+  sitemap:{time:0,urls:[]},
+  pages:new Map(),
+  products:new Map(),
+  searches:new Map()
+};
+globalThis.__migSiteWideCache=globalCache;
 
-function decodeHtml(value = "") {
+const AR_EN = new Map(Object.entries({
+  "طماطم":"tomato","طماطه":"tomato","بندوره":"tomato",
+  "خيار":"cucumber","خيارا":"cucumber",
+  "باذنجان":"eggplant","باذنجانن":"eggplant",
+  "فلفل":"pepper","فليفله":"pepper",
+  "بطيخ":"watermelon","رقي":"watermelon",
+  "شمام":"melon","كنتالوب":"cantaloupe",
+  "كوسا":"zucchini","كوسه":"zucchini",
+  "باميه":"okra","بامية":"okra",
+  "بصل":"onion","ذره":"corn","ذرة":"corn",
+  "فجل":"radish","شمندر":"beetroot","سبانخ":"spinach","ملوخيه":"molokhia","ملوخية":"molokhia",
+  "سماد":"fertilizer","اسمده":"fertilizer","اسمدة":"fertilizer",
+  "ري":"irrigation","تنقيط":"drip irrigation",
+  "ادوات":"tools","أدوات":"tools","معدات":"equipment",
+  "بذور":"seeds","بذره":"seeds","بذرة":"seeds",
+  "مبيد":"pesticide","مبيدات":"pesticides",
+  "بيت محمي":"greenhouse","بيوت محميه":"greenhouse","بيوت محمية":"greenhouse",
+  "زراعه مائيه":"hydroponics","زراعة مائية":"hydroponics"
+}));
+
+const STOP=new Set([
+  "في","فيه","فيكم","عندكم","عندك","هل","ابي","ابغي","ابغى","ابا","عايز","عاوز","محتاج",
+  "موجود","متوفر","شي","شيء","لو","ممكن","قولي","قول","عطني","اعطني","وين","شو","شنو","ايش",
+  "هو","هي","هذا","هذي","هاد","ده","دي","عن","من","على","علي","الى","إلى",
+  "المنتج","منتج","المنتجات","منتجات","السعر","سعر","اسعار","الاسعار","تفاصيل","تفاصيله",
+  "please","have","do","you","is","are","what","where","show","me","price","prices","details"
+]);
+
+function decodeHtml(value=""){
   return String(value)
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&#x27;/gi, "'")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
+    .replace(/&nbsp;/gi," ")
+    .replace(/&amp;/gi,"&")
+    .replace(/&quot;/gi,'"')
+    .replace(/&#39;|&#x27;/gi,"'")
+    .replace(/&lt;/gi,"<")
+    .replace(/&gt;/gi,">")
+    .replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi,(_,n)=>String.fromCharCode(parseInt(n,16)));
 }
 
-function stripHtml(value = "") {
+function stripHtml(value=""){
   return decodeHtml(
     String(value)
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-  )
-    .replace(/\s+/g, " ")
-    .trim();
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ")
+      .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi," ")
+      .replace(/<[^>]+>/g," ")
+  ).replace(/\s+/g," ").trim();
 }
 
-function clean(value = "", max = 5000) {
-  return stripHtml(value).slice(0, max);
+function cleanHtml(value="",max=8000){
+  return stripHtml(value).slice(0,max);
 }
 
-function absoluteUrl(href = "") {
-  try {
-    return new URL(decodeHtml(href), SITE_ORIGIN).toString();
-  } catch {
-    return "";
-  }
-}
-
-async function fetchText(url, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        "User-Agent": "MIG-FARM-AI-Catalog/1.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+async function fetchText(url,timeoutMs=12000){
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    const response=await fetch(url,{
+      signal:controller.signal,
+      redirect:"follow",
+      headers:{
+        "User-Agent":"MIG-FARM-Sitewide-Assistant/3.0",
+        "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
       }
     });
-
-    if (!response.ok) {
-      throw new Error(`Website fetch failed ${response.status}`);
-    }
-
+    if(!response.ok) throw new Error(`fetch ${response.status}`);
     return await response.text();
-  } finally {
+  }finally{
     clearTimeout(timeout);
   }
 }
 
-function metaContent(html, key, attribute = "property") {
-  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patterns = [
-    new RegExp(`<meta[^>]+${attribute}=["']${escaped}["'][^>]+content=["']([^"']*)["'][^>]*>`, "i"),
-    new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+${attribute}=["']${escaped}["'][^>]*>`, "i")
-  ];
+function absoluteUrl(href=""){
+  try{return new URL(decodeHtml(href),SITE_ORIGIN).toString();}
+  catch{return "";}
+}
 
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match) return decodeHtml(match[1]).trim();
+function metaContent(html,key,attribute="property"){
+  const escaped=key.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  const patterns=[
+    new RegExp(`<meta[^>]+${attribute}=["']${escaped}["'][^>]+content=["']([^"']*)["'][^>]*>`,"i"),
+    new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+${attribute}=["']${escaped}["'][^>]*>`,"i")
+  ];
+  for(const pattern of patterns){
+    const match=html.match(pattern);
+    if(match) return decodeHtml(match[1]).trim();
   }
   return "";
 }
 
-function findJsonLdProduct(html) {
-  const scripts = [...html.matchAll(
-    /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
-  )];
+function titleText(html){
+  return cleanHtml(
+    (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1] || "",
+    500
+  );
+}
 
-  function findProduct(node) {
-    if (!node) return null;
+function h1Text(html){
+  return cleanHtml(
+    (html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)||[])[1] || "",
+    500
+  );
+}
 
-    if (Array.isArray(node)) {
-      for (const item of node) {
-        const found = findProduct(item);
-        if (found) return found;
-      }
+function mainText(html){
+  const main=html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
+  return cleanHtml(main ? main[1] : html,10000);
+}
+
+function findJsonLdProduct(html){
+  const scripts=[...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+
+  function find(node){
+    if(!node) return null;
+    if(Array.isArray(node)){
+      for(const item of node){ const x=find(item); if(x) return x; }
       return null;
     }
-
-    if (typeof node === "object") {
-      const type = node["@type"];
-      if (
-        type === "Product" ||
-        (Array.isArray(type) && type.includes("Product"))
-      ) {
-        return node;
-      }
-
-      if (node["@graph"]) {
-        const found = findProduct(node["@graph"]);
-        if (found) return found;
-      }
-
-      for (const value of Object.values(node)) {
-        const found = findProduct(value);
-        if (found) return found;
-      }
+    if(typeof node==="object"){
+      const type=node["@type"];
+      if(type==="Product" || (Array.isArray(type)&&type.includes("Product"))) return node;
+      if(node["@graph"]){ const x=find(node["@graph"]); if(x) return x; }
+      for(const value of Object.values(node)){ const x=find(value); if(x) return x; }
     }
-
     return null;
   }
 
-  for (const script of scripts) {
-    try {
-      const parsed = JSON.parse(decodeHtml(script[1]).trim());
-      const product = findProduct(parsed);
-      if (product) return product;
-    } catch {
-      // Ignore malformed JSON-LD blocks.
-    }
+  for(const script of scripts){
+    try{
+      const parsed=JSON.parse(decodeHtml(script[1]).trim());
+      const found=find(parsed);
+      if(found) return found;
+    }catch{}
   }
-
   return null;
 }
 
-function firstOffer(offers) {
-  if (!offers) return null;
-  if (Array.isArray(offers)) return offers[0] || null;
-  if (offers.offers && Array.isArray(offers.offers)) return offers.offers[0] || null;
+function firstOffer(offers){
+  if(!offers) return null;
+  if(Array.isArray(offers)) return offers[0]||null;
+  if(offers.offers && Array.isArray(offers.offers)) return offers.offers[0]||null;
   return offers;
 }
 
-function fallbackVisiblePrice(html) {
-  const patterns = [
+function visiblePrice(html){
+  const patterns=[
     /(?:AED|د\.?\s*إ\.?)\s*([0-9][0-9,.]*)/i,
     /([0-9][0-9,.]*)\s*(?:AED|د\.?\s*إ\.?)/i,
     /class=["'][^"']*(?:oe_price|product_price)[^"']*["'][^>]*>[\s\S]{0,250}?([0-9][0-9,.]*)/i
   ];
-
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match) {
-      return String(match[1] || "").replace(/,/g, "").trim();
-    }
+  for(const pattern of patterns){
+    const match=html.match(pattern);
+    if(match) return String(match[1]||"").replace(/,/g,"").trim();
   }
-
   return "";
 }
 
-function h1Text(html) {
-  const match = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
-  return match ? clean(match[1], 400) : "";
+function availabilityText(value=""){
+  const n=String(value).toLowerCase();
+  if(n.includes("instock")) return "متوفر";
+  if(n.includes("outofstock")) return "غير متوفر";
+  if(n.includes("preorder")) return "طلب مسبق";
+  return cleanText(value,100);
 }
 
-function descriptionFallback(html) {
-  const itemProp = html.match(
-    /<[^>]+itemprop=["']description["'][^>]*>([\s\S]*?)<\/[^>]+>/i
-  );
-  if (itemProp) return clean(itemProp[1], 2500);
-
-  return (
-    metaContent(html, "og:description") ||
-    metaContent(html, "description", "name")
-  ).slice(0, 2500);
-}
-
-function availabilityText(value = "") {
-  const normalized = String(value).toLowerCase();
-
-  if (normalized.includes("instock")) return "متوفر";
-  if (normalized.includes("outofstock")) return "غير متوفر";
-  if (normalized.includes("preorder")) return "طلب مسبق";
-
-  return clean(value, 100);
-}
-
-export async function fetchProduct(url) {
-  const cached = productCache.get(url);
-  const now = Date.now();
-
-  if (cached && now - cached.time < PRODUCT_CACHE_TTL) {
-    return cached.value;
+export async function getSitemapUrls(){
+  const now=Date.now();
+  if(globalCache.sitemap.urls.length && now-globalCache.sitemap.time<CACHE_TTL){
+    return globalCache.sitemap.urls;
   }
 
-  const html = await fetchText(url);
-  const ld = findJsonLdProduct(html);
-  const offer = firstOffer(ld?.offers);
+  const candidates=[`${SITE_ORIGIN}/sitemap.xml`,`${SITE_ORIGIN}/sitemap.xml.gz`];
+  let xml="";
+  for(const url of candidates){
+    try{ xml=await fetchText(url); if(xml) break; }catch{}
+  }
 
-  const name =
-    clean(ld?.name, 500) ||
-    metaContent(html, "og:title") ||
-    h1Text(html) ||
-    clean((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1], 500);
+  const urls=[];
+  for(const match of xml.matchAll(/<loc>([\s\S]*?)<\/loc>/gi)){
+    const url=decodeHtml(match[1]).trim();
+    if(url.startsWith("http")) urls.push(url.split("#")[0]);
+  }
 
-  const price =
-    String(offer?.price ?? offer?.lowPrice ?? "").trim() ||
-    metaContent(html, "product:price:amount") ||
-    fallbackVisiblePrice(html);
+  globalCache.sitemap={time:now,urls:[...new Set(urls)]};
+  return globalCache.sitemap.urls;
+}
 
-  const currency =
-    String(offer?.priceCurrency || "").trim() ||
-    metaContent(html, "product:price:currency") ||
-    (price ? "AED" : "");
+export async function fetchProduct(url){
+  const cached=globalCache.products.get(url);
+  const now=Date.now();
+  if(cached && now-cached.time<CACHE_TTL) return cached.value;
 
-  const product = {
-    name,
-    price,
-    currency,
-    sku: clean(ld?.sku || ld?.mpn || "", 200),
-    availability: availabilityText(offer?.availability || ""),
-    description: clean(ld?.description || descriptionFallback(html), 2500),
-    brand: clean(
-      typeof ld?.brand === "string" ? ld.brand : ld?.brand?.name || "",
-      300
-    ),
+  const html=await fetchText(url);
+  const ld=findJsonLdProduct(html);
+  if(!ld) return null;
+
+  const offer=firstOffer(ld.offers);
+  const product={
+    name:cleanText(ld.name || metaContent(html,"og:title") || h1Text(html),500),
+    price:String(offer?.price ?? offer?.lowPrice ?? "").trim()
+      || metaContent(html,"product:price:amount")
+      || visiblePrice(html),
+    currency:String(offer?.priceCurrency || "").trim()
+      || metaContent(html,"product:price:currency")
+      || "AED",
+    sku:cleanText(ld.sku || ld.mpn || "",200),
+    availability:availabilityText(offer?.availability || ""),
+    description:cleanText(ld.description || metaContent(html,"og:description") || "",2200),
     url
   };
 
-  productCache.set(url, { time: now, value: product });
+  globalCache.products.set(url,{time:now,value:product});
   return product;
 }
 
-function extractProductLinks(html) {
-  const urls = [];
-  const seen = new Set();
+function queryTerms(value=""){
+  const normalized=normalizeAr(value);
+  const expanded=[];
 
-  for (const match of html.matchAll(/href=["']([^"']*\/shop\/[^"'?#]+(?:\?[^"']*)?)["']/gi)) {
-    const url = absoluteUrl(match[1]);
-    if (!url) continue;
-
-    const pathname = new URL(url).pathname;
-    if (
-      pathname === "/shop" ||
-      pathname.startsWith("/shop/cart") ||
-      pathname.startsWith("/shop/checkout") ||
-      pathname.startsWith("/shop/payment") ||
-      pathname.startsWith("/shop/confirmation") ||
-      pathname.startsWith("/shop/category/")
-    ) {
-      continue;
-    }
-
-    const normalized = url.split("#")[0];
-    if (!seen.has(normalized)) {
-      seen.add(normalized);
-      urls.push(normalized);
+  for(const [ar,en] of AR_EN.entries()){
+    if(normalized.includes(normalizeAr(ar))){
+      expanded.push(...tokenize(en));
     }
   }
 
-  return urls;
+  const words=tokenize(normalized)
+    .filter(x=>!STOP.has(x))
+    .filter(x=>x.length>1);
+
+  return [...new Set([...words,...expanded])];
 }
 
-function normalizeSearch(value = "") {
-  return String(value)
-    .toLowerCase()
-    .replace(/[أإآ]/g, "ا")
-    .replace(/ى/g, "ي")
-    .replace(/[ًٌٍَُِّْ]/g, "")
-    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-const STOP_WORDS = new Set([
-  "فيه","في","عندكم","عندك","عايز","عاوز","عايزه","عاوزة","محتاج","محتاجه",
-  "هل","موجود","موجوده","متوفر","متوفرة","طب","طيب","ايه","اي","إيه","ممكن",
-  "قولي","قول","اديني","عايزين","بكام","كام","السعر","سعر","اسعار","الاسعار",
-  "تفاصيل","تفاصيله","عن","من","لو","منتج","منتجات","عند","please","have","do",
-  "you","price","prices","details","what","about","is","there","any","show","me"
-]);
-
-const GENERIC_FOLLOWUP = new Set([
-  "الحار","حار","الحلو","حلو","السعر","اسعار","الاسعار","بكام","كام",
-  "تفاصيل","تفاصيله","متوفر","موجود","النوع","الانواع"
-]);
-
-function usefulTerms(value = "") {
-  return normalizeSearch(value)
-    .split(/\s+/)
-    .filter(Boolean)
-    .filter(term => term.length > 1)
-    .filter(term => !STOP_WORDS.has(term));
-}
-
-function historyUserMessages(history = []) {
+function historyUserMessages(history=[]){
   return history
-    .filter(item => item && item.role === "user" && typeof item.content === "string")
-    .map(item => item.content)
-    .slice(-5);
+    .filter(x=>x && x.role==="user" && typeof x.content==="string")
+    .map(x=>x.content)
+    .slice(-6);
 }
 
-export function buildCatalogQuery(message, history = []) {
-  const currentTerms = usefulTerms(message);
-  const onlyGeneric =
-    currentTerms.length === 0 ||
-    currentTerms.every(term => GENERIC_FOLLOWUP.has(term));
-
-  if (!onlyGeneric) {
-    return currentTerms.slice(0, 6).join(" ");
-  }
-
-  const prior = historyUserMessages(history).reverse();
-
-  for (const previous of prior) {
-    const terms = usefulTerms(previous).filter(term => !GENERIC_FOLLOWUP.has(term));
-    if (terms.length) {
-      return terms.slice(0, 6).join(" ");
-    }
-  }
-
-  return currentTerms.join(" ") || normalizeSearch(message);
-}
-
-export async function searchProducts(query, limit = 8) {
-  const cleanQuery = String(query || "").trim();
-  if (!cleanQuery) return [];
-
-  const cacheKey = cleanQuery.toLowerCase();
-  const cached = searchCache.get(cacheKey);
-  const now = Date.now();
-
-  if (cached && now - cached.time < SEARCH_CACHE_TTL) {
-    return cached.value.slice(0, limit);
-  }
-
-  const searchUrl = `${SITE_ORIGIN}/shop?search=${encodeURIComponent(cleanQuery)}`;
-  const html = await fetchText(searchUrl);
-  const links = extractProductLinks(html).slice(0, Math.min(limit, 10));
-
-  const products = (
-    await Promise.all(
-      links.map(async url => {
-        try {
-          return await fetchProduct(url);
-        } catch {
-          return null;
-        }
-      })
-    )
-  ).filter(product => product && product.name);
-
-  searchCache.set(cacheKey, { time: now, value: products });
-  return products.slice(0, limit);
-}
-
-const PAGE_RULES = [
-  {
-    keywords: ["تواصل","اتصال","واتساب","هاتف","ايميل","فرع","contact","phone","email","whatsapp"],
-    path: "/contactus",
-    title: "بيانات التواصل"
-  },
-  {
-    keywords: ["خدمات","الخدمات","service","services"],
-    path: "/services",
-    title: "الخدمات"
-  },
-  {
-    keywords: ["دليل","زراعة","الزراعة","planting","guide"],
-    path: "/planting-guide",
-    title: "دليل الزراعة"
-  },
-  {
-    keywords: ["شروط","احكام","الأحكام","terms","condition"],
-    path: "/terms",
-    title: "الشروط والأحكام"
-  },
-  {
-    keywords: ["خصوصية","الخصوصية","privacy"],
-    path: "/privacy-policy",
-    title: "سياسة الخصوصية"
-  },
-  {
-    keywords: ["كوكيز","ملفات","ارتباط","cookie","cookies"],
-    path: "/cookie-policy",
-    title: "سياسة ملفات الارتباط"
-  }
+const GENERIC_FOLLOWUPS=[
+  "ارخص","الارخص","اغلى","الاغلى","بكم","بكام","كام","سعره","سعرها","السعر",
+  "تفاصيله","تفاصيلها","تفاصيل","متوفر","موجود","الحار","الحلو","الاصغر","الكبير"
 ];
 
-export async function relevantPageText(message) {
-  const normalized = normalizeSearch(message);
+export function buildQuery(message,history=[]){
+  let terms=queryTerms(message);
+  const normalized=normalizeAr(message);
 
-  const match = PAGE_RULES.find(rule =>
-    rule.keywords.some(keyword => normalized.includes(normalizeSearch(keyword)))
-  );
+  const generic=terms.length===0 || GENERIC_FOLLOWUPS.some(x=>normalized===normalizeAr(x));
 
-  if (!match) return null;
+  if(!generic) return terms.slice(0,8).join(" ");
 
-  try {
-    const html = await fetchText(`${SITE_ORIGIN}${match.path}`);
-    const body = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
-    const text = clean(body ? body[1] : html, 7000);
+  for(const previous of historyUserMessages(history).reverse()){
+    const prior=queryTerms(previous);
+    if(prior.length) return prior.slice(0,8).join(" ");
+  }
 
-    return {
-      title: match.title,
-      path: match.path,
-      url: `${SITE_ORIGIN}${match.path}`,
-      text
-    };
-  } catch {
-    return null;
+  return terms.join(" ");
+}
+
+function productUrlCandidate(url){
+  try{
+    const u=new URL(url);
+    const path=u.pathname;
+    if(!path.startsWith("/shop/")) return false;
+    if(path.startsWith("/shop/category/")) return false;
+    if([
+      "/shop/cart","/shop/checkout","/shop/payment","/shop/confirmation",
+      "/shop/wishlist","/shop/compare"
+    ].some(x=>path.startsWith(x))) return false;
+    return true;
+  }catch{return false;}
+}
+
+function scoreText(text,terms){
+  const tokens=tokenize(text);
+  let score=0;
+
+  for(const term of terms){
+    for(const token of tokens){
+      if(token===term) score+=8;
+      else if(token.includes(term) || term.includes(token)) score+=4;
+      else if(fuzzyWordMatch(token,term)) score+=2;
+    }
+  }
+
+  return score;
+}
+
+async function productCandidatesFromShopSearch(query){
+  try{
+    const url=`${SITE_ORIGIN}/shop?search=${encodeURIComponent(query)}`;
+    const html=await fetchText(url);
+    const urls=[];
+
+    for(const match of html.matchAll(/href=["']([^"']*\/shop\/[^"'?#]+)["']/gi)){
+      const abs=absoluteUrl(match[1]);
+      if(abs && productUrlCandidate(abs)) urls.push(abs);
+    }
+
+    return [...new Set(urls)].slice(0,20);
+  }catch{
+    return [];
   }
 }
 
-export function siteOrigin() {
+export async function searchProducts(message,history=[],limit=8){
+  const query=buildQuery(message,history);
+  if(!query) return [];
+
+  const cacheKey=`p:${normalizeAr(query)}`;
+  const now=Date.now();
+  const cached=globalCache.searches.get(cacheKey);
+  if(cached && now-cached.time<SEARCH_TTL) return cached.value.slice(0,limit);
+
+  const terms=queryTerms(query);
+  const direct=await productCandidatesFromShopSearch(query);
+
+  let candidates=[...direct];
+
+  if(candidates.length<8){
+    const sitemap=await getSitemapUrls();
+    const scoredUrls=sitemap
+      .filter(productUrlCandidate)
+      .map(url=>({url,score:scoreText(decodeURIComponent(url),terms)}))
+      .filter(x=>x.score>0)
+      .sort((a,b)=>b.score-a.score)
+      .slice(0,30)
+      .map(x=>x.url);
+
+    candidates=[...new Set([...candidates,...scoredUrls])];
+  }
+
+  const products=(
+    await Promise.all(
+      candidates.slice(0,30).map(async url=>{
+        try{return await fetchProduct(url);}
+        catch{return null;}
+      })
+    )
+  ).filter(Boolean);
+
+  const ranked=products
+    .map(product=>{
+      const hay=`${product.name} ${product.sku} ${product.description}`;
+      return {product,score:scoreText(hay,terms)};
+    })
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score)
+    .map(x=>x.product);
+
+  globalCache.searches.set(cacheKey,{time:now,value:ranked});
+  return ranked.slice(0,limit);
+}
+
+function isSitePage(url){
+  try{
+    const u=new URL(url);
+    const p=u.pathname;
+    if(p.startsWith("/web/") || p.startsWith("/my/")) return false;
+    if(p.startsWith("/shop/")) return false;
+    if(/\.(png|jpg|jpeg|webp|gif|svg|pdf|xml)$/i.test(p)) return false;
+    return true;
+  }catch{return false;}
+}
+
+export async function fetchPage(url){
+  const cached=globalCache.pages.get(url);
+  const now=Date.now();
+  if(cached && now-cached.time<CACHE_TTL) return cached.value;
+
+  const html=await fetchText(url);
+  const page={
+    title:metaContent(html,"og:title") || h1Text(html) || titleText(html),
+    description:metaContent(html,"og:description") || metaContent(html,"description","name"),
+    text:mainText(html),
+    url
+  };
+
+  globalCache.pages.set(url,{time:now,value:page});
+  return page;
+}
+
+function keywordBoost(url,message){
+  const n=normalizeAr(message);
+  const p=normalizeAr(decodeURIComponent(new URL(url).pathname));
+
+  const mappings=[
+    [["خصوصيه","privacy"],["privacy"]],
+    [["شروط","احكام","terms"],["terms"]],
+    [["كوكي","كوكيز","ارتباط","cookie"],["cookie"]],
+    [["تواصل","اتصال","contact"],["contact"]],
+    [["خدمات","service"],["service"]],
+    [["شحن","توصيل","delivery","shipping"],["shipping","delivery"]],
+    [["من نحن","عن الشركه","about"],["about"]],
+    [["دليل","زراعه","planting"],["planting","guide"]]
+  ];
+
+  let score=0;
+  for(const [words,paths] of mappings){
+    if(words.some(w=>n.includes(normalizeAr(w))) && paths.some(x=>p.includes(x))) score+=30;
+  }
+  return score;
+}
+
+export async function searchSitePages(message,limit=5){
+  const terms=queryTerms(message);
+  const sitemap=await getSitemapUrls();
+
+  const candidates=sitemap
+    .filter(isSitePage)
+    .map(url=>{
+      const raw=decodeURIComponent(url);
+      return {
+        url,
+        score:scoreText(raw,terms)+keywordBoost(url,message)
+      };
+    })
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,18);
+
+  const pages=(
+    await Promise.all(
+      candidates.map(async x=>{
+        try{
+          const page=await fetchPage(x.url);
+          return {
+            page,
+            score:x.score+scoreText(`${page.title} ${page.description} ${page.text.slice(0,5000)}`,terms)
+          };
+        }catch{return null;}
+      })
+    )
+  )
+    .filter(Boolean)
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,limit)
+    .map(x=>x.page);
+
+  return pages;
+}
+
+export function siteOrigin(){
   return SITE_ORIGIN;
 }

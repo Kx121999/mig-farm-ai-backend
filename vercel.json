@@ -1,7 +1,7 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "Free live website knowledge backend for the MIG FARM Odoo chat widget"
+  "description": "Free site-wide Emirati assistant for MIG FARM Odoo website"
 }
