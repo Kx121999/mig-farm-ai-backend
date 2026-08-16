@@ -1,5 +1,5 @@
 import { searchProducts, searchSitePages, siteOrigin } from "../lib/site.js";
-import { smallTalk, formatProducts, extractPageAnswer } from "../lib/emirati.js";
+import { naturalIntentReply, smallTalk, formatProducts, extractPageAnswer } from "../lib/emirati.js";
 import { cleanText, normalizeAr, safeLocale, safePageUrl, jsonResponse } from "../lib/utils.js";
 
 const DEFAULT_ORIGINS=[
@@ -57,6 +57,11 @@ function isPriceFollowup(message){
   return /(ارخص|الارخص|اغلى|الاغلى|بكام|بكم|سعر|السعر|كام)/.test(t);
 }
 
+function isProductFollowup(message){
+  const t=normalizeAr(message);
+  return /(طب|طيب|زين|والحار|والحلو|ارخص|الارخص|اغلى|الاغلى|سعره|سعرها|بكم|بكام|تفاصيله|تفاصيلها|متوفر|موجود|فيهم|منهم|هذا|هذي|ده|دي)/.test(t);
+}
+
 function getLastAssistantProductRows(history=[]){
   for(let i=history.length-1;i>=0;i--){
     const item=history[i];
@@ -67,30 +72,20 @@ function getLastAssistantProductRows(history=[]){
     const rows=[];
     const regex=/•\s*([^•\n]+?)\s*—\s*([0-9][0-9,.]*)\s*AED(?:\s*-\s*([^\n•]+))?/g;
     let match;
-
     while((match=regex.exec(text))!==null){
       const price=parseFloat(String(match[2]).replace(/,/g,""));
-
       if(!Number.isNaN(price)){
-        rows.push({
-          name:match[1].trim(),
-          price,
-          status:(match[3]||"").trim()
-        });
+        rows.push({name:match[1].trim(),price,status:(match[3]||"").trim()});
       }
     }
-
     if(rows.length) return rows;
   }
-
   return [];
 }
 
 function priceFollowupAnswer(message,history=[],locale="ar"){
   if(!isPriceFollowup(message)) return "";
-
   const rows=getLastAssistantProductRows(history);
-
   if(!rows.length) return "";
 
   const t=normalizeAr(message);
@@ -98,7 +93,6 @@ function priceFollowupAnswer(message,history=[],locale="ar"){
   if(/ارخص|الارخص|اقل سعر/.test(t)){
     const min=Math.min(...rows.map(x=>x.price));
     const matches=rows.filter(x=>x.price===min);
-
     return locale==="en"
       ? `The lowest price is ${min} AED:\n${matches.map(x=>`• ${x.name}`).join("\n")}`
       : `أرخص سعر من اللي فوق هو ${min} درهم:\n${matches.map(x=>`• ${x.name}`).join("\n")}`;
@@ -107,7 +101,6 @@ function priceFollowupAnswer(message,history=[],locale="ar"){
   if(/اغلى|الاغلى|اعلى سعر/.test(t)){
     const max=Math.max(...rows.map(x=>x.price));
     const matches=rows.filter(x=>x.price===max);
-
     return locale==="en"
       ? `The highest price is ${max} AED:\n${matches.map(x=>`• ${x.name}`).join("\n")}`
       : `أعلى سعر من اللي فوق هو ${max} درهم:\n${matches.map(x=>`• ${x.name}`).join("\n")}`;
@@ -124,15 +117,8 @@ function fallback(locale="ar"){
 
 export async function OPTIONS(request){
   const origin=request.headers.get("origin")||"";
-
-  if(!isAllowedOrigin(origin)){
-    return new Response(null,{status:403});
-  }
-
-  return new Response(null,{
-    status:204,
-    headers:corsHeaders(origin)
-  });
+  if(!isAllowedOrigin(origin)) return new Response(null,{status:403});
+  return new Response(null,{status:204,headers:corsHeaders(origin)});
 }
 
 export async function POST(request){
@@ -140,113 +126,88 @@ export async function POST(request){
   const cors=corsHeaders(origin);
 
   if(!isAllowedOrigin(origin)){
-    return jsonResponse({
-      error:"origin_not_allowed"
-    },403,cors);
+    return jsonResponse({error:"origin_not_allowed"},403,cors);
   }
 
   let body;
-
-  try{
-    body=await request.json();
-  }catch{
-    return jsonResponse({
-      error:"invalid_json"
-    },400,cors);
-  }
+  try{ body=await request.json(); }
+  catch{ return jsonResponse({error:"invalid_json"},400,cors); }
 
   const message=cleanText(body?.message,2500);
   const sessionId=cleanText(body?.session_id,160)||crypto.randomUUID();
   const locale=safeLocale(body?.locale);
   const pageUrl=safePageUrl(body?.page_url);
   const pageTitle=cleanText(body?.page_title,400);
-
   const history=Array.isArray(body?.history)
     ? body.history
-        .filter(
-          x =>
-            x &&
-            ["user","assistant"].includes(x.role) &&
-            typeof x.content==="string"
-        )
-        .slice(-10)
-        .map(x=>({
-          role:x.role,
-          content:cleanText(x.content,2500)
-        }))
+      .filter(x=>x && ["user","assistant"].includes(x.role) && typeof x.content==="string")
+      .slice(-10)
+      .map(x=>({role:x.role,content:cleanText(x.content,2500)}))
     : [];
 
   if(!message){
-    return jsonResponse({
-      error:"message_required"
-    },400,cors);
+    return jsonResponse({error:"message_required"},400,cors);
   }
 
-  const ip=(request.headers.get("x-forwarded-for")||"unknown")
-    .split(",")[0]
-    .trim();
-
+  const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)){
     return jsonResponse({
-      reply:
-        locale==="en"
-          ? "Too many messages. Try again in a minute."
-          : "رسائل وايد بسرعة 😄 جرّب عقب دقيقة.",
+      reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة.",
       session_id:sessionId,
       suggested_actions:[],
       escalation:false,
-      mode:"free_sitewide_emirati_v3"
+      mode:"free_sitewide_emirati_v3_1"
     },429,cors);
   }
 
   if(asksForHuman(message)){
     return jsonResponse({
-      reply:
-        locale==="en"
-          ? "Sure. You can contact the MIG FARM team directly on WhatsApp."
-          : "أكيد، حاضرين. تقدر تكلم فريق MIG FARM مباشرة على واتساب.",
+      reply:locale==="en"
+        ?"Sure. You can contact the MIG FARM team directly on WhatsApp."
+        :"أكيد، حاضرين. تقدر تكلم فريق MIG FARM مباشرة على واتساب.",
       session_id:sessionId,
-      suggested_actions:[
-        {
-          type:"whatsapp",
-          label:
-            locale==="en"
-              ? "WhatsApp MIG FARM"
-              : "كلمنا واتساب",
-          url:"https://wa.me/971581768215"
-        }
-      ],
+      suggested_actions:[{
+        type:"whatsapp",
+        label:locale==="en"?"WhatsApp MIG FARM":"كلمنا واتساب",
+        url:"https://wa.me/971581768215"
+      }],
       escalation:true,
-      mode:"free_sitewide_emirati_v3"
+      mode:"free_sitewide_emirati_v3_1"
     },200,cors);
   }
 
-  const followup=priceFollowupAnswer(
-    message,
-    history,
-    locale
-  );
-
+  const followup=priceFollowupAnswer(message,history,locale);
   if(followup){
     return jsonResponse({
       reply:followup,
       session_id:sessionId,
       suggested_actions:[],
       escalation:false,
-      mode:"free_sitewide_emirati_v3",
+      mode:"free_sitewide_emirati_v3_1",
       source:"conversation_memory"
     },200,cors);
   }
 
-  const casual=smallTalk(message,locale);
+  const natural=naturalIntentReply(message,locale);
+  if(natural){
+    return jsonResponse({
+      reply:natural,
+      session_id:sessionId,
+      suggested_actions:[],
+      escalation:false,
+      mode:"free_sitewide_emirati_v3_1",
+      source:"natural_site_intent"
+    },200,cors);
+  }
 
+  const casual=smallTalk(message,locale);
   if(casual){
     return jsonResponse({
       reply:casual,
       session_id:sessionId,
       suggested_actions:[],
       escalation:false,
-      mode:"free_sitewide_emirati_v3",
+      mode:"free_sitewide_emirati_v3_1",
       source:"smalltalk"
     },200,cors);
   }
@@ -255,52 +216,29 @@ export async function POST(request){
   let pages=[];
 
   try{
-    if(
-      asksProductish(message) ||
-      history.some(
-        x =>
-          x.role==="user" &&
-          asksProductish(x.content)
-      )
-    ){
-      products=await searchProducts(
-        message,
-        history,
-        8
-      );
+    const hasRecentProductContext =
+      isProductFollowup(message) &&
+      history.slice(-4).some(x=>x.role==="user" && asksProductish(x.content));
+
+    if(asksProductish(message) || hasRecentProductContext){
+      products=await searchProducts(message,history,8);
     }
 
     if(!products.length){
-      pages=await searchSitePages(
-        message,
-        5
-      );
+      pages=await searchSitePages(message,5);
     }
   }catch(error){
-    console.error(
-      "MIG assistant lookup failed",
-      {
-        name:error?.name,
-        message:error?.message
-      }
-    );
+    console.error("MIG assistant lookup failed",{name:error?.name,message:error?.message});
   }
 
   if(products.length){
-    const reply=formatProducts(
-      products,
-      locale
-    );
-
+    const reply=formatProducts(products,locale);
     const actions=[];
 
     if(products[0]?.url){
       actions.push({
         type:"page",
-        label:
-          locale==="en"
-            ? "Open first product"
-            : "افتح أول منتج",
+        label:locale==="en"?"Open first product":"افتح أول منتج",
         url:products[0].url
       });
     }
@@ -310,44 +248,27 @@ export async function POST(request){
       session_id:sessionId,
       suggested_actions:actions,
       escalation:false,
-      mode:"free_sitewide_emirati_v3",
+      mode:"free_sitewide_emirati_v3_1",
       source:"live_products",
       results:products.map(p=>({
-        name:p.name,
-        price:p.price,
-        currency:p.currency,
-        availability:p.availability,
-        sku:p.sku,
-        url:p.url
+        name:p.name,price:p.price,currency:p.currency,
+        availability:p.availability,sku:p.sku,url:p.url
       }))
     },200,cors);
   }
 
-  const pageReply=extractPageAnswer(
-    pages,
-    message,
-    locale
-  );
-
+  const pageReply=extractPageAnswer(pages,message,locale);
   if(pageReply){
     return jsonResponse({
       reply:pageReply,
       session_id:sessionId,
-      suggested_actions:
-        pages[0]?.url
-          ? [
-              {
-                type:"page",
-                label:
-                  locale==="en"
-                    ? "Open page"
-                    : "افتح الصفحة",
-                url:pages[0].url
-              }
-            ]
-          : [],
+      suggested_actions:pages[0]?.url ? [{
+        type:"page",
+        label:locale==="en"?"Open page":"افتح الصفحة",
+        url:pages[0].url
+      }] : [],
       escalation:false,
-      mode:"free_sitewide_emirati_v3",
+      mode:"free_sitewide_emirati_v3_1",
       source:"live_site_page"
     },200,cors);
   }
@@ -355,23 +276,15 @@ export async function POST(request){
   return jsonResponse({
     reply:fallback(locale),
     session_id:sessionId,
-    suggested_actions:[
-      {
-        type:"whatsapp",
-        label:
-          locale==="en"
-            ? "WhatsApp MIG FARM"
-            : "كلمنا واتساب",
-        url:"https://wa.me/971581768215"
-      }
-    ],
+    suggested_actions:[{
+      type:"whatsapp",
+      label:locale==="en"?"WhatsApp MIG FARM":"كلمنا واتساب",
+      url:"https://wa.me/971581768215"
+    }],
     escalation:true,
-    mode:"free_sitewide_emirati_v3",
+    mode:"free_sitewide_emirati_v3_1",
     source:"fallback",
-    page_context:{
-      page_title:pageTitle,
-      page_url:pageUrl
-    },
+    page_context:{page_title:pageTitle,page_url:pageUrl},
     site_origin:siteOrigin()
   },200,cors);
 }
