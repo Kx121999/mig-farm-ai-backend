@@ -1,24 +1,17 @@
-# MIG FARM Website Assistant Backend
+# MIG FARM Website Assistant — V5 Final Context Engine
 
-Free, site-wide customer assistant for the MIG FARM Odoo ecommerce website.
+Free site-wide assistant for the MIG FARM Odoo ecommerce website.
 
-## Version
-4.0.0 — Free Sitewide Emirati Engine
-
-## Main capabilities
-- Live Odoo product search with price and availability
-- Emirati/UAE customer-service Arabic
-- Conversation memory for cheapest/highest/available/count follow-ups
-- Shipping, branches, contact and business information
-- Website policy routing
-- Current product-page awareness
-- Product-category discovery and filtering
-- Safe handling of pesticide dosage questions
-- No paid LLM/API dependency in this mode
+## What V5 fixes
+- Keeps structured conversation state in the browser and sends it each turn.
+- Understands short follow-ups such as `داخل العين`, `ودبي؟`, `والحار؟`, and `الثاني بكام؟` from the previous topic.
+- Recovers context from recent history even before the new frontend is installed.
+- Uses confidence thresholds for website retrieval and refuses weak/irrelevant page matches.
+- Asks a clarification question when a fragment is ambiguous instead of inventing an answer.
+- Stops obvious off-topic questions from being matched to random MIG FARM pages.
+- Preserves live product search, price/availability comparisons, current product-page context, safety guardrails and Emirati Arabic.
+- No paid LLM/API dependency in this mode.
 
 ## Endpoints
 - `GET /api/health`
 - `POST /api/chat`
-
-## Test
-`npm test`
