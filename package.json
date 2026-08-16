@@ -1,0 +1,8 @@
+{
+  "name": "mig-farm-ai-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Secure AI backend for the MIG FARM Odoo website chat widget",
+  "dependencies": {"openai": "latest"}
+}
