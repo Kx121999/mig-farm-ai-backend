@@ -1,19 +1,22 @@
 export function GET(){
   return Response.json({
     ok:true,
-    service:"MIG FARM Website Assistant Backend",
-    version:"4.0.0",
-    mode:"free_sitewide_emirati_v4",
+    service:"MIG FARM Contextual Website Assistant",
+    version:"5.0.0",
+    mode:"free_contextual_rag_v5",
     features:[
+      "structured_conversation_state",
+      "elliptical_followup_resolution",
+      "history_context_recovery",
       "live_product_search",
-      "conversation_memory",
-      "sitewide_business_intents",
+      "confidence_guarded_site_rag",
+      "ambiguity_clarification",
+      "off_domain_guard",
       "page_product_context",
+      "product_comparison_memory",
       "emirati_arabic",
-      "shipping_and_branch_answers",
-      "policy_routing",
-      "product_comparison_filters",
-      "safe_pesticide_guidance"
+      "safe_agricultural_guidance",
+      "dynamic_quick_replies"
     ],
     time:new Date().toISOString()
   });
