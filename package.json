@@ -1,22 +1,54 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>MIG FARM Website Assistant</title>
-  <style>
-    body{font-family:Arial,sans-serif;max-width:760px;margin:60px auto;padding:0 20px;color:#173d2b;background:#f7fbf8}
-    .card{background:#fff;border:1px solid #dfeae2;border-radius:18px;padding:28px;box-shadow:0 16px 45px rgba(18,74,45,.08)}
-    h1{margin-top:0;color:#0b5b35} code{background:#eef6f0;padding:3px 7px;border-radius:6px}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>MIG FARM Website Assistant</h1>
-    <p>Backend is online.</p>
-    <p>Version: <strong>4.0.0</strong></p>
-    <p>Health: <code>/api/health</code></p>
-    <p>Chat: <code>/api/chat</code></p>
-  </div>
-</body>
-</html>
+import assert from "node:assert/strict";
+import {
+  directKnowledgeReply,
+  historyReply,
+  isProductIntent
+} from "../lib/knowledge.js";
+
+function reply(q,locale="ar"){ return directKnowledgeReply(q,locale)?.reply || ""; }
+
+assert.match(reply("هلا"),/هلا والله/);
+assert.match(reply("شلونك"),/بخير/);
+assert.match(reply("هلا شو عندكم غير البذور؟"),/غير البذور/);
+assert.match(reply("شو عندكم؟"),/البذور/);
+assert.equal(reply("شو عندكم من الأسمدة؟"),"");
+
+assert.match(reply("عندكم شحن للعين؟"),/13 درهم.*العين/);
+assert.match(reply("الشحن مجاني؟"),/13 درهم/);
+assert.match(reply("كم يوم الشحن للعين؟"),/مب مؤكدة/);
+assert.match(reply("توصلون السعودية؟"),/داخل الإمارات/);
+
+assert.match(reply("وين فرع الشارقة؟"),/54 702 5904/);
+assert.match(reply("رقم العين"),/58 176 8215/);
+assert.match(reply("الايميل"),/sales@migfarm.com/);
+assert.match(reply("متى تفتحون؟"),/مب مؤكدة/);
+
+assert.match(reply("ايش طرق الدفع؟"),/إتمام الطلب/);
+assert.match(reply("هل السعر شامل الضريبة؟"),/ما عندي تأكيد/);
+assert.match(reply("عندكم خصومات؟"),/ممكن تتغير/);
+assert.match(reply("سياسة الخصوصية"),/سياسة الخصوصية/);
+assert.match(reply("شروط الاسترجاع"),/شروط الموقع/);
+
+assert.match(reply("عايز جرعة مبيد"),/ما بعطيك جرعة/);
+assert.match(reply("كيف استخدم السماد"),/تعتمد على المنتج/);
+assert.match(reply("النبات عندي اصفر"),/صورة واضحة/);
+
+assert.equal(isProductIntent("فيه طماطم؟"),true);
+assert.equal(isProductIntent("عندكم اسمده؟"),true);
+assert.equal(isProductIntent("عندكم شحن للعين؟"),false);
+assert.equal(isProductIntent("شو عندكم غير البذور؟"),false);
+
+const history=[
+  {role:"assistant",content:"حصلت لك 3 منتجات:\n• منتج أ — 35 AED - متوفر\n• منتج ب — 100 AED - متوفر\n• منتج ج — 50 AED - غير متوفر"}
+];
+
+assert.match(historyReply("طب الأرخص فيهم؟",history,"ar").reply,/35 درهم/);
+assert.match(historyReply("أرخص واحد متوفر",history,"ar").reply,/35 درهم/);
+assert.match(historyReply("كم واحد؟",history,"ar").reply,/3 منتجات/);
+assert.match(historyReply("الثاني بكام؟",history,"ar").reply,/100 AED/);
+assert.match(historyReply("رتبهم من الأرخص",history,"ar").reply,/35 AED[\s\S]*50 AED[\s\S]*100 AED/);
+assert.match(historyReply("قارن بينهم",history,"ar").reply,/السعر والتوفر/);
+assert.match(historyReply("المتوفر بس",history,"ar").reply,/منتج أ/);
+assert.doesNotMatch(historyReply("المتوفر بس",history,"ar").reply,/منتج ج/);
+
+console.log("MIG FARM V4 smoke tests passed");

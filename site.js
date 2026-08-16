@@ -1,82 +1,65 @@
-export function cleanText(value,maxLength=3000){
-  if(typeof value!=="string") return "";
-  return value
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"")
-    .trim()
-    .slice(0,maxLength);
-}
+import { normalizeAr, tokenize } from "./utils.js";
 
-export function normalizeAr(value=""){
-  return String(value)
-    .toLowerCase()
-    .replace(/[أإآ]/g,"ا")
-    .replace(/ى/g,"ي")
-    .replace(/ة/g,"ه")
-    .replace(/[ًٌٍَُِّْـ]/g,"")
-    .replace(/[^\p{L}\p{N}\s.-]/gu," ")
-    .replace(/\s+/g," ")
-    .trim();
-}
-
-export function tokenize(value=""){
-  return normalizeAr(value)
-    .split(/\s+/)
-    .filter(Boolean)
-    .filter(x=>x.length>1);
-}
-
-export function safeLocale(value){
-  return value==="en" ? "en" : "ar";
-}
-
-export function safePageUrl(value){
-  if(!value || typeof value!=="string") return "";
-  try{
-    const url=new URL(value);
-    if(!["http:","https:"].includes(url.protocol)) return "";
-    return url.toString().slice(0,1000);
-  }catch{
-    return "";
+export function formatProducts(products,locale="ar"){
+  const en=locale==="en";
+  if(!products.length){
+    return en?"I couldn't confirm a matching product in the live store.":"ما حصلت منتج مؤكد مطابق في المتجر.";
   }
-}
 
-export function jsonResponse(data,status=200,headers={}){
-  return new Response(JSON.stringify(data),{
-    status,
-    headers:{
-      "Content-Type":"application/json; charset=utf-8",
-      ...headers
-    }
+  const shown=products.slice(0,8);
+  const heading=en
+    ? `I found ${shown.length} matching product${shown.length===1?"":"s"} on MIG FARM:`
+    : `حصلت لك ${shown.length} ${shown.length===1?"منتج":"منتجات"} على موقع MIG FARM:`;
+
+  const rows=shown.map(p=>{
+    const price=p.price ? `${p.price} ${p.currency||"AED"}` : (en?"price not shown":"السعر مب ظاهر");
+    const availability=p.availability ? ` - ${p.availability}` : "";
+    return `• ${p.name} — ${price}${availability}`;
   });
+
+  return `${heading}\n${rows.join("\n")}`;
 }
 
-export function levenshtein(a="",b=""){
-  a=normalizeAr(a); b=normalizeAr(b);
-  const m=a.length,n=b.length;
-  if(!m) return n;
-  if(!n) return m;
-  const dp=Array.from({length:n+1},(_,j)=>j);
-  for(let i=1;i<=m;i++){
-    let prev=dp[0];
-    dp[0]=i;
-    for(let j=1;j<=n;j++){
-      const temp=dp[j];
-      dp[j]=Math.min(
-        dp[j]+1,
-        dp[j-1]+1,
-        prev+(a[i-1]===b[j-1]?0:1)
-      );
-      prev=temp;
+function sentenceSplit(text=""){
+  return String(text)
+    .split(/(?<=[.!؟])\s+|\n+/)
+    .map(x=>x.trim())
+    .filter(x=>x.length>25);
+}
+
+export function extractPageAnswer(pages,message,locale="ar"){
+  if(!pages.length) return "";
+  const terms=tokenize(message).filter(x=>x.length>1);
+  const scored=[];
+
+  for(const page of pages){
+    for(const sentence of sentenceSplit(`${page.description}. ${page.text}`)){
+      const n=normalizeAr(sentence);
+      let score=0;
+      for(const term of terms){
+        if(n.includes(term)) score+=3;
+      }
+      if(score>0) scored.push({sentence,score,page});
     }
   }
-  return dp[n];
-}
 
-export function fuzzyWordMatch(a,b){
-  a=normalizeAr(a); b=normalizeAr(b);
-  if(!a || !b) return false;
-  if(a===b || a.includes(b) || b.includes(a)) return true;
-  const maxLen=Math.max(a.length,b.length);
-  if(maxLen<=4) return levenshtein(a,b)<=1;
-  return levenshtein(a,b)<=Math.max(1,Math.floor(maxLen*0.25));
+  scored.sort((a,b)=>b.score-a.score);
+  const unique=[];
+  const seen=new Set();
+
+  for(const item of scored){
+    const key=normalizeAr(item.sentence).slice(0,120);
+    if(seen.has(key)) continue;
+    seen.add(key);
+    unique.push(item);
+    if(unique.length>=3) break;
+  }
+
+  if(!unique.length) return "";
+
+  const page=unique[0].page;
+  const body=unique.map(x=>x.sentence).join("\n");
+  return locale==="en"
+    ? `${page.title}:\n${body}`
+    : `حسب المعلومات الموجودة في الموقع عن ${page.title}:\n${body}`;
 }
