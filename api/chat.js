@@ -267,3 +267,6 @@ export async function POST(request){
     site_origin:siteOrigin()
   },200,cors);
 }
+
+  },200,cors);
+}
