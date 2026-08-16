@@ -1,110 +1,54 @@
-import { normalizeAr, tokenize } from "./utils.js";
+import assert from "node:assert/strict";
+import {
+  directKnowledgeReply,
+  historyReply,
+  isProductIntent
+} from "../lib/knowledge.js";
 
-export function smallTalk(message,locale="ar"){
-  if(locale==="en") return "";
+function reply(q,locale="ar"){ return directKnowledgeReply(q,locale)?.reply || ""; }
 
-  const t=normalizeAr(message);
+assert.match(reply("هلا"),/هلا والله/);
+assert.match(reply("شلونك"),/بخير/);
+assert.match(reply("هلا شو عندكم غير البذور؟"),/غير البذور/);
+assert.match(reply("شو عندكم؟"),/البذور/);
+assert.equal(reply("شو عندكم من الأسمدة؟"),"");
 
-  if(/^(هلا|هلا والله|مرحبا|السلام عليكم|سلام|هاي|hello|hi)\b/.test(t)){
-    return "هلا والله 👋 حياك في MIG FARM. شو حاب تعرف؟";
-  }
+assert.match(reply("عندكم شحن للعين؟"),/13 درهم.*العين/);
+assert.match(reply("الشحن مجاني؟"),/13 درهم/);
+assert.match(reply("كم يوم الشحن للعين؟"),/مب مؤكدة/);
+assert.match(reply("توصلون السعودية؟"),/داخل الإمارات/);
 
-  if(/شلونك|كيفك|كيف الحال|علومك|شو اخبارك/.test(t)){
-    return "بخير دامك بخير 🌱 شو أقدر أساعدك فيه اليوم؟";
-  }
+assert.match(reply("وين فرع الشارقة؟"),/54 702 5904/);
+assert.match(reply("رقم العين"),/58 176 8215/);
+assert.match(reply("الايميل"),/sales@migfarm.com/);
+assert.match(reply("متى تفتحون؟"),/مب مؤكدة/);
 
-  if(/شكرا|مشكور|تسلم|يعطيك العافيه|يعطيك العافية/.test(t)){
-    return "العفو، حاضرين 🌱 إذا تبا أي شي ثاني أنا وياك.";
-  }
+assert.match(reply("ايش طرق الدفع؟"),/إتمام الطلب/);
+assert.match(reply("هل السعر شامل الضريبة؟"),/ما عندي تأكيد/);
+assert.match(reply("عندكم خصومات؟"),/ممكن تتغير/);
+assert.match(reply("سياسة الخصوصية"),/سياسة الخصوصية/);
+assert.match(reply("شروط الاسترجاع"),/شروط الموقع/);
 
-  if(/منو انت|مين انت|انت مين|شو تسوي|شو وظيفتك/.test(t)){
-    return "أنا مساعد MIG FARM للموقع. أقدر أساعدك بالمنتجات والأسعار والتوفر والخدمات والشحن وسياسات الموقع وأوصلك للصفحة أو الواتساب إذا احتجت.";
-  }
+assert.match(reply("عايز جرعة مبيد"),/ما بعطيك جرعة/);
+assert.match(reply("كيف استخدم السماد"),/تعتمد على المنتج/);
+assert.match(reply("النبات عندي اصفر"),/صورة واضحة/);
 
-  if(/وينكم|وين موقعكم|الفروع|فرعكم/.test(t)){
-    return "عندنا فرعين في الإمارات: العين والشارقة. إذا تبا رقم فرع معيّن قل لي العين أو الشارقة.";
-  }
+assert.equal(isProductIntent("فيه طماطم؟"),true);
+assert.equal(isProductIntent("عندكم اسمده؟"),true);
+assert.equal(isProductIntent("عندكم شحن للعين؟"),false);
+assert.equal(isProductIntent("شو عندكم غير البذور؟"),false);
 
-  if(/رقم العين|واتساب العين|فرع العين/.test(t)){
-    return "رقم وواتساب فرع العين: +971 58 176 8215.";
-  }
+const history=[
+  {role:"assistant",content:"حصلت لك 3 منتجات:\n• منتج أ — 35 AED - متوفر\n• منتج ب — 100 AED - متوفر\n• منتج ج — 50 AED - غير متوفر"}
+];
 
-  if(/رقم الشارقه|رقم الشارقة|فرع الشارقه|فرع الشارقة/.test(t)){
-    return "رقم فرع الشارقة: +971 54 702 5904.";
-  }
+assert.match(historyReply("طب الأرخص فيهم؟",history,"ar").reply,/35 درهم/);
+assert.match(historyReply("أرخص واحد متوفر",history,"ar").reply,/35 درهم/);
+assert.match(historyReply("كم واحد؟",history,"ar").reply,/3 منتجات/);
+assert.match(historyReply("الثاني بكام؟",history,"ar").reply,/100 AED/);
+assert.match(historyReply("رتبهم من الأرخص",history,"ar").reply,/35 AED[\s\S]*50 AED[\s\S]*100 AED/);
+assert.match(historyReply("قارن بينهم",history,"ar").reply,/السعر والتوفر/);
+assert.match(historyReply("المتوفر بس",history,"ar").reply,/منتج أ/);
+assert.doesNotMatch(historyReply("المتوفر بس",history,"ar").reply,/منتج ج/);
 
-  if(/الايميل|الإيميل|البريد/.test(t)){
-    return "إيميل MIG FARM هو sales@migfarm.com.";
-  }
-
-  return "";
-}
-
-export function formatProducts(products,locale="ar"){
-  if(locale==="en"){
-    return "I found these products on the MIG FARM website:\n"+products.map(p=>{
-      const price=p.price?`${p.price} ${p.currency||"AED"}`:"price not shown";
-      const availability=p.availability?` - ${p.availability}`:"";
-      return `• ${p.name} — ${price}${availability}`;
-    }).join("\n");
-  }
-
-  return "حصلت لك هالمنتجات على موقع MIG FARM:\n"+products.map(p=>{
-    const price=p.price?`${p.price} ${p.currency||"AED"}`:"السعر مب ظاهر";
-    const availability=p.availability?` - ${p.availability}`:"";
-    return `• ${p.name} — ${price}${availability}`;
-  }).join("\n");
-}
-
-function sentenceSplit(text=""){
-  return String(text)
-    .split(/(?<=[.!؟])\s+|\n+/)
-    .map(x=>x.trim())
-    .filter(x=>x.length>25);
-}
-
-export function extractPageAnswer(pages,message,locale="ar"){
-  if(!pages.length) return "";
-
-  const terms=tokenize(message).filter(x=>x.length>1);
-  const scored=[];
-
-  for(const page of pages){
-    for(const sentence of sentenceSplit(`${page.description}. ${page.text}`)){
-      const n=normalizeAr(sentence);
-      let score=0;
-      for(const term of terms){
-        if(n.includes(term)) score+=3;
-      }
-      if(score>0) scored.push({sentence,score,page});
-    }
-  }
-
-  scored.sort((a,b)=>b.score-a.score);
-  const unique=[];
-  const seen=new Set();
-
-  for(const item of scored){
-    const key=normalizeAr(item.sentence).slice(0,120);
-    if(seen.has(key)) continue;
-    seen.add(key);
-    unique.push(item);
-    if(unique.length>=4) break;
-  }
-
-  if(!unique.length){
-    const first=pages[0];
-    const fallback=(first.description || first.text || "").slice(0,700);
-    if(!fallback) return "";
-    return locale==="en"
-      ? `${first.title}:\n${fallback}`
-      : `حسب اللي موجود في الموقع عن ${first.title}:\n${fallback}`;
-  }
-
-  const page=unique[0].page;
-  const body=unique.map(x=>x.sentence).join("\n");
-
-  return locale==="en"
-    ? `${page.title}:\n${body}`
-    : `هيه، حسب التفاصيل الموجودة في الموقع عن ${page.title}:\n${body}`;
-}
+console.log("MIG FARM V4 smoke tests passed");
