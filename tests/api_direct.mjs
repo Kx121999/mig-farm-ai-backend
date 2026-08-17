@@ -13,7 +13,7 @@ async function ask(message,state={},history=[]){
 }
 
 let r=await ask('هلا');
-assert.equal(r.version,'8.4.0');
+assert.equal(r.version,'9.0.0');
 assert.match(r.reply,/حياك|هلا|مرحبا/);
 
 r=await ask('شو يعني F1؟');
@@ -32,4 +32,4 @@ const state1=r.conversation_state;
 r=await ask('طماطم',state1,[{role:'user',content:'عندي مزرعة 2000 متر في العين وعايز بيت محمي'},{role:'assistant',content:r.reply}]);
 assert.equal(r.customer_profile.crop,'tomato');
 
-console.log('MIG FARM V7 direct API tests passed');
+console.log('MIG FARM V9 direct API tests passed');
