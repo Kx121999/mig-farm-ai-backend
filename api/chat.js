@@ -20,6 +20,9 @@ import {
 } from "../lib/sales.js";
 import { extendedKnowledgeReply, knowledgeStats } from "../lib/human_knowledge.js";
 import { buildLearningEvent, logLearningEvent, assistantMeta } from "../lib/learning.js";
+import { readServerSession, writeServerSession, mergeSessionState, mergeSessionProfile, sessionPersistenceMode } from "../lib/session_store.js";
+import { searchProductIndex, productIndexStatus } from "../lib/product_index.js";
+import { clientProducts, commerceCapabilities } from "../lib/commerce.js";
 
 const VERSION="7.0.0";
 const MODE="free_sales_knowledge_agent_v7";
@@ -129,7 +132,7 @@ function sourceNeedsLearning(source=""){
   return /(fallback|no_live|clarify|repair|off_domain)/.test(String(source||""));
 }
 
-function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar"}){
+async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar"}){
   const next=updateState(state,analysis,message,source,results);
   const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
   const stage=journeyStage({analysis,profile:nextProfile,state:next,message,results});
@@ -150,6 +153,13 @@ function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,si
     actions.push(buildWhatsAppHandoff({profile:nextProfile,state:next,analysis,message}));
   }
 
+  await writeServerSession(sessionId,{
+    conversation_state:next,
+    customer_profile:nextProfile,
+    sales_stage:stage,
+    lead_temperature:lead.temperature
+  });
+
   return jsonResponse({
     session_id:sessionId,version:VERSION,mode:MODE,
     ...payload,
@@ -162,6 +172,11 @@ function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,si
     lead_temperature:lead.temperature,
     handoff_summary:handoffSummary,
     assistant_meta:meta,
+    runtime:{
+      session_persistence:sessionPersistenceMode(),
+      product_index:productIndexStatus()
+    },
+    commerce:commerceCapabilities(),
     learning_event:sourceNeedsLearning(source)?learning:undefined,
     source
   },status,cors);
@@ -170,8 +185,17 @@ function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,si
 async function searchCatalog(analysis,state,message,history){
   const query=buildSearchQuery(analysis,state,message);
   let products=[];
-  try{ products=await searchProducts(query,history,24); }
-  catch(error){ console.error("product search failed",error?.message); }
+  try{
+    const indexed=await searchProductIndex(query,analysis,state,12);
+    products=indexed.products||[];
+  }catch(error){ console.error("product index search failed",error?.message); }
+
+  if(products.length<4){
+    try{
+      const live=await searchProducts(query,history,24);
+      products=mergeProducts(products,live);
+    }catch(error){ console.error("product search failed",error?.message); }
+  }
   products=filterRankProducts(products,analysis,state,message);
   const categoryKey=analysis.category?.key||state.category||"";
   if(categoryKey==="seeds" && products.length<4){
@@ -193,13 +217,13 @@ async function multiIntentShippingProducts({analysis,state,message,history,local
   const {products,categoryKey}=await searchCatalog(analysis,state,message,history);
   if(!shipping) return null;
   if(!products.length){
-    return makeResponse({
+    return await makeResponse({
       payload:{reply:`${shipping.reply}\n\nوبالنسبة للمنتج: ما حصلت نتيجة مطابقة بشكل مؤكد في المتجر الحي.`,display_reply:shipping.reply,quick_replies:["دور بالاسم","كلم الفريق"],suggested_actions:shipping.actions||[]},
       cors,sessionId,state,analysis,signals,profile,message,source:"multi_shipping_no_product",locale
     });
   }
-  const cleanResults=products.map(p=>({name:p.name,price:p.price,currency:p.currency,availability:p.availability,sku:p.sku,url:p.url}));
-  return makeResponse({
+  const cleanResults=clientProducts(products);
+  return await makeResponse({
     payload:{
       reply:`${shipping.reply}\n\n${formatProductsForMemory(products,locale,`${sessionId}:${message}`)}`,
       display_reply:`${shipping.reply}\nوبالنسبة للمنتج، حصلت لك ${products.length} خيارات مناسبة 👇`,
@@ -231,52 +255,55 @@ export async function POST(request){
   const pageTitle=cleanText(body?.page_title,500);
   const history=normalizeHistory(body?.history);
   const productContext=normalizeProductContext(body?.product_context);
-  const state=mergeState(body?.conversation_state,history);
-  const existingProfile=sanitizeCustomerProfile(body?.conversation_state?.customer_profile||body?.customer_profile);
+  const serverSession=await readServerSession(sessionId);
+  const mergedIncomingState=mergeSessionState(serverSession,body?.conversation_state);
+  const state=mergeState(mergedIncomingState,history);
+  const mergedIncomingProfile=mergeSessionProfile(serverSession,body?.conversation_state?.customer_profile||body?.customer_profile);
+  const existingProfile=sanitizeCustomerProfile(mergedIncomingProfile);
   const analysis=analyzeTurn(message,state,history,locale);
   const signals=extractCustomerSignals(message,analysis,state);
   const profile=mergeCustomerProfile(existingProfile,signals,analysis,state);
 
-  if(!message) return makeResponse({payload:{reply:locale==="en"?"Write a message first.":"اكتب سؤالك أول."},status:400,cors,sessionId,state,analysis,signals,profile,message,source:"empty",locale});
+  if(!message) return await makeResponse({payload:{reply:locale==="en"?"Write a message first.":"اكتب سؤالك أول."},status:400,cors,sessionId,state,analysis,signals,profile,message,source:"empty",locale});
 
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
-  if(!rateLimit(`${ip}:${sessionId}`)) return makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
+  if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
   // Repair misunderstandings before routing a vague "wrong / I mean..." message.
   const repair=customerRepairReply(signals,analysis,profile);
-  if(repair) return makeResponse({payload:{reply:repair.reply,quick_replies:repair.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:repair.source,locale});
+  if(repair) return await makeResponse({payload:{reply:repair.reply,quick_replies:repair.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:repair.source,locale});
 
   // A ready customer who already has products should not be sent back to generic ordering instructions.
   const purchase=purchaseContinuation({profile,state,analysis,message});
-  if(purchase) return makeResponse({payload:{reply:purchase.reply,quick_replies:purchase.quick_replies||[],suggested_actions:purchase.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:purchase.source,locale});
+  if(purchase) return await makeResponse({payload:{reply:purchase.reply,quick_replies:purchase.quick_replies||[],suggested_actions:purchase.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:purchase.source,locale});
 
   // Natural multi-intent: "عندكم بذور طماطم وتوصلون العين؟"
   const multi=await multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors});
   if(multi) return multi;
 
   const direct=directReply(analysis,state,message,sessionId);
-  if(direct) return makeResponse({payload:{reply:direct.reply,quick_replies:direct.quick_replies||[],suggested_actions:direct.actions||[],escalation:direct.escalation},cors,sessionId,state,analysis,signals,profile,message,source:direct.source,locale});
+  if(direct) return await makeResponse({payload:{reply:direct.reply,quick_replies:direct.quick_replies||[],suggested_actions:direct.actions||[],escalation:direct.escalation},cors,sessionId,state,analysis,signals,profile,message,source:direct.source,locale});
 
   const humanKnowledge=extendedKnowledgeReply(message,locale,{sessionId,profile,state,analysis});
-  if(humanKnowledge) return makeResponse({payload:{reply:humanKnowledge.reply,quick_replies:humanKnowledge.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:humanKnowledge.source,locale});
+  if(humanKnowledge) return await makeResponse({payload:{reply:humanKnowledge.reply,quick_replies:humanKnowledge.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:humanKnowledge.source,locale});
 
   const memory=productMemoryReply(analysis,state,locale);
-  if(memory) return makeResponse({payload:{reply:memory.reply,quick_replies:salesQuickReplies({category:state.category,stage:"compare",results:state.last_products||[],profile})},cors,sessionId,state,analysis,signals,profile,message,source:memory.source,locale});
+  if(memory) return await makeResponse({payload:{reply:memory.reply,quick_replies:salesQuickReplies({category:state.category,stage:"compare",results:state.last_products||[],profile})},cors,sessionId,state,analysis,signals,profile,message,source:memory.source,locale});
 
   const currentProduct=await resolveCurrentProduct(pageUrl,productContext);
   const current=currentProductReply(message,currentProduct,locale);
-  if(current) return makeResponse({payload:{reply:current,suggested_actions:pageUrl?[{type:"page",label:"افتح المنتج",url:pageUrl}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"current_product",locale});
+  if(current) return await makeResponse({payload:{reply:current,suggested_actions:pageUrl?[{type:"page",label:"افتح المنتج",url:pageUrl}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"current_product",locale});
 
   const contextual=ambiguousContextReply(message,state,analysis);
-  if(contextual) return makeResponse({payload:{reply:contextual.reply,quick_replies:contextual.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:contextual.source,locale});
+  if(contextual) return await makeResponse({payload:{reply:contextual.reply,quick_replies:contextual.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:contextual.source,locale});
 
-  if(isClearlyOffDomain(message)) return makeResponse({payload:{reply:"أنا مخصص لـ MIG FARM والزراعة والمنتجات والشحن وخدمات الموقع. إذا سؤالك متعلق بهالمجال عطِني التفاصيل وأنا أساعدك."},cors,sessionId,state,analysis,signals,profile,message,source:"off_domain",locale});
+  if(isClearlyOffDomain(message)) return await makeResponse({payload:{reply:"أنا مخصص لـ MIG FARM والزراعة والمنتجات والشحن وخدمات الموقع. إذا سؤالك متعلق بهالمجال عطِني التفاصيل وأنا أساعدك."},cors,sessionId,state,analysis,signals,profile,message,source:"off_domain",locale});
 
   // Greenhouse = project qualification, not a random product dump.
   if((analysis.category?.key||state.category||profile.category)==="greenhouse" && ["product_search","recommendation","unknown"].includes(analysis.intent)){
     const stage=journeyStage({analysis,profile,state,message});
     const gh=greenhouseLeadReply({profile,state,analysis,stage});
-    return makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
+    return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
   }
 
   const productLike=["product_search","recommendation"].includes(analysis.intent) || Boolean(analysis.category) || Boolean(analysis.crop);
@@ -287,32 +314,32 @@ export async function POST(request){
       const stage=journeyStage({analysis,profile,state,message});
       const next=nextBestQuestion({analysis,profile,state,stage});
       if(next){
-        return makeResponse({payload:{reply:next.reply,quick_replies:next.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:`sales_qualify_${next.field}`,locale});
+        return await makeResponse({payload:{reply:next.reply,quick_replies:next.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:`sales_qualify_${next.field}`,locale});
       }
     }
 
     const {products,categoryKey}=await searchCatalog(analysis,state,message,history);
     if(products.length){
-      const cleanResults=products.map(p=>({name:p.name,price:p.price,currency:p.currency,availability:p.availability,sku:p.sku,url:p.url}));
+      const cleanResults=clientProducts(products);
       const reply=formatProductsForMemory(products,locale,`${sessionId}:${message}`);
       const stage=journeyStage({analysis,profile,state,message,results:cleanResults});
       const quick=salesQuickReplies({category:categoryKey,stage,results:cleanResults,profile});
-      return makeResponse({payload:{reply,results:cleanResults,quick_replies:quick.length?quick:productSearchQuickReplies(categoryKey,locale,true),brand_scope:categoryKey==="seeds"?"mig_farm_seeds_only":"category_filtered"},cors,sessionId,state,analysis,signals,profile,message,source:categoryKey==="seeds"?"live_migfarm_seeds":"live_category_products",results:cleanResults,locale});
+      return await makeResponse({payload:{reply,results:cleanResults,quick_replies:quick.length?quick:productSearchQuickReplies(categoryKey,locale,true),brand_scope:categoryKey==="seeds"?"mig_farm_seeds_only":"category_filtered"},cors,sessionId,state,analysis,signals,profile,message,source:categoryKey==="seeds"?"live_migfarm_seeds":"live_category_products",results:cleanResults,locale});
     }
 
     if(categoryKey==="seeds"){
       const fallback=knownSeedFallback(analysis.crop?.key||state.crop,locale);
-      return makeResponse({payload:{reply:fallback||pick(TONE.noProductAr,`${sessionId}:${message}`),quick_replies:productSearchQuickReplies("seeds",locale,false)},cors,sessionId,state,analysis,signals,profile,message,source:"seed_knowledge_no_live_match",locale});
+      return await makeResponse({payload:{reply:fallback||pick(TONE.noProductAr,`${sessionId}:${message}`),quick_replies:productSearchQuickReplies("seeds",locale,false)},cors,sessionId,state,analysis,signals,profile,message,source:"seed_knowledge_no_live_match",locale});
     }
     const knownFallback=knownCategoryFallback(categoryKey,locale);
-    return makeResponse({payload:{reply:knownFallback||`${pick(TONE.noProductAr,`${sessionId}:${message}`)} اكتب اسم المنتج أو استخدامه بشكل أدق، أو أقدر أوصلك بالفريق.`,quick_replies:["دور بالاسم","كلم الفريق"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})]},cors,sessionId,state,analysis,signals,profile,message,source:knownFallback?"known_category_no_live_match":"no_live_product_match",locale});
+    return await makeResponse({payload:{reply:knownFallback||`${pick(TONE.noProductAr,`${sessionId}:${message}`)} اكتب اسم المنتج أو استخدامه بشكل أدق، أو أقدر أوصلك بالفريق.`,quick_replies:["دور بالاسم","كلم الفريق"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})]},cors,sessionId,state,analysis,signals,profile,message,source:knownFallback?"known_category_no_live_match":"no_live_product_match",locale});
   }
 
   // Site-wide retrieval only after verified knowledge and product routing fail.
   let pages=[];
   try{ pages=await searchSitePages(message,5); }catch(error){ console.error("site search failed",error?.message); }
   const pAnswer=pageAnswer(pages,message,locale);
-  if(pAnswer) return makeResponse({payload:{reply:pAnswer.reply,confidence:pAnswer.confidence,suggested_actions:pAnswer.page?.url?[{type:"page",label:"افتح الصفحة",url:pAnswer.page.url}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"confidence_site_rag",locale});
+  if(pAnswer) return await makeResponse({payload:{reply:pAnswer.reply,confidence:pAnswer.confidence,suggested_actions:pAnswer.page?.url?[{type:"page",label:"افتح الصفحة",url:pAnswer.page.url}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"confidence_site_rag",locale});
 
-  return makeResponse({payload:{reply:pick(TONE.fallbackAr,`${sessionId}:${message}`),quick_replies:["منتج","شحن","فرع","خدمة"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})],escalation:true,page_context:{page_title:pageTitle,page_url:pageUrl},knowledge_stats:knowledgeStats()},cors,sessionId,state,analysis,signals,profile,message,source:"safe_human_fallback",locale});
+  return await makeResponse({payload:{reply:pick(TONE.fallbackAr,`${sessionId}:${message}`),quick_replies:["منتج","شحن","فرع","خدمة"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})],escalation:true,page_context:{page_title:pageTitle,page_url:pageUrl},knowledge_stats:knowledgeStats()},cors,sessionId,state,analysis,signals,profile,message,source:"safe_human_fallback",locale});
 }
