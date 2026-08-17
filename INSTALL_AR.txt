@@ -1,0 +1,44 @@
+MIG FARM AI V7 — SALES & KNOWLEDGE AGENT
+
+النسخة دي تنقل المساعد من شات بحث ذكي إلى موظف مبيعات رقمي داخل نطاق MIG FARM.
+
+أهم الإضافات:
+- Customer Profile Memory
+- Sales Journey Engine
+- Lead Score / Hot-Warm-Cold
+- سؤال واحد في كل مرة بدل استجواب العميل
+- ملخص جاهز للواتساب عند التحويل للفريق
+- فهم التصحيح: غلط / مش ده / قصدي
+- فهم Product + Shipping في نفس الرسالة
+- قاعدة معرفة أوسع عن MIG FARM والمنتجات والمصطلحات الزراعية
+- الأسعار والتوفر Live من Odoo فقط
+- بذور MIG FARM فقط عند سؤال العميل عن البذور
+- Learning Telemetry بدون تسجيل الرسالة الخام أو بيانات شخصية
+
+ترتيب الرفع الآمن على GitHub:
+1) lib/brain.js
+2) lib/dialogue.js
+3) lib/catalog.js
+4) lib/customer.js
+5) lib/sales.js
+6) lib/human_knowledge.js
+7) lib/learning.js
+8) api/chat.js
+9) api/health.js
+10) package.json
+
+بعد نشر V7:
+- افتح /api/health وتأكد من version 7.0.0
+- بعد ذلك استبدل Odoo View بملف odoo/MIG_FARM_AI_CHAT_UI_V7_2.txt
+
+اختبارات مقترحة بعد النشر:
+1) عندكم بذور؟
+2) متوفر أسمدة
+3) عندكم بذور طماطم وتوصلون العين؟
+4) رشحلي بذور فلفل
+5) مكشوف
+6) العين
+7) الأرخص فيهم؟
+8) أبغي أطلب
+9) غلط مش ده قصدي أسمدة
+10) عندي مزرعة 2000 متر في العين وعايز بيت محمي

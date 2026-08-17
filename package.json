@@ -1,8 +1,10 @@
 {
-  "name": "mig-farm-ai-backend",
-  "version": "5.0.0",
-  "private": true,
-  "type": "module",
-  "description": "Context-aware free site-wide Emirati assistant for MIG FARM Odoo website",
-  "scripts": {"test":"node tests/smoke.mjs"}
+  "name":"mig-farm-ai-backend",
+  "version":"7.0.0",
+  "private":true,
+  "type":"module",
+  "description":"Free sales and knowledge assistant for MIG FARM Odoo website",
+  "scripts":{
+    "test":"node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/api_direct.mjs"
+  }
 }
