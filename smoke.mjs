@@ -1,70 +1,90 @@
 import assert from "node:assert/strict";
-import { analyzeTurn, sanitizeState } from "../lib/dialogue.js";
-import { extractCustomerSignals, mergeCustomerProfile, sanitizeCustomerProfile, customerRepairReply } from "../lib/customer.js";
-import { leadScore, journeyStage, nextBestQuestion, buildHandoffSummary, buildWhatsAppHandoff, purchaseContinuation } from "../lib/sales.js";
-import { extendedKnowledgeReply, knowledgeStats } from "../lib/human_knowledge.js";
-import { buildLearningEvent } from "../lib/learning.js";
+import { analyzeTurn, sanitizeState, updateState, directReply, productMemoryReply } from "../lib/dialogue.js";
+import { filterRankProducts, isMigFarmSeed, buildSearchQuery } from "../lib/catalog.js";
 
 let state=sanitizeState({});
-let analysis=analyzeTurn("عندي مزرعة 2000 متر في العين وعايز بيت محمي",state,[],"ar");
-let signals=extractCustomerSignals("عندي مزرعة 2000 متر في العين وعايز بيت محمي",analysis,state);
-let profile=mergeCustomerProfile({},signals,analysis,state);
-assert.equal(profile.project_type,"farm");
-assert.match(profile.area,/2000/);
-assert.equal(profile.emirate,"العين");
-assert.equal(profile.category,"greenhouse");
+let a=analyzeTurn("عندكم بذور؟",state,[],"ar");
+assert.equal(a.intent,"product_search");
+assert.equal(a.category.key,"seeds");
 
-let stage=journeyStage({analysis,profile,state,message:"عندي مزرعة 2000 متر في العين وعايز بيت محمي"});
-assert.ok(["explore","qualify"].includes(stage));
-let next=nextBestQuestion({analysis,profile,state,stage});
-assert.equal(next.field,"crop");
+state=updateState(state,a,"عندكم بذور؟","test",[
+  {name:"خيار JABAARA F1",price:"240",currency:"AED",availability:"متوفر"},
+  {name:"ORGANIC KATRINA CUCUMBER SEED",price:"260",currency:"AED",availability:"متوفر"}
+]);
 
-analysis=analyzeTurn("أبغي عرض سعر",state,[],"ar");
-signals=extractCustomerSignals("أبغي عرض سعر",analysis,state);
-profile=mergeCustomerProfile(profile,signals,analysis,state);
-const lead=leadScore({analysis,profile,state,message:"أبغي عرض سعر"});
-assert.equal(lead.temperature,"hot");
-assert.ok(lead.score>=55);
-assert.equal(journeyStage({analysis,profile,state,message:"أبغي عرض سعر"}),"ready");
+a=analyzeTurn("متوفر أسمدة",state,[],"ar");
+assert.equal(a.category.key,"fertilizer");
+assert.equal(a.intent,"product_search");
 
-const summary=buildHandoffSummary({profile,state,analysis,message:"أبغي عرض سعر"});
-assert.match(summary,/العين/);
-assert.match(summary,/2000/);
-assert.match(summary,/عرض سعر/);
-const wa=buildWhatsAppHandoff({profile,state,analysis,message:"أبغي عرض سعر"});
-assert.equal(wa.type,"whatsapp");
-assert.match(wa.url,/text=/);
+const fakeSeeds=[
+  {name:"خيار JABAARA F1",price:"240",description:"",url:"https://example.com/shop/jabaara"},
+  {name:"ORGANIC KATRINA-CUCUMBER SEED 500 SEEDS",price:"260",description:"",url:"https://example.com/shop/katrina"},
+  {name:"طماطم فوكس F1",price:"165",description:"",url:"https://example.com/shop/fox"}
+];
+const seedAnalysis=analyzeTurn("بذور خيار",sanitizeState({}),[],"ar");
+const filtered=filterRankProducts(fakeSeeds,seedAnalysis,sanitizeState({}),"بذور خيار");
+assert.equal(filtered.length,1);
+assert.match(filtered[0].name,/JABAARA/i);
+assert.equal(isMigFarmSeed(fakeSeeds[1]),false);
 
-const f1=extendedKnowledgeReply("شو يعني F1؟","ar",{sessionId:"x"});
-assert.ok(f1);
-assert.match(f1.reply,/هجين|الجيل الأول/);
+let ship=analyzeTurn("عندكم شحن للعين؟",sanitizeState({}),[],"ar");
+let shipState=updateState(sanitizeState({}),ship,"عندكم شحن للعين؟","shipping",[]);
+let follow=analyzeTurn("داخل العين",shipState,[],"ar");
+assert.equal(follow.intent,"unknown");
+const { ambiguousContextReply } = await import("../lib/dialogue.js");
+assert.match(ambiguousContextReply("داخل العين",shipState,follow).reply,/13/);
 
-const first=extendedKnowledgeReply("أنا أول مرة أزرع","ar",{sessionId:"x"});
-assert.ok(first);
-assert.match(first.reply,/المحصول|تزرع/);
+const fertDose=analyzeTurn("جرعة السماد كام؟",sanitizeState({category:"fertilizer"}),[],"ar");
+assert.equal(fertDose.intent,"fertilizer_dose");
+assert.match(directReply(fertDose,sanitizeState({category:"fertilizer"}),"جرعة السماد كام؟","s").reply,/تعتمد/);
 
-const correctionAnalysis=analyzeTurn("غلط",sanitizeState({category:"seeds"}),[],"ar");
-const correctionSignals=extractCustomerSignals("غلط",correctionAnalysis,sanitizeState({category:"seeds"}));
-const repair=customerRepairReply(correctionSignals,correctionAnalysis,sanitizeCustomerProfile({category:"seeds"}));
-assert.ok(repair);
-assert.match(repair.reply,/صحح/);
+const pestDose=analyzeTurn("كم ملي من المبيد؟",sanitizeState({category:"pesticide"}),[],"ar");
+assert.equal(pestDose.intent,"pesticide_dose");
 
-const readyState=sanitizeState({last_products:[{name:"طماطم مهرة F1",price:"290",currency:"AED",availability:"متوفر"}]});
-const buyAnalysis=analyzeTurn("أبغي أطلب",readyState,[],"ar");
-const buySignals=extractCustomerSignals("أبغي أطلب",buyAnalysis,readyState);
-const buyProfile=mergeCustomerProfile({},buySignals,buyAnalysis,readyState);
-const continuation=purchaseContinuation({profile:buyProfile,state:readyState,analysis:buyAnalysis,message:"أبغي أطلب"});
-assert.ok(continuation);
-assert.match(continuation.reply,/آخر المنتجات|الأول/);
+let memState=sanitizeState({last_products:[
+  {name:"A",price:"20",currency:"AED",availability:"متوفر"},
+  {name:"B",price:"10",currency:"AED",availability:"متوفر"}
+]});
+const memA=analyzeTurn("الأرخص فيهم؟",memState,[],"ar");
+assert.equal(memA.intent,"product_memory");
+assert.match(productMemoryReply(memA,memState,"ar").reply,/10/);
 
-const stats=knowledgeStats();
-assert.ok(stats.seed_varieties>=30);
-assert.ok(stats.known_products>=20);
-assert.ok(stats.glossary_topics>=15);
+const info=analyzeTurn("ايه تفاصيل MICROPLUS",sanitizeState({}),[],"ar");
+assert.equal(info.intent,"known_product_info");
+assert.match(directReply(info,sanitizeState({}),"ايه تفاصيل MICROPLUS","s").reply,/15%/);
 
-const event=buildLearningEvent({sessionId:"secret-session",message:"مش فاهم",analysis:{intent:"unknown"},profile:{},source:"safe_human_fallback",stage:"discover",lead:{temperature:"cold"}});
-assert.equal(event.unresolved,true);
-assert.equal(Object.prototype.hasOwnProperty.call(event,"message"),false);
-assert.ok(event.query_hash);
+const gh=analyzeTurn("عايز بيت محمي",sanitizeState({}),[],"ar");
+assert.equal(gh.category.key,"greenhouse");
 
-console.log("MIG FARM V7 sales-agent smoke tests passed");
+const q=buildSearchQuery(analyzeTurn("متوفر اسمدة",sanitizeState({}),[],"ar"),sanitizeState({}),"متوفر اسمدة");
+assert.match(q,/fertilizer/i);
+
+
+// Recommendation slot flow
+let recState=sanitizeState({});
+let rec=analyzeTurn("رشحلي بذور",recState,[],"ar");
+assert.equal(rec.intent,"recommendation");
+let recReply=directReply(rec,recState,"رشحلي بذور","rec");
+assert.match(recReply.reply,/المحصول/);
+recState=updateState(recState,rec,"رشحلي بذور",recReply.source,[]);
+assert.equal(recState.pending,"crop");
+rec=analyzeTurn("طماطم",recState,[],"ar");
+assert.equal(rec.intent,"recommendation");
+recReply=directReply(rec,recState,"طماطم","rec");
+assert.match(recReply.reply,/مكشوفة|بيت محمي/);
+recState=updateState(recState,rec,"طماطم",recReply.source,[]);
+assert.equal(recState.crop,"tomato");
+assert.equal(recState.pending,"cultivation");
+
+// Known product dose must go to safety, not generic search
+const microDose=analyzeTurn("جرعة MICROPLUS كام",sanitizeState({}),[],"ar");
+assert.equal(microDose.intent,"fertilizer_dose");
+const edoDose=analyzeTurn("كم ملي Edomec",sanitizeState({}),[],"ar");
+assert.equal(edoDose.intent,"pesticide_dose");
+
+// Bare availability follow-up
+const bareAvail=analyzeTurn("متوفر؟",memState,[],"ar");
+assert.equal(bareAvail.intent,"product_memory");
+assert.match(productMemoryReply(bareAvail,memState,"ar").reply,/المتوفر/);
+
+console.log("MIG FARM V6 human-engine smoke tests passed");
