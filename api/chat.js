@@ -37,9 +37,18 @@ import {
   buildHybridPlan, mergeHybridMemory, criticReview, applyCriticGuard,
   hybridResponseMeta, episodicMemoryCandidates
 } from "../lib/hybrid_brain.js";
+import {
+  mergeSemanticMemory, semanticMemoryCandidates, semanticMemoryCandidatesAdaptive, vectorMemoryHealth
+} from "../lib/vector_memory.js";
+import {
+  buildKnowledgeGraph, knowledgeGraphSummary, knowledgeGraphContext
+} from "../lib/knowledge_graph.js";
+import {
+  runNeuralAgent, shouldUseNeuralAgent, neuralBrainHealth
+} from "../lib/neural_agent.js";
 
-const VERSION="10.0.0";
-const MODE="hybrid_brain_rag_planner_critic_v10";
+const VERSION="11.0.0";
+const MODE="neural_hybrid_agent_vector_memory_graph_v11";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -161,6 +170,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
+  next.v=11;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
@@ -174,6 +184,19 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   });
   next.hybrid_memory=hybridMemory;
   const hybrid=hybridResponseMeta({plan:executionPlan,memory:hybridMemory,review,retrieval:retrievalBundle,evidence,cognition:cognitive});
+
+  const semanticMemory=mergeSemanticMemory(state?.v11_memory||{}, {
+    message,analysis,cognition:frame,decision,payload,source,turn:next.turn
+  });
+  next.v11_memory=semanticMemory;
+  const semanticHits=semanticMemoryCandidates(message,semanticMemory,6);
+  const responseGraph=buildKnowledgeGraph({message,analysis,state:next,profile,results,retrieval:retrievalBundle,memory:semanticHits});
+  const neuralTrace=Array.isArray(payload?.neural_trace)?payload.neural_trace.slice(0,12):[];
+  const neuralModel=String(payload?.neural_model||"");
+  const neuralResponseId=String(payload?.neural_response_id||"");
+  if(payload && typeof payload==="object"){
+    delete payload.neural_trace; delete payload.neural_model; delete payload.neural_response_id;
+  }
 
   const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
   const stage=journeyStage({analysis,profile:nextProfile,state:next,message,results});
@@ -225,6 +248,15 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     cognitive,
     evidence,
     hybrid_brain:hybrid,
+    neural_brain:{
+      ...neuralBrainHealth(),
+      used:source==="neural_agent_v11",
+      model_used:neuralModel||undefined,
+      response_id:neuralResponseId||undefined,
+      tool_trace:neuralTrace,
+      semantic_memory:{items:semanticMemory.items.length,recalled:semanticHits.length,engine:vectorMemoryHealth().local_embedding},
+      knowledge_graph:knowledgeGraphSummary(responseGraph)
+    },
     learning_event:sourceNeedsLearning(source)?learning:undefined,
     source
   },status,cors);
@@ -257,6 +289,75 @@ async function searchCatalog(analysis,state,message,history){
     }catch(error){ console.error("seed sitemap discovery failed",error?.message); }
   }
   return {products,categoryKey,query};
+}
+
+
+async function tryV11NeuralAgent({analysis,state,message,history,locale,profile,cognition}){
+  const plan=buildHybridPlan({message,analysis,cognition,state,profile});
+  if(!shouldUseNeuralAgent({message,analysis,cognition,plan})) return null;
+
+  const recalled=await semanticMemoryCandidatesAdaptive(message,state?.v11_memory||{},6);
+  const seedGraph=buildKnowledgeGraph({message,analysis,state,profile,results:state?.visible_products||[],memory:recalled.items||[]});
+
+  const toolHandlers={
+    search_catalog:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      if(!toolAnalysis.category&&analysis?.category) toolAnalysis.category=analysis.category;
+      if(!toolAnalysis.crop&&analysis?.crop) toolAnalysis.crop=analysis.crop;
+      if(!toolAnalysis.emirate&&analysis?.emirate) toolAnalysis.emirate=analysis.emirate;
+      if(!toolAnalysis.cultivation&&analysis?.cultivation) toolAnalysis.cultivation=analysis.cultivation;
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      return {query:found.query,category:found.categoryKey,products:clientProducts(found.products).slice(0,limit)};
+    },
+    search_knowledge:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      const items=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
+      return {query,items:items.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score}))};
+    },
+    search_site:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const pages=await searchSitePages(query,limit);
+      const items=semanticSiteCandidates(query,pages,limit);
+      return {query,items:items.map(x=>({id:x.id,title:x.title,answer:x.answer,url:x.url,source:x.source,score:x.score}))};
+    },
+    recall_memory:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const hit=await semanticMemoryCandidatesAdaptive(query,state?.v11_memory||{},limit);
+      return {query,engine:hit.engine,items:(hit.items||[]).map(x=>({id:x.id,title:x.title,answer:x.answer,source:x.source,score:x.embedding_score??x.score}))};
+    }
+  };
+
+  try{
+    const result=await runNeuralAgent({
+      message,locale,
+      context:{analysis,state,profile,cognition,graph_context:knowledgeGraphContext(seedGraph),memory_hits:recalled.items||[]},
+      toolHandlers
+    });
+    if(!result?.handled||!result.reply) return null;
+    const products=clientProducts(result.products||[]).slice(0,8);
+    const evidenceItems=(result.evidence||[]).map((x,i)=>({
+      id:String(x?.id||`neural-${i}`),title:String(x?.title||""),answer:String(x?.answer||""),url:String(x?.url||""),
+      source:String(x?.source||"neural_tool"),verified:Boolean(x?.verified),score:Number(x?.score||0)
+    }));
+    const retrieval=fuseRetrieval({message,products,knowledge:evidenceItems.filter(x=>x.source==="github_knowledge"),pages:evidenceItems.filter(x=>x.source==="site_page"),memory:recalled.items||[]});
+    return {
+      payload:{
+        reply:result.reply,display_reply:result.reply,results:products,
+        quick_replies:products.length?salesQuickReplies({category:analysis?.category?.key||state?.category,stage:"consider",results:products,profile}):[],
+        neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||""
+      },
+      source:"neural_agent_v11",results,retrieval,plan
+    };
+  }catch(error){
+    console.error("V11 neural agent fallback:",error?.message);
+    return null;
+  }
 }
 
 function productNeedInTurn(analysis={}){
@@ -393,6 +494,16 @@ export async function POST(request){
     const stage=journeyStage({analysis,profile,state,message});
     const gh=greenhouseLeadReply({profile,state,analysis,stage});
     return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
+  }
+
+  // V11: bounded neural agent with tool calling. If it is not configured or fails,
+  // the proven V10 deterministic/hybrid stack continues unchanged.
+  const neural=await tryV11NeuralAgent({analysis,state,message,history,locale,profile,cognition});
+  if(neural){
+    return await makeResponse({
+      payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
+      source:neural.source,results:neural.results,locale,cognition,retrieval:neural.retrieval,plan:neural.plan
+    });
   }
 
   const productLike=["product_search","recommendation"].includes(analysis.intent) || Boolean(analysis.category) || Boolean(analysis.crop);
