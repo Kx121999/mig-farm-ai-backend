@@ -25,9 +25,14 @@ import { searchProductIndex, productIndexStatus } from "../lib/product_index.js"
 import { clientProducts, commerceCapabilities } from "../lib/commerce.js";
 import { answerGitHubKnowledge, githubKnowledgeStatus } from "../lib/knowledge_loader.js";
 import { enforceResponseQuality, conversationQualityMeta } from "../lib/quality.js";
+import {
+  buildCognitiveFrame, mergeCognitiveMemory, cognitiveProductDecision,
+  cognitiveVisibleSetDecision, cognitiveResponseMeta, updateCognitiveDecisionMemory
+} from "../lib/cognition.js";
+import { evidenceSummary, detectEvidenceRisks } from "../lib/evidence.js";
 
-const VERSION="8.4.0";
-const MODE="github_commerce_conversation_quality_v8";
+const VERSION="9.0.0";
+const MODE="cognitive_knowledge_reasoning_v9";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -134,9 +139,13 @@ function sourceNeedsLearning(source=""){
   return /(fallback|no_live|clarify|repair|off_domain)/.test(String(source||""));
 }
 
-async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar"}){
+async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null}){
   payload=enforceResponseQuality(payload);
+  const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
   const next=updateState(state,analysis,message,source,results,payload);
+  let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
+  cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
+  next.cognitive_memory=cognitiveMemory;
   const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
   const stage=journeyStage({analysis,profile:nextProfile,state:next,message,results});
   const lead=leadScore({analysis,profile:nextProfile,state:next,message,source,results});
@@ -157,6 +166,9 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   }
 
   const quality=conversationQualityMeta({previous:state,next,analysis,message,source,payload,results});
+  const evidence=evidenceSummary({source,payload,results,analysis});
+  const evidenceRisks=detectEvidenceRisks({source,payload,results});
+  const cognitive=cognitiveResponseMeta({frame,memory:cognitiveMemory,decision,evidence,risks:evidenceRisks});
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -184,6 +196,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     },
     commerce:commerceCapabilities(),
     conversation_quality:quality,
+    cognitive,
+    evidence,
     learning_event:sourceNeedsLearning(source)?learning:undefined,
     source
   },status,cors);
@@ -274,6 +288,7 @@ export async function POST(request){
   const analysis=analyzeTurn(message,state,history,locale);
   const signals=extractCustomerSignals(message,analysis,state);
   const profile=mergeCustomerProfile(existingProfile,signals,analysis,state);
+  const cognition=buildCognitiveFrame({message,analysis,state,profile,history});
 
   if(!message) return await makeResponse({payload:{reply:locale==="en"?"Write a message first.":"اكتب سؤالك أول."},status:400,cors,sessionId,state,analysis,signals,profile,message,source:"empty",locale});
 
@@ -319,8 +334,23 @@ export async function POST(request){
   const humanKnowledge=extendedKnowledgeReply(message,locale,{sessionId,profile,state,analysis});
   if(humanKnowledge) return await makeResponse({payload:{reply:humanKnowledge.reply,quick_replies:humanKnowledge.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:humanKnowledge.source,locale});
 
+  const cognitiveMemoryDecision=cognitiveVisibleSetDecision({state,frame:cognition,locale});
+  if(cognitiveMemoryDecision.handled){
+    const cResults=clientProducts(cognitiveMemoryDecision.results||[]);
+    return await makeResponse({
+      payload:{
+        reply:cognitiveMemoryDecision.memory_reply||cognitiveMemoryDecision.display_reply,
+        display_reply:cognitiveMemoryDecision.display_reply,
+        results:cResults,
+        quick_replies:salesQuickReplies({category:state.category,stage:"compare",results:cResults,profile})
+      },
+      cors,sessionId,state,analysis,signals,profile,message,
+      source:"cognitive_visible_set_decision",results:cResults,locale,cognition,decision:cognitiveMemoryDecision
+    });
+  }
+
   const memory=productMemoryReply(analysis,state,locale);
-  if(memory) return await makeResponse({payload:{reply:memory.reply,quick_replies:salesQuickReplies({category:state.category,stage:"compare",results:state.last_products||[],profile})},cors,sessionId,state,analysis,signals,profile,message,source:memory.source,locale});
+  if(memory) return await makeResponse({payload:{reply:memory.reply,quick_replies:salesQuickReplies({category:state.category,stage:"compare",results:state.last_products||[],profile})},cors,sessionId,state,analysis,signals,profile,message,source:memory.source,locale,cognition});
 
   const currentProduct=await resolveCurrentProduct(pageUrl,productContext);
   const current=currentProductReply(message,currentProduct,locale);
@@ -352,11 +382,30 @@ export async function POST(request){
 
     const {products,categoryKey}=await searchCatalog(analysis,state,message,history);
     if(products.length){
-      const cleanResults=clientProducts(products);
-      const reply=formatProductsForMemory(products,locale,`${sessionId}:${message}`);
+      let cleanResults=clientProducts(products);
+      const decision=cognitiveProductDecision({products:cleanResults,frame:cognition,locale});
       const stage=journeyStage({analysis,profile,state,message,results:cleanResults});
+      let reply=formatProductsForMemory(products,locale,`${sessionId}:${message}`);
+      let displayReply="";
+      if(decision.handled){
+        cleanResults=clientProducts(decision.results||[]);
+        reply=decision.memory_reply||decision.display_reply||reply;
+        displayReply=decision.display_reply||"";
+      }
       const quick=salesQuickReplies({category:categoryKey,stage,results:cleanResults,profile});
-      return await makeResponse({payload:{reply,results:cleanResults,quick_replies:quick.length?quick:productSearchQuickReplies(categoryKey,locale,true),brand_scope:categoryKey==="seeds"?"mig_farm_seeds_only":"category_filtered"},cors,sessionId,state,analysis,signals,profile,message,source:categoryKey==="seeds"?"live_migfarm_seeds":"live_category_products",results:cleanResults,locale});
+      return await makeResponse({
+        payload:{
+          reply,
+          ...(displayReply?{display_reply:displayReply}:{}),
+          results:cleanResults,
+          quick_replies:quick.length?quick:productSearchQuickReplies(categoryKey,locale,true),
+          brand_scope:categoryKey==="seeds"?"mig_farm_seeds_only":"category_filtered",
+          ...(decision.handled?{decision_basis:decision.decision_basis,knowledge_gaps:decision.knowledge_gaps}: {})
+        },
+        cors,sessionId,state,analysis,signals,profile,message,
+        source:decision.handled?"cognitive_product_decision":(categoryKey==="seeds"?"live_migfarm_seeds":"live_category_products"),
+        results:cleanResults,locale,cognition,decision:decision.handled?decision:null
+      });
     }
 
     if(categoryKey==="seeds"){
