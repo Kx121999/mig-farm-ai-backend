@@ -1,6 +1,7 @@
+import { adminKnowledgeStatus } from "../lib/admin_knowledge.js";
 import { knowledgeStats } from "../lib/human_knowledge.js";
 
-export function GET(){
+export async function GET(){
   return Response.json({
     ok:true,
     service:"MIG FARM Sales & Knowledge Assistant",
@@ -25,6 +26,6 @@ export function GET(){
       "privacy_safe_learning_telemetry"
     ],
     knowledge:knowledgeStats(),
-    time:new Date().toISOString()
+    time:new Date().toISOString(),knowledge:await adminKnowledgeStatus()
   });
 }
