@@ -1,0 +1,29 @@
+MIG FARM AI V9.0.0 — Cognitive Intelligence Release
+
+هذه ليست زيادة FAQ أو كلمات مفتاحية. هذه طبقة قرار معرفي فوق النظام الحالي.
+
+المحرك الجديد يبني Cognitive Frame لكل رسالة يتضمن:
+- الهدف
+- النية
+- القيود
+- المرجع إلى المنتجات الظاهرة
+- هل الرسالة تصحيح أم تغيير سياق
+- ما المعلومات الناقصة
+- درجة ثقة أولية
+
+ثم يحفظ Cognitive Memory بين الرسائل، ويستخدمها في اختيار المنتجات والميزانية والتوفر.
+
+مصادر المعرفة أصبحت مصنفة حسب قوة الدليل:
+1. Live Store
+2. GitHub Managed Knowledge
+3. Verified Static Knowledge
+4. Site Retrieval
+5. Conversation Context
+6. Clarification / Knowledge Gap
+
+الرد النهائي يرجع metadata جديدة:
+- cognitive
+- evidence
+مع استمرار conversation_quality وكل حقول V8 السابقة.
+
+ملاحظة: cognitive.decision_basis هو ملخص معايير القرار فقط وليس chain-of-thought.

@@ -1,0 +1,42 @@
+MIG FARM AI — V9.0.0 Cognitive Intelligence & Knowledge Reasoning
+
+ارفع محتويات هذه الحزمة على Root مستودع GitHub بنفس المسارات، واستبدل الملفات القديمة عند الطلب.
+
+الملفات الجديدة:
+lib/cognition.js
+lib/evidence.js
+tests/v9_cognitive.mjs
+
+الملفات التي يتم تحديثها:
+lib/dialogue.js
+api/chat.js
+api/health.js
+tests/api_direct.mjs
+package.json
+
+لا يوجد أي تعديل مطلوب داخل Odoo.
+لا يوجد Token جديد مطلوب.
+لا تغيّر data/knowledge.json في هذه المرحلة.
+
+بعد الرفع:
+1) انتظر نجاح Deployment على Vercel.
+2) افتح /api/health وتأكد أن version = 9.0.0 وأن mode = cognitive_knowledge_reasoning_v9.
+3) اختبر داخل الشات:
+   - عايز 2 منتجات طماطم متوفرين تحت 50 درهم
+   - اختارلي أرخص واحد فيهم ويكون متوفر
+   - ميزانيتي 70 درهم وعايز 2 منتجات
+   - لا أقصد طماطم أقصد خيار
+   - مش شرط متوفر
+
+الجديد في V9:
+- Goal Tracking: يفهم هدف العميل وليس الكلمات فقط.
+- Constraint Memory: يتذكر الميزانية والتوفر والمحصول والإمارة وطريقة الزراعة عبر الرسائل.
+- Budget Reasoning: يختار منتجات ضمن ميزانية إجمالية أو حد سعر للمنتج.
+- Visible Set Reasoning: يقرر من المنتجات التي شاهدها العميل فعليًا.
+- Evidence-Aware Confidence: يفرق بين بيانات المتجر الحية والمعرفة الموثقة والاستنتاج والسياق غير المؤكد.
+- Knowledge Gap Detection: يسجل ما ينقصه بدل أن يخترع معلومة.
+- Context Reset & Correction: يمسح القيود القديمة عند تصحيح المستخدم أو تغيير الموضوع الحقيقي.
+- Decision Basis: يحتفظ بمعايير القرار مثل السعر والتوفر والميزانية بدون كشف أي chain-of-thought.
+- Metacognitive Risk Flags: يرصد الثقة الزائدة أو ادعاء سعر/توفر من غير دليل حي.
+
+تم تشغيل Full Regression على V6/V7/V8/V8.1.1/Phase3/Phase4/V9 وجميع الاختبارات PASS.
