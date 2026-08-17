@@ -82,7 +82,7 @@ const risks=detectEvidenceRisks({source:"safe_human_fallback",payload:{reply:"أ
 assert.ok(risks.includes("overconfidence_without_evidence"));
 
 const state=sanitizeState({cognitive_memory:{active_goal:"recommend",constraints:{crop:"tomato",total_budget:100,require_available:true},decision_count:3}});
-assert.equal(state.v,9);
+assert.equal(state.v,10);
 assert.equal(state.cognitive_memory.constraints.crop,"tomato");
 assert.equal(state.cognitive_memory.constraints.total_budget,100);
 assert.equal(state.cognitive_memory.decision_count,3);
