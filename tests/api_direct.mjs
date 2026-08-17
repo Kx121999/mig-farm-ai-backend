@@ -13,8 +13,8 @@ async function ask(message,state={},history=[]){
 }
 
 let r=await ask('هلا');
-assert.equal(r.version,'12.0.0');
-assert.equal(r.mode,'persistent_cognitive_os_neural_agent_v12');
+assert.equal(r.version,'13.0.0');
+assert.equal(r.mode,'autonomous_commerce_executive_v13');
 assert.equal(r.hybrid_brain?.engine,'hybrid_brain_v10');
 assert.match(r.reply,/حياك|هلا|مرحبا/);
 
@@ -34,4 +34,4 @@ const state1=r.conversation_state;
 r=await ask('طماطم',state1,[{role:'user',content:'عندي مزرعة 2000 متر في العين وعايز بيت محمي'},{role:'assistant',content:r.reply}]);
 assert.equal(r.customer_profile.crop,'tomato');
 
-console.log('MIG FARM V12 direct API tests passed');
+console.log('MIG FARM V13 direct API tests passed');

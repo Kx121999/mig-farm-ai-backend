@@ -47,7 +47,7 @@ assert.ok(persistentMemoryCandidates('ايه اللي اخترناه؟',next,5).
 assert.ok(temporalMemoryCandidates('سعر طماطم الشمال',next,5).length>0);
 
 const nh=neuralBrainHealth();
-assert.equal(nh.version,'12.0');
+assert.ok(Number(nh.version)>=12);
 assert.ok(nh.tools.includes('recall_persistent_memory'));
 assert.ok(nh.tools.includes('search_temporal_memory'));
 const ph=persistentStoreHealth();
