@@ -54,9 +54,13 @@ import {
   consolidatePersistentSnapshot, persistentMemoryCandidates, temporalMemoryCandidates,
   cognitiveOSMeta
 } from "../lib/cognitive_os.js";
+import {
+  buildCommerceMission, optimizeLivePortfolio, deterministicComparison, verifyCommerceResponse,
+  groundedCommerceFallback, autonomousCommerceMeta
+} from "../lib/autonomous_commerce.js";
 
-const VERSION="12.0.0";
-const MODE="persistent_cognitive_os_neural_agent_v12";
+const VERSION="13.0.0";
+const MODE="autonomous_commerce_executive_v13";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -178,7 +182,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=12;
+  next.v=13;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
@@ -243,6 +247,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   }
 
   const quality=conversationQualityMeta({previous:state,next,analysis,message,source,payload,results});
+  const autonomousMission=buildCommerceMission({message,analysis,cognition:frame,state:next,profile:nextProfile,locale});
+  const autonomousMeta=autonomousCommerceMeta({mission:autonomousMission});
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -275,9 +281,10 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     evidence,
     hybrid_brain:hybrid,
     cognitive_os:cognitiveOS,
+    autonomous_commerce:autonomousMeta,
     neural_brain:{
       ...neuralBrainHealth(),
-      used:source==="neural_agent_v12",
+      used:source==="neural_agent_v13",
       model_used:neuralModel||undefined,
       response_id:neuralResponseId||undefined,
       tool_trace:neuralTrace,
@@ -319,9 +326,16 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV12NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null}){
+async function tryV13NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
-  if(!shouldUseNeuralAgent({message,analysis,cognition,plan})) return null;
+  const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
+  if(mission?.next_question && ["recommend","bundle","budget_optimize","solution_plan"].includes(mission.kind)){
+    return {
+      payload:{reply:mission.next_question.reply,quick_replies:mission.next_question.quick_replies||[],autonomous_plan:mission.tasks,autonomous_mission:mission.kind},
+      source:"autonomous_clarification_v13",results:[],retrieval:null,plan
+    };
+  }
+  if(!shouldUseNeuralAgent({message,analysis,cognition,plan}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
 
   const recalled=await semanticMemoryCandidatesAdaptive(message,state?.v11_memory||{},6);
   const persistentHits=persistentMemoryCandidates(message,persistentSnapshot,6);
@@ -372,17 +386,52 @@ async function tryV12NeuralAgent({analysis,state,message,history,locale,profile,
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
       const items=temporalMemoryCandidates(query,persistentSnapshot,limit);
       return {query,warning:"historical_observations_not_current_truth",items};
+    },
+    optimize_live_bundle:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      if(!toolAnalysis.category&&analysis?.category) toolAnalysis.category=analysis.category;
+      if(!toolAnalysis.crop&&analysis?.crop) toolAnalysis.crop=analysis.crop;
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      const live=clientProducts(found.products).slice(0,12);
+      const toolMission={...mission,budget_aed:Number(args?.budget_aed)||mission.budget_aed||null,requested_count:Math.max(1,Math.min(4,Number(args?.max_items)||mission.requested_count||3)),require_available:Boolean(args?.require_available)};
+      const portfolio=optimizeLivePortfolio({products:live,mission:toolMission,maxItems:toolMission.requested_count});
+      return {query,products:portfolio.products,portfolio:{total_aed:portfolio.total_aed,within_budget:portfolio.within_budget,decision_basis:portfolio.decision_basis,confidence:portfolio.confidence,evaluated:portfolio.evaluated},alternatives:portfolio.alternatives};
+    },
+    compare_live_options:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(2,Math.min(6,Number(args?.limit)||4));
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      if(!toolAnalysis.category&&analysis?.category) toolAnalysis.category=analysis.category;
+      if(!toolAnalysis.crop&&analysis?.crop) toolAnalysis.crop=analysis.crop;
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      const live=clientProducts(found.products).slice(0,limit);
+      return {query,products:live,comparison:deterministicComparison(live,Array.isArray(args?.criteria)?args.criteria:[])};
+    },
+    prepare_purchase_plan:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      if(!toolAnalysis.category&&analysis?.category) toolAnalysis.category=analysis.category;
+      if(!toolAnalysis.crop&&analysis?.crop) toolAnalysis.crop=analysis.crop;
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      const live=clientProducts(found.products).slice(0,12);
+      const toolMission={...mission,kind:"purchase",budget_aed:Number(args?.budget_aed)||mission.budget_aed||null,requested_count:Math.max(1,Math.min(4,Number(args?.max_items)||mission.requested_count||3))};
+      const portfolio=optimizeLivePortfolio({products:live,mission:toolMission,maxItems:toolMission.requested_count});
+      return {query,products:portfolio.products,purchase_plan:{total_aed:portfolio.total_aed,within_budget:portfolio.within_budget,decision_basis:portfolio.decision_basis,order_placed:false,next_step:"customer_confirmation_or_cart"},alternatives:portfolio.alternatives};
     }
   };
 
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:persistentSnapshot?.journey||null},
+      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:persistentSnapshot?.journey||null,autonomous_mission:mission},
       toolHandlers
     });
     if(!result?.handled||!result.reply) return null;
     const products=clientProducts(result.products||[]).slice(0,8);
+    const portfolio=optimizeLivePortfolio({products,mission,maxItems:mission.requested_count||undefined});
+    const verification=verifyCommerceResponse({reply:result.reply,products,mission,portfolio});
+    const safeReply=verification.ok?result.reply:groundedCommerceFallback({mission,portfolio,products,locale});
     const evidenceItems=(result.evidence||[]).map((x,i)=>({
       id:String(x?.id||`neural-${i}`),title:String(x?.title||""),answer:String(x?.answer||""),url:String(x?.url||""),
       source:String(x?.source||"neural_tool"),verified:Boolean(x?.verified),score:Number(x?.score||0)
@@ -390,16 +439,56 @@ async function tryV12NeuralAgent({analysis,state,message,history,locale,profile,
     const retrieval=fuseRetrieval({message,products,knowledge:evidenceItems.filter(x=>x.source==="github_knowledge"),pages:evidenceItems.filter(x=>x.source==="site_page"),memory:recalled.items||[]});
     return {
       payload:{
-        reply:result.reply,display_reply:result.reply,results:products,
+        reply:safeReply,display_reply:safeReply,results:products,
+        autonomous_plan:mission.tasks,autonomous_mission:mission.kind,autonomous_verification:verification,
+        autonomous_portfolio:portfolio.handled?{total_aed:portfolio.total_aed,within_budget:portfolio.within_budget,decision_basis:portfolio.decision_basis,confidence:portfolio.confidence}:undefined,
         quick_replies:products.length?salesQuickReplies({category:analysis?.category?.key||state?.category,stage:"consider",results:products,profile}):[],
         neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||""
       },
-      source:"neural_agent_v12",results,retrieval,plan
+      source:"neural_agent_v13",results,retrieval,plan
     };
   }catch(error){
-    console.error("V11 neural agent fallback:",error?.message);
+    console.error("V13 autonomous neural fallback:",error?.message);
     return null;
   }
+}
+
+
+async function tryDeterministicAutonomousCommerce({analysis,state,message,history,locale,profile,cognition}){
+  const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
+  if(!["compare","bundle","budget_optimize","solution_plan"].includes(mission.kind)) return null;
+  if(mission.next_question){
+    return {
+      payload:{reply:mission.next_question.reply,quick_replies:mission.next_question.quick_replies||[],autonomous_plan:mission.tasks,autonomous_mission:mission.kind},
+      source:"autonomous_clarification_v13",results:[],mission,portfolio:null,verification:null
+    };
+  }
+  const found=await searchCatalog(analysis,state,message,history);
+  const live=clientProducts(found.products||[]).slice(0,12);
+  if(!live.length) return null;
+  if(mission.kind==="compare"){
+    const comparison=deterministicComparison(live,mission?.comparison_criteria||cognition?.constraints?.comparison_criteria||[]);
+    const rows=comparison.products.slice(0,4);
+    const cheapest=comparison.cheapest;
+    const reply=locale==="en"
+      ?`I verified ${rows.length} live options. ${cheapest?`The lowest visible price is ${cheapest.name} at ${cheapest.price} ${cheapest.currency||"AED"}.`:"Some prices are not visible, so I won't guess."}`
+      :`راجعت ${rows.length} خيارات من المتجر الحي. ${cheapest?`أقل سعر ظاهر حاليًا هو ${cheapest.name} بسعر ${cheapest.price} ${cheapest.currency||"AED"}.`:"بعض الأسعار مش ظاهرة، فمش هخمن."}`;
+    const verification=verifyCommerceResponse({reply,products:rows,mission});
+    return {payload:{reply,display_reply:reply,results:rows,autonomous_plan:mission.tasks,autonomous_mission:mission.kind,autonomous_verification:verification},source:"autonomous_live_compare_v13",results:rows,mission,portfolio:null,verification};
+  }
+  const portfolio=optimizeLivePortfolio({products:live,mission,maxItems:mission.requested_count||undefined});
+  if(!portfolio.handled) return null;
+  const reply=groundedCommerceFallback({mission,portfolio,products:portfolio.products,locale});
+  const verification=verifyCommerceResponse({reply,products:portfolio.products,mission,portfolio});
+  return {
+    payload:{
+      reply,display_reply:reply,results:portfolio.products,
+      autonomous_plan:mission.tasks,autonomous_mission:mission.kind,autonomous_verification:verification,
+      autonomous_portfolio:{total_aed:portfolio.total_aed,within_budget:portfolio.within_budget,decision_basis:portfolio.decision_basis,confidence:portfolio.confidence,evaluated:portfolio.evaluated},
+      decision_basis:portfolio.decision_basis
+    },
+    source:"autonomous_portfolio_v13",results:portfolio.products,mission,portfolio,verification
+  };
 }
 
 function productNeedInTurn(analysis={}){
@@ -545,13 +634,20 @@ export async function POST(request){
     return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
   }
 
-  // V12: persistent cognitive OS + bounded neural tool-calling agent. If persistence or neural services fail,
-  // the proven deterministic/hybrid stack continues unchanged.
-  const neural=await tryV12NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute});
+  // V13: autonomous commerce executive + bounded neural tool-calling. Persistence is optional; live commerce grounding is mandatory for current product decisions.
+  const neural=await tryV13NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
       source:neural.source,results:neural.results,locale,cognition,retrieval:neural.retrieval,plan:neural.plan
+    });
+  }
+
+  const autonomous=await tryDeterministicAutonomousCommerce({analysis,state,message,history,locale,profile,cognition});
+  if(autonomous){
+    return await makeResponse({
+      payload:autonomous.payload,cors,sessionId,state,analysis,signals,profile,message,source:autonomous.source,
+      results:autonomous.results,locale,cognition
     });
   }
 

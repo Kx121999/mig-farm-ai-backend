@@ -9,35 +9,38 @@ import { knowledgeGraphHealth } from "../lib/knowledge_graph.js";
 import { neuralBrainHealth } from "../lib/neural_agent.js";
 import { persistentStoreHealth } from "../lib/persistent_store.js";
 import { cognitiveOSHealth } from "../lib/cognitive_os.js";
+import { autonomousCommerceHealth } from "../lib/autonomous_commerce.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM Persistent Cognitive Commerce & Knowledge OS",
-    version:"12.0.0",
-    mode:"persistent_cognitive_os_neural_agent_v12",
+    service:"MIG FARM Autonomous Commerce Intelligence OS",
+    version:"13.0.0",
+    mode:"autonomous_commerce_executive_v13",
     features:[
-      "persistent_bounded_customer_memory","memory_consolidation","temporal_product_memory","persistent_knowledge_graph","retrieval_router",
-      "cross_session_preference_hydration","knowledge_gap_queue","journey_memory","temporal_conflict_detection","privacy_bounded_retention",
-      "bounded_neural_tool_calling","responses_api_agent_loop","live_catalog_tool","verified_knowledge_tool","site_retrieval_tool","semantic_memory_tool",
-      "persistent_memory_tool","temporal_memory_tool","adaptive_embedding_rerank","ephemeral_response_graph","cross_turn_entity_relations",
+      "autonomous_commerce_mission_decomposition","single_question_clarification_gate","multi_step_commerce_orchestration",
+      "live_portfolio_optimizer","budget_constrained_bundle_search","deterministic_live_comparison","grounded_price_claim_guard",
+      "agricultural_dosage_claim_guard","deterministic_safe_finalizer","purchase_plan_tool","commerce_tool_budgeting",
+      "counterfactual_alternatives","bounded_neural_tool_calling","responses_api_agent_loop","live_catalog_tool","verified_knowledge_tool",
+      "site_retrieval_tool","semantic_memory_tool","persistent_memory_optional","temporal_memory_optional","adaptive_embedding_rerank",
       "prompt_injection_resistant_tool_policy","deterministic_v10_fallback","multi_step_planner","query_hypotheses","hybrid_semantic_rag",
-      "weighted_source_fusion","episodic_memory","preference_memory","self_critique_before_response","claim_risk_guard",
-      "cross_source_conflict_detection","evidence_weighted_confidence","knowledge_gap_persistence","goal_tracking","constraint_memory",
-      "budget_reasoning","multi_constraint_product_selection","visible_set_reasoning","decision_basis","context_reset_and_correction",
-      "customer_profile_memory","sales_journey_engine","lead_scoring","whatsapp_handoff_summary","conversation_repair","hard_context_switching",
-      "pairwise_product_comparison","response_deduplication","conversation_quality_score","multi_intent_shipping_products",
-      "live_odoo_price_and_stock","mig_farm_seeds_only","page_product_context","safe_pesticide_and_fertilizer_guidance",
-      "github_managed_knowledge","privacy_safe_learning_telemetry"
+      "weighted_source_fusion","self_critique_before_response","claim_risk_guard","cross_source_conflict_detection",
+      "evidence_weighted_confidence","goal_tracking","constraint_memory","budget_reasoning","multi_constraint_product_selection",
+      "visible_set_reasoning","decision_basis","context_reset_and_correction","customer_profile_memory","sales_journey_engine",
+      "lead_scoring","whatsapp_handoff_summary","conversation_repair","hard_context_switching","pairwise_product_comparison",
+      "response_deduplication","conversation_quality_score","multi_intent_shipping_products","live_odoo_price_and_stock",
+      "mig_farm_seeds_only","page_product_context","safe_pesticide_and_fertilizer_guidance","github_managed_knowledge",
+      "privacy_safe_learning_telemetry"
     ],
     knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth()},
     cognition:cognitionHealth(),
     hybrid_brain:hybridBrainHealth(),
+    autonomous_commerce:autonomousCommerceHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:persistence,
+    persistent_store:{...persistence,required_for_v13:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
