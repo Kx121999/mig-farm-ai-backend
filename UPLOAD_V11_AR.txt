@@ -1,0 +1,26 @@
+رفع V11 على GitHub
+==================
+
+ارفع الملفات الموجودة داخل ZIP إلى Root المشروع بنفس المسارات واعمل Replace للملفات القديمة.
+
+الملفات الجديدة/المعدلة:
+api/chat.js
+api/health.js
+lib/dialogue.js
+lib/vector_memory.js
+lib/knowledge_graph.js
+lib/neural_agent.js
+package.json
+tests/v11_neural.mjs
+tests/api_direct.mjs
+
+لا يوجد تعديل مطلوب في Odoo.
+لا يوجد تعديل مطلوب في GTM.
+لا تضع أي API key داخل GitHub أو داخل الملفات.
+
+بعد نشر Vercel افتح:
+https://mig-farm-ai-backend.vercel.app/api/health
+
+المتوقع:
+version = 11.0.0
+mode = neural_hybrid_agent_vector_memory_graph_v11

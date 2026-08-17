@@ -1,0 +1,56 @@
+MIG FARM AI V11.0 — Neural Hybrid Agent
+========================================
+
+المرحلة الجديدة تضيف فوق V10:
+
+1) Neural Tool-Calling Agent
+- مبني فوق OpenAI Responses API عند تفعيل OPENAI_API_KEY.
+- Agent loop محدود وآمن حتى 3 جولات افتراضيًا.
+- أدوات داخلية مسموحة فقط:
+  search_catalog
+  search_knowledge
+  search_site
+  recall_memory
+- أي سعر أو مخزون أو ترشيح منتج يجب أن يرجع للمتجر الحي.
+- المحتوى المسترجع يعامل كبيانات وليس كتعليمات للحماية من prompt injection.
+
+2) Semantic Memory V11
+- ذاكرة محادثة دلالية bounded حتى 28 memory atoms.
+- تحفظ الهدف والقيود والقرارات والفجوات المعرفية.
+- Local feature-hash embeddings + cosine similarity بدون تكلفة خارجية.
+- دعم اختياري لإعادة ترتيب الذاكرة باستخدام OpenAI embeddings إذا OPENAI_EMBEDDINGS=on.
+
+3) Ephemeral Knowledge Graph
+- يبني graph داخلي لكل طلب يربط:
+  العميل -> الهدف -> المحصول -> القسم -> الإمارة -> طريقة الزراعة -> المنتجات -> الأدلة -> الذاكرة
+- أقصى 32 node و48 edge.
+- لا يتم تخزين graph بشكل دائم.
+
+4) Safe V10 Fallback
+- إذا OpenAI API غير مفعّل أو فشل أو انتهت المهلة، V10 يواصل العمل بدون توقف.
+- كل قدرات V6/V7/V8/V9/V10 محفوظة.
+
+5) Health
+version: 11.0.0
+mode: neural_hybrid_agent_vector_memory_graph_v11
+
+عند عدم وجود OPENAI_API_KEY:
+neural_brain.configured = false
+provider = deterministic_v10_fallback
+
+عند إضافة المفتاح:
+neural_brain.configured = true
+provider = openai
+
+اختبارات الإصدار:
+V6 PASS
+V7 PASS
+V8 Core PASS
+V8 Phase2 PASS
+V8.1.1 PASS
+V8 Phase3 PASS
+V8 Phase4 PASS
+V9 PASS
+V10 PASS
+V11 PASS
+Direct API PASS

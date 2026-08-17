@@ -1,0 +1,21 @@
+تفعيل Neural Brain الحقيقي في Vercel
+=====================================
+
+من Vercel Project Settings > Environment Variables أضف:
+
+OPENAI_API_KEY = مفتاح OpenAI API الخاص بالمشروع
+
+اختياري:
+OPENAI_MODEL = gpt-5.6
+NEURAL_AGENT_MODE = complex
+NEURAL_MAX_ROUNDS = 3
+NEURAL_TIMEOUT_MS = 9000
+
+ولتشغيل Embedding rerank الخارجي اختياريًا:
+OPENAI_EMBEDDINGS = on
+OPENAI_EMBEDDING_MODEL = text-embedding-3-small
+
+مهم:
+- لا ترفع OPENAI_API_KEY إلى GitHub.
+- بعد إضافة/تعديل Environment Variables اعمل Redeploy.
+- لو لم تضف المفتاح، V11 يظل آمنًا ويعمل بمحرك V10 fallback + Semantic Memory/Knowledge Graph المحليين.

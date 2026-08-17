@@ -1,10 +1,10 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "10.0.0",
+  "version": "11.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM hybrid cognitive sales, semantic retrieval, planning, critic and knowledge reasoning assistant for Odoo",
+  "description": "MIG FARM neural hybrid sales and knowledge agent with bounded tool calling, semantic memory, knowledge graph, cognitive reasoning and deterministic fallback",
   "scripts": {
-    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/v8_phase4.mjs && node tests/v9_cognitive.mjs && node tests/v10_hybrid.mjs && node tests/api_direct.mjs"
+    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/v8_phase4.mjs && node tests/v9_cognitive.mjs && node tests/v10_hybrid.mjs && node tests/v11_neural.mjs && node tests/api_direct.mjs"
   }
 }
