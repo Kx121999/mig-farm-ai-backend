@@ -23,7 +23,7 @@ import { buildLearningEvent, logLearningEvent, assistantMeta } from "../lib/lear
 import { readServerSession, writeServerSession, mergeSessionState, mergeSessionProfile, sessionPersistenceMode } from "../lib/session_store.js";
 import { searchProductIndex, productIndexStatus } from "../lib/product_index.js";
 import { clientProducts, commerceCapabilities } from "../lib/commerce.js";
-import { answerAdminKnowledge, adminKnowledgeStatus } from "../lib/admin_knowledge.js";
+import { answerGitHubKnowledge, githubKnowledgeStatus } from "../lib/knowledge_loader.js";
 
 const VERSION="7.0.0";
 const MODE="free_sales_knowledge_agent_v7";
@@ -176,7 +176,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     runtime:{
       session_persistence:sessionPersistenceMode(),
       product_index:productIndexStatus(),
-      knowledge:await adminKnowledgeStatus()
+      knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
     learning_event:sourceNeedsLearning(source)?learning:undefined,
@@ -275,10 +275,10 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V8 Phase 3: admin-managed verified knowledge can override generic rules.
+  // V8 Phase 3 GitHub Edition: repository-managed verified knowledge can override generic rules.
   // It is deliberately checked after core request validation/rate limiting and before static FAQ routing.
   try{
-    const managed=await answerAdminKnowledge(message,{locale,analysis,state,profile});
+    const managed=answerGitHubKnowledge(message,{locale,analysis,state,profile});
     if(managed){
       return await makeResponse({
         payload:{
@@ -289,11 +289,11 @@ export async function POST(request){
           knowledge_revision:managed.revision
         },
         cors,sessionId,state,analysis,signals,profile,message,
-        source:"admin_knowledge",locale
+        source:"github_knowledge",locale
       });
     }
   }catch(error){
-    console.error("admin knowledge failed",error?.message);
+    console.error("github knowledge failed",error?.message);
   }
 
   // Repair misunderstandings before routing a vague "wrong / I mean..." message.

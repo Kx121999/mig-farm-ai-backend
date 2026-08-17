@@ -1,4 +1,4 @@
-import { adminKnowledgeStatus } from "../lib/admin_knowledge.js";
+import { githubKnowledgeStatus } from "../lib/knowledge_loader.js";
 import { knowledgeStats } from "../lib/human_knowledge.js";
 
 export async function GET(){
@@ -26,6 +26,6 @@ export async function GET(){
       "privacy_safe_learning_telemetry"
     ],
     knowledge:knowledgeStats(),
-    time:new Date().toISOString(),knowledge:await adminKnowledgeStatus()
+    time:new Date().toISOString(),knowledge:githubKnowledgeStatus()
   });
 }
