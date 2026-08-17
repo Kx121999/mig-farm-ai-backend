@@ -1,0 +1,26 @@
+MIG FARM AI V13 MAX — Autonomous Commerce Intelligence OS
+Version: 13.0.0
+Mode: autonomous_commerce_executive_v13
+
+أهم التطويرات:
+- Autonomous Commerce Mission Decomposition
+- Multi-step Commerce Orchestration
+- سؤال توضيحي واحد فقط عند نقص معلومة حرجة
+- Live Portfolio Optimizer
+- Budget-constrained Bundle Search
+- Verified Live Comparison
+- 3 أدوات Agent جديدة:
+  optimize_live_bundle
+  compare_live_options
+  prepare_purchase_plan
+- Tool Budgeting لمنع دوران الـAgent بلا داعٍ
+- Grounded Price Claim Guard: يمنع ذكر سعر غير موجود في النتائج الحية
+- Agricultural Dosage Claim Guard: يمنع جرعات غير موثقة
+- Deterministic Safe Finalizer: لو الرد العصبي فيه ادعاء غير موثق يتم استبداله برد مبني فقط على البيانات الحية
+- Counterfactual Alternatives للبدائل
+- Purchase-stage orchestration بدون ادعاء أن الطلب تم تنفيذه
+- Persistence/Redis غير مطلوب لتشغيل V13
+
+لا يوجد تعديل مطلوب في Odoo أو GTM.
+لا يوجد Environment Variable جديد مطلوب.
+OPENAI_API_KEY الحالي يكفي لتشغيل Neural Agent.

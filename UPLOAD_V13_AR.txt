@@ -1,0 +1,21 @@
+طريقة الرفع:
+1) فك ضغط الملف.
+2) ارفع محتويات المجلد مباشرة إلى Root مستودع GitHub المستخدم في Vercel.
+3) حافظ على نفس المسارات: api/ و lib/ و tests/ و package.json.
+4) اعمل Replace للملفات الموجودة عند طلب GitHub ذلك.
+5) انتظر Vercel Deployment.
+6) افتح /api/health.
+
+المتوقع:
+version = 13.0.0
+mode = autonomous_commerce_executive_v13
+
+autonomous_commerce.version = 13.0
+neural_brain.version = 13.0
+neural_brain.tools يجب أن تحتوي على:
+optimize_live_bundle
+compare_live_options
+prepare_purchase_plan
+
+ملاحظة:
+persistent_store.configured يمكن أن يظل false. هذا طبيعي ولا يمنع V13.
