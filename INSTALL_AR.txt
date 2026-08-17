@@ -1,44 +1,28 @@
-MIG FARM AI V7 — SALES & KNOWLEDGE AGENT
+MIG FARM V8 - PHASE 1 (STAGED UNDER V7)
 
-النسخة دي تنقل المساعد من شات بحث ذكي إلى موظف مبيعات رقمي داخل نطاق MIG FARM.
+الهدف:
+- تحسين ترتيب نتائج المنتجات بدون تغيير واجهة الشات الحالية.
+- جمع Metrics مجمعة بدون تخزين نص رسائل العملاء.
+- إضافة Endpoint داخلي محمي للمقاييس.
+- عدم تغيير VERSION الظاهر للعميل قبل نجاح الاختبارات النهائية.
 
-أهم الإضافات:
-- Customer Profile Memory
-- Sales Journey Engine
-- Lead Score / Hot-Warm-Cold
-- سؤال واحد في كل مرة بدل استجواب العميل
-- ملخص جاهز للواتساب عند التحويل للفريق
-- فهم التصحيح: غلط / مش ده / قصدي
-- فهم Product + Shipping في نفس الرسالة
-- قاعدة معرفة أوسع عن MIG FARM والمنتجات والمصطلحات الزراعية
-- الأسعار والتوفر Live من Odoo فقط
-- بذور MIG FARM فقط عند سؤال العميل عن البذور
-- Learning Telemetry بدون تسجيل الرسالة الخام أو بيانات شخصية
+ارفع بالترتيب:
+1) lib/ranker.js          (ملف جديد)
+2) lib/metrics.js         (ملف جديد)
+3) استبدل lib/catalog.js
+4) استبدل lib/learning.js
+5) api/metrics.js         (ملف جديد)
+6) tests/v8_core.mjs      (ملف جديد)
 
-ترتيب الرفع الآمن على GitHub:
-1) lib/brain.js
-2) lib/dialogue.js
-3) lib/catalog.js
-4) lib/customer.js
-5) lib/sales.js
-6) lib/human_knowledge.js
-7) lib/learning.js
-8) api/chat.js
-9) api/health.js
-10) package.json
+لا تعدل api/chat.js ولا api/health.js في هذه المرحلة.
 
-بعد نشر V7:
-- افتح /api/health وتأكد من version 7.0.0
-- بعد ذلك استبدل Odoo View بملف odoo/MIG_FARM_AI_CHAT_UI_V7_2.txt
+بعد الرفع:
+- V7 يظل ظاهرًا للمستخدم.
+- الـRanking الجديد يعمل تلقائيًا لأن catalog.js يستدعي ranker.js.
+- الـMetrics تبدأ تلقائيًا لأن learning.js يسجلها.
+- /api/metrics لن يعرض أي بيانات إلا بعد إضافة Environment Variable:
+  MIG_METRICS_TOKEN=<secret value>
 
-اختبارات مقترحة بعد النشر:
-1) عندكم بذور؟
-2) متوفر أسمدة
-3) عندكم بذور طماطم وتوصلون العين؟
-4) رشحلي بذور فلفل
-5) مكشوف
-6) العين
-7) الأرخص فيهم؟
-8) أبغي أطلب
-9) غلط مش ده قصدي أسمدة
-10) عندي مزرعة 2000 متر في العين وعايز بيت محمي
+مهم:
+الـMetrics Runtime aggregate داخل Vercel serverless، لذلك قد تُصفّر عند Cold Start.
+هي مناسبة الآن لمراقبة الاتجاهات والاختبار، وليست Database دائمة.
