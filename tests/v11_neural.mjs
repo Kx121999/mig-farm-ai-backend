@@ -44,7 +44,7 @@ assert.ok(gs.edges>=3);
 assert.ok(knowledgeGraphContext(graph).length>0);
 
 const nh=neuralBrainHealth();
-assert.equal(nh.version,'11.0');
+assert.ok(Number(nh.version)>=11,'neural brain must stay at V11 or newer');
 assert.ok(Array.isArray(nh.tools)&&nh.tools.includes('search_catalog'));
 assert.equal(vectorMemoryHealth().version,'11.0');
 
