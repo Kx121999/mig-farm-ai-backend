@@ -1,0 +1,45 @@
+MIG FARM AI — V10 Hybrid Brain
+==============================
+
+النسخة: 10.0.0
+الوضع: hybrid_brain_rag_planner_critic_v10
+
+طريقة الرفع:
+1) افتح Repository الخاص بـ mig-farm-ai-backend على GitHub.
+2) ارفع محتويات هذا ZIP على ROOT مباشرة بنفس المسارات.
+3) وافق على Replace/Overwrite للملفات الموجودة.
+4) لا تضع الملفات داخل مجلد V10 إضافي.
+5) انتظر Vercel حتى ينتهي Deployment.
+
+المسارات التي يتم تحديثها/إضافتها:
+- api/chat.js
+- api/health.js
+- lib/dialogue.js
+- lib/semantic_rag.js      (جديد)
+- lib/hybrid_brain.js      (جديد)
+- tests/v10_hybrid.mjs     (جديد)
+- tests/v9_cognitive.mjs
+- tests/api_direct.mjs
+- package.json
+
+لا تحتاج:
+- أي تعديل في Odoo
+- تغيير رابط API
+- Token جديد
+- قاعدة بيانات Vector خارجية
+- خدمة Embeddings خارجية
+
+بعد الرفع:
+افتح /api/health وتأكد من:
+version: 10.0.0
+mode: hybrid_brain_rag_planner_critic_v10
+
+اختبارات سريعة للشات:
+1) رشحلي بذور طماطم متوفرة وأرخص حاجة
+2) ميزانيتي 80 درهم وعايز اتنين
+3) الأول ولا التاني وليه؟
+4) لا قصدي خيار مش طماطم
+5) كم التوصيل للعين؟
+6) سؤال معرفة بصياغة غير حرفية عن فروع أو شحن أو سياسة موجودة في GitHub Knowledge
+
+V10 يحافظ على كل V6/V7/V8/V9 ويضيف التخطيط والـHybrid RAG والذاكرة الحلقية والنقد الذاتي.

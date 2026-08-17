@@ -1,0 +1,22 @@
+MIG FARM AI V10 — Hybrid Brain / Semantic RAG / Planner / Critic
+================================================================
+
+ما الجديد:
+- Multi-Step Planner: يحول السؤال إلى خطة تنفيذ داخلية قبل الإجابة.
+- Query Hypotheses: يعيد صياغة هدف البحث داخليًا باستخدام السياق والمحصول والقسم والإمارة.
+- Hybrid Semantic RAG: دمج GitHub Knowledge + صفحات الموقع + المنتجات الحية + الذاكرة.
+- Retrieval Fusion: ترتيب المصادر بمزيج fuzzy tokens + Arabic normalization + character trigrams + concept expansion + weighted RRF.
+- Episodic Memory: يحتفظ بالتفضيلات والقرارات السابقة والفجوات المعرفية بدون تخزين الرسائل الخام داخل الذاكرة الهيكلية.
+- Preference Memory: الإمارة وطريقة الزراعة والميزانية وتفضيل السعر/التوفر تستمر بين الأدوار.
+- Self-Critic: فحص الرد قبل الإرجاع للعميل لاكتشاف الثقة الزائدة والـsuperlatives والادعاءات غير المسندة.
+- Claim Guard: يخفف الادعاءات المطلقة عندما لا تكون الأدلة كافية.
+- Cross-Source Conflict Detection: يرصد احتمالات التضارب بين بيانات المتجر والمصادر الأخرى.
+- Evidence Weighted Confidence: الثقة النهائية تتأثر بنوع الدليل والنقد وجودة الاسترجاع.
+- Knowledge Gap Persistence: يتذكر ما لم نكن نملك دليلاً كافيًا عليه بدل إعادة اختراعه في الرد التالي.
+- State Schema V10: conversation_state أصبح يحتفظ بـ hybrid_memory مع cognitive_memory.
+
+سياسة المصدر:
+Live Store > Verified GitHub Knowledge > Site Retrieval > Conversation Inference
+
+مهم:
+هذه النسخة لا تعتمد على Vector DB أو API مدفوع للـEmbeddings. طبقة الاسترجاع هجينة محلية وسريعة ومصممة للعمل فوق البنية الحالية بدون تغيير Odoo.
