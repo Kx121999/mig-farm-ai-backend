@@ -46,9 +46,17 @@ import {
 import {
   runNeuralAgent, shouldUseNeuralAgent, neuralBrainHealth
 } from "../lib/neural_agent.js";
+import {
+  readPersistentSnapshot, writePersistentSnapshot, recordKnowledgeGaps, persistentStoreHealth
+} from "../lib/persistent_store.js";
+import {
+  hydrateStateFromPersistent, hydrateProfileFromPersistent, buildRetrievalRoute,
+  consolidatePersistentSnapshot, persistentMemoryCandidates, temporalMemoryCandidates,
+  cognitiveOSMeta
+} from "../lib/cognitive_os.js";
 
-const VERSION="11.0.0";
-const MODE="neural_hybrid_agent_vector_memory_graph_v11";
+const VERSION="12.0.0";
+const MODE="persistent_cognitive_os_neural_agent_v12";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -170,7 +178,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=11;
+  next.v=12;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
@@ -191,6 +199,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   next.v11_memory=semanticMemory;
   const semanticHits=semanticMemoryCandidates(message,semanticMemory,6);
   const responseGraph=buildKnowledgeGraph({message,analysis,state:next,profile,results,retrieval:retrievalBundle,memory:semanticHits});
+  const priorPersistent=state?.__persistent_snapshot||{};
+  const retrievalRoute=state?.__v12_route||buildRetrievalRoute({message,analysis,cognition:frame,persistent:priorPersistent});
   const neuralTrace=Array.isArray(payload?.neural_trace)?payload.neural_trace.slice(0,12):[];
   const neuralModel=String(payload?.neural_model||"");
   const neuralResponseId=String(payload?.neural_response_id||"");
@@ -211,6 +221,21 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   next.lead_score=lead.score;
   next.lead_temperature=lead.temperature;
   next.last_handoff_summary=handoffSummary.slice(0,1500);
+
+  const persistentSnapshot=consolidatePersistentSnapshot({
+    previous:priorPersistent,state:next,profile:nextProfile,analysis,message,source,results,responseGraph,decision,route:retrievalRoute
+  });
+  const persistentHits=persistentMemoryCandidates(message,persistentSnapshot,6);
+  let persistenceResult={persisted:false,reason:"not_attempted"};
+  try{ persistenceResult=await writePersistentSnapshot(sessionId,persistentSnapshot); }
+  catch(error){ persistenceResult={persisted:false,reason:String(error?.message||"persist_failed").slice(0,160)}; }
+  const currentGapSet=[...(Array.isArray(decision?.knowledge_gaps)?decision.knowledge_gaps:[]),...(Array.isArray(payload?.knowledge_gaps)?payload.knowledge_gaps:[])].map(x=>String(x?.text||x||"").slice(0,220)).filter(Boolean);
+  if(sourceNeedsLearning(source) && !currentGapSet.length){
+    const unresolved=["unresolved",analysis?.intent||"unknown",analysis?.category?.key||next?.category||"",analysis?.crop?.key||next?.crop||""].filter(Boolean).join(":");
+    currentGapSet.push(unresolved);
+  }
+  if(currentGapSet.length){ try{ await recordKnowledgeGaps([...new Set(currentGapSet)].slice(0,5)); }catch{} }
+  const cognitiveOS=cognitiveOSMeta({snapshot:persistentSnapshot,route:retrievalRoute,persisted:persistenceResult.persisted,persistence_reason:persistenceResult.reason,persistent_hits:persistentHits.length});
 
   let actions=uniqActions(payload.suggested_actions||payload.actions||[]);
   if((stage==="ready"||stage==="handoff"||lead.temperature==="hot") && !actions.some(a=>a.type==="whatsapp")){
@@ -240,6 +265,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     assistant_meta:meta,
     runtime:{
       session_persistence:sessionPersistenceMode(),
+      persistent_cognitive_store:persistentStoreHealth(),
       product_index:productIndexStatus(),
       knowledge:githubKnowledgeStatus()
     },
@@ -248,9 +274,10 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     cognitive,
     evidence,
     hybrid_brain:hybrid,
+    cognitive_os:cognitiveOS,
     neural_brain:{
       ...neuralBrainHealth(),
-      used:source==="neural_agent_v11",
+      used:source==="neural_agent_v12",
       model_used:neuralModel||undefined,
       response_id:neuralResponseId||undefined,
       tool_trace:neuralTrace,
@@ -292,12 +319,15 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV11NeuralAgent({analysis,state,message,history,locale,profile,cognition}){
+async function tryV12NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   if(!shouldUseNeuralAgent({message,analysis,cognition,plan})) return null;
 
   const recalled=await semanticMemoryCandidatesAdaptive(message,state?.v11_memory||{},6);
-  const seedGraph=buildKnowledgeGraph({message,analysis,state,profile,results:state?.visible_products||[],memory:recalled.items||[]});
+  const persistentHits=persistentMemoryCandidates(message,persistentSnapshot,6);
+  const temporalHits=temporalMemoryCandidates(message,persistentSnapshot,6);
+  const seedGraph=buildKnowledgeGraph({message,analysis,state,profile,results:state?.visible_products||[],memory:[...(recalled.items||[]),...persistentHits]});
+  const graphContext=[...knowledgeGraphContext(persistentSnapshot?.graph||{}),...knowledgeGraphContext(seedGraph)].slice(0,20);
 
   const toolHandlers={
     search_catalog:async args=>{
@@ -330,13 +360,25 @@ async function tryV11NeuralAgent({analysis,state,message,history,locale,profile,
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
       const hit=await semanticMemoryCandidatesAdaptive(query,state?.v11_memory||{},limit);
       return {query,engine:hit.engine,items:(hit.items||[]).map(x=>({id:x.id,title:x.title,answer:x.answer,source:x.source,score:x.embedding_score??x.score}))};
+    },
+    recall_persistent_memory:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const items=persistentMemoryCandidates(query,persistentSnapshot,limit);
+      return {query,engine:"persistent_feature_hash",items};
+    },
+    search_temporal_memory:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const items=temporalMemoryCandidates(query,persistentSnapshot,limit);
+      return {query,warning:"historical_observations_not_current_truth",items};
     }
   };
 
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{analysis,state,profile,cognition,graph_context:knowledgeGraphContext(seedGraph),memory_hits:recalled.items||[]},
+      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:persistentSnapshot?.journey||null},
       toolHandlers
     });
     if(!result?.handled||!result.reply) return null;
@@ -352,7 +394,7 @@ async function tryV11NeuralAgent({analysis,state,message,history,locale,profile,
         quick_replies:products.length?salesQuickReplies({category:analysis?.category?.key||state?.category,stage:"consider",results:products,profile}):[],
         neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||""
       },
-      source:"neural_agent_v11",results,retrieval,plan
+      source:"neural_agent_v12",results,retrieval,plan
     };
   }catch(error){
     console.error("V11 neural agent fallback:",error?.message);
@@ -409,14 +451,21 @@ export async function POST(request){
   const history=normalizeHistory(body?.history);
   const productContext=normalizeProductContext(body?.product_context);
   const serverSession=await readServerSession(sessionId);
+  const persistentRead=await readPersistentSnapshot(sessionId);
   const mergedIncomingState=mergeSessionState(serverSession,body?.conversation_state);
-  const state=mergeState(mergedIncomingState,history);
+  const hydratedIncomingState=hydrateStateFromPersistent(mergedIncomingState,persistentRead.snapshot);
+  const state=mergeState(hydratedIncomingState,history);
+  state.__persistent_snapshot=persistentRead.snapshot;
+  state.__persistent_read={persisted:persistentRead.persisted,reason:persistentRead.reason};
   const mergedIncomingProfile=mergeSessionProfile(serverSession,body?.conversation_state?.customer_profile||body?.customer_profile);
-  const existingProfile=sanitizeCustomerProfile(mergedIncomingProfile);
+  const persistentProfile=hydrateProfileFromPersistent(mergedIncomingProfile,persistentRead.snapshot);
+  const existingProfile=sanitizeCustomerProfile(persistentProfile);
   const analysis=analyzeTurn(message,state,history,locale);
   const signals=extractCustomerSignals(message,analysis,state);
   const profile=mergeCustomerProfile(existingProfile,signals,analysis,state);
   const cognition=buildCognitiveFrame({message,analysis,state,profile,history});
+  const retrievalRoute=buildRetrievalRoute({message,analysis,cognition,persistent:persistentRead.snapshot});
+  state.__v12_route=retrievalRoute;
 
   if(!message) return await makeResponse({payload:{reply:locale==="en"?"Write a message first.":"اكتب سؤالك أول."},status:400,cors,sessionId,state,analysis,signals,profile,message,source:"empty",locale});
 
@@ -496,9 +545,9 @@ export async function POST(request){
     return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
   }
 
-  // V11: bounded neural agent with tool calling. If it is not configured or fails,
-  // the proven V10 deterministic/hybrid stack continues unchanged.
-  const neural=await tryV11NeuralAgent({analysis,state,message,history,locale,profile,cognition});
+  // V12: persistent cognitive OS + bounded neural tool-calling agent. If persistence or neural services fail,
+  // the proven deterministic/hybrid stack continues unchanged.
+  const neural=await tryV12NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
@@ -559,7 +608,7 @@ export async function POST(request){
   try{ pages=await searchSitePages(message,7); }catch(error){ console.error("site search failed",error?.message); }
   const knowledgeCandidates=semanticKnowledgeCandidates(message,{locale,analysis,state,profile,cognition},6);
   const siteCandidates=semanticSiteCandidates(message,pages,7);
-  const memoryCandidates=episodicMemoryCandidates(state?.hybrid_memory||{});
+  const memoryCandidates=[...episodicMemoryCandidates(state?.hybrid_memory||{}),...persistentMemoryCandidates(message,persistentRead.snapshot,6)];
   const hybridRetrieval=fuseRetrieval({message,knowledge:knowledgeCandidates,pages:siteCandidates,memory:memoryCandidates});
   const hybridAnswer=composeHybridKnowledgeAnswer(hybridRetrieval,locale);
   if(hybridAnswer){
