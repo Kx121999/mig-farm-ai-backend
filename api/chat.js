@@ -1,2885 +1,318 @@
+import { searchProducts, searchSitePages, siteOrigin, fetchProduct } from "../lib/site.js";
+import { cleanText, safeLocale, safePageUrl, jsonResponse, normalizeAr, tokenize } from "../lib/utils.js";
+import { BUSINESS, CATEGORIES, GREENHOUSE_KNOWLEDGE, TONE } from "../lib/brain.js";
 import {
-  searchProducts,
-  searchSitePages,
-  siteOrigin,
-  fetchProduct,
-  getSitemapUrls
-} from "../lib/site.js";
-
-import { formatProducts, extractPageAnswer } from "../lib/emirati.js";
-
+  analyzeTurn, mergeState, updateState, directReply, productMemoryReply,
+  ambiguousContextReply, isClearlyOffDomain, pick
+} from "../lib/dialogue.js";
 import {
-  BUSINESS,
-  directKnowledgeReply,
-  historyReply,
-  isProductIntent,
-  isProductFollowup,
-  currentProductReply,
-  productPostFilter,
-  productClarificationReply
-} from "../lib/knowledge.js";
-
+  buildSearchQuery, filterRankProducts, formatProductsForMemory,
+  knownSeedFallback, productSearchQuickReplies, discoverMigFarmSeeds,
+  mergeProducts, knownCategoryFallback
+} from "../lib/catalog.js";
 import {
-  sanitizeConversationState,
-  mergeConversationState,
-  contextualRewrite,
-  ambiguityReply,
-  isClearlyOffDomain,
-  nextConversationState,
-  quickRepliesFor
-} from "../lib/conversation.js";
-
+  sanitizeCustomerProfile, extractCustomerSignals, mergeCustomerProfile,
+  customerRepairReply
+} from "../lib/customer.js";
 import {
-  cleanText,
-  normalizeAr,
-  safeLocale,
-  safePageUrl,
-  jsonResponse
-} from "../lib/utils.js";
-
-
-const VERSION="5.0.0";
-const MODE="free_contextual_rag_v5";
-
-const DEFAULT_ORIGINS=[
-  "https://www.migfarm.com",
-  "https://migfarm.com",
-  "https://edu-mig-for-agriculture.odoo.com"
-];
-
-
-/* =========================================================
-   MIG FARM SEEDS ONLY ENGINE
-   ========================================================= */
-
-const MIG_FARM_SEED_GROUPS={
-
-  tomato:[
-    "الشمال",
-    "فوكس",
-    "الريم",
-    "مهره",
-    "shamal",
-    "mahra"
-  ],
-
-  cucumber:[
-    "jabaara",
-    "جباره",
-    "wafra",
-    "وفره"
-  ],
-
-  eggplant:[
-    "عتيق",
-    "مياسه",
-    "مزيونه",
-    "ateeq",
-    "mayasa",
-    "mazouna"
-  ],
-
-  pepper:[
-    "جمر",
-    "شهاب",
-    "شراره",
-    "الكوس",
-    "جميرا",
-    "البرشا",
-    "jamra",
-    "shihab",
-    "sharara",
-    "kous",
-    "jumeirah",
-    "barsha"
-  ],
-
-  melon:[
-    "حلوه العين",
-    "سلطانه",
-    "الرومانسيه",
-    "المدار",
-    "sultana",
-    "almadar"
-  ],
-
-  zucchini:[
-    "عجيبه",
-    "ajiba"
-  ],
-
-  corn:[
-    "معدي",
-    "maadi"
-  ],
-
-  cabbage:[
-    "وهاج",
-    "wahaj"
-  ]
-
-};
-
-
-/* =========================================================
-   CROP DETECTION
-   ========================================================= */
-
-const SEED_CROP_TERMS={
-
-  tomato:[
-    "طماطم",
-    "طماطه",
-    "بندوره",
-    "tomato"
-  ],
-
-  cucumber:[
-    "خيار",
-    "cucumber"
-  ],
-
-  eggplant:[
-    "باذنجان",
-    "eggplant"
-  ],
-
-  pepper:[
-    "فلفل",
-    "فليفله",
-    "pepper"
-  ],
-
-  melon:[
-    "شمام",
-    "كنتالوب",
-    "melon",
-    "cantaloupe"
-  ],
-
-  zucchini:[
-    "كوسه",
-    "كوسا",
-    "zucchini",
-    "squash"
-  ],
-
-  corn:[
-    "ذره",
-    "ذرة",
-    "corn",
-    "maize"
-  ],
-
-  cabbage:[
-    "ملفوف",
-    "كرنب",
-    "cabbage"
-  ],
-
-  watermelon:[
-    "بطيخ",
-    "watermelon"
-  ],
-
-  okra:[
-    "باميه",
-    "بامية",
-    "okra"
-  ],
-
-  onion:[
-    "بصل",
-    "onion"
-  ],
-
-  radish:[
-    "فجل",
-    "radish"
-  ],
-
-  beet:[
-    "شمندر",
-    "بنجر",
-    "beet",
-    "beetroot"
-  ],
-
-  spinach:[
-    "سبانخ",
-    "spinach"
-  ],
-
-  molokhia:[
-    "ملوخيه",
-    "ملوخية",
-    "molokhia"
-  ],
-
-  turnip:[
-    "لفت",
-    "turnip"
-  ],
-
-  chard:[
-    "سلق",
-    "chard"
-  ],
-
-  fennel:[
-    "شومر",
-    "شمر",
-    "fennel"
-  ]
-
-};
-
-
-const SEED_WORDS=[
-  "بذور",
-  "بذره",
-  "بذرة",
-  "تقاوي",
-  "seed",
-  "seeds"
-];
-
-
-const NON_SEED_CATEGORY_WORDS=[
-
-  "سماد",
-  "اسمده",
-  "اسمدة",
-  "تغذيه النبات",
-  "تغذية النبات",
-  "fertilizer",
-  "fertiliser",
-
-  "مبيد",
-  "مبيدات",
-  "pesticide",
-  "insecticide",
-
-  "ري",
-  "تنقيط",
-  "irrigation",
-  "drip",
-
-  "ادوات",
-  "أدوات",
-  "معدات",
-  "tools",
-  "equipment",
-
-  "بيت محمي",
-  "بيوت محميه",
-  "بيوت محمية",
-  "greenhouse",
-
-  "زراعه مائيه",
-  "زراعة مائية",
-  "hydroponic",
-  "hydroponics"
-
-];
-
-
-/* =========================================================
-   RATE LIMIT
-   ========================================================= */
-
-const rateBuckets=
-  globalThis.__migV5Rate || new Map();
-
-globalThis.__migV5Rate=rateBuckets;
-
-
-/* =========================================================
-   TEXT HELPERS
-   ========================================================= */
-
-function n(value=""){
-  return normalizeAr(
-    String(value||"")
-  );
-}
-
-
-function hasTerm(text,term){
-
-  const t=n(text);
-  const q=n(term);
-
-  if(!t || !q){
-    return false;
-  }
-
-  if(q.includes(" ")){
-    return t.includes(q);
-  }
-
-  const tokens=
-    t.split(/\s+/)
-      .filter(Boolean);
-
-  if(tokens.includes(q)){
-    return true;
-  }
-
-  return (
-    q.length>=4 &&
-    t.includes(q)
-  );
-}
-
-
-function includesAny(text,terms=[]){
-
-  return terms.some(
-    term=>hasTerm(text,term)
-  );
-
-}
-
-
-/* =========================================================
-   MIG FARM VARIETY MARKERS
-   ========================================================= */
-
-function configuredSeedMarkers(){
-
-  const extra=
-    String(
-      process.env.MIG_SEED_MARKERS||""
-    )
-    .split(",")
-    .map(x=>x.trim())
-    .filter(Boolean);
-
-  const base=
-    Object.values(
-      MIG_FARM_SEED_GROUPS
-    ).flat();
-
-  return [
-    ...new Set(
-      [
-        ...base,
-        ...extra
-      ]
-      .map(n)
-      .filter(Boolean)
-    )
-  ];
-
-}
-
-
-/* =========================================================
-   DETECT REQUESTED CROP
-   ========================================================= */
-
-function requestedSeedGroup(
-  message=""
-){
-
-  const t=n(message);
-
-  for(
-    const [group,terms]
-    of Object.entries(SEED_CROP_TERMS)
-  ){
-
-    if(
-      terms.some(
-        term=>
-          t.includes(
-            n(term)
-          )
-      )
-    ){
-      return group;
-    }
-
-  }
-
-  return "";
-
-}
-
-
-/* =========================================================
-   DETECT SEED INTENT
-   ========================================================= */
-
-function explicitSeedIntent(
-  message=""
-){
-
-  const t=n(message);
-
-  if(!t){
-    return false;
-  }
-
-
-  // المستخدم بيقول غير البذور
-  if(
-    /(غير|بدون|ما عدا|بعيد عن).{0,24}(بذور|بذره|بذرة|seed)/
-      .test(t)
-  ){
-    return false;
-  }
-
-
-  // لو طلب قسم تاني صراحة
-  if(
-    NON_SEED_CATEGORY_WORDS.some(
-      term=>hasTerm(t,term)
-    )
-  ){
-    return false;
-  }
-
-
-  if(
-    SEED_WORDS.some(
-      term=>hasTerm(t,term)
-    )
-  ){
-    return true;
-  }
-
-
-  return Boolean(
-    requestedSeedGroup(message)
-  );
-
-}
-
-
-/* =========================================================
-   KEEP SEED CONTEXT
-   ========================================================= */
-
-function seedContextActive(
-  message,
-  state={},
-  history=[]
-){
-
-  if(
-    explicitSeedIntent(message)
-  ){
-    return true;
-  }
-
-
-  if(
-    state?.product_query &&
-    explicitSeedIntent(
-      state.product_query
-    )
-  ){
-    return true;
-  }
-
-
-  for(
-    let i=history.length-1;
-    i>=0;
-    i--
-  ){
-
-    const item=history[i];
-
-    if(
-      !item ||
-      item.role!=="user"
-    ){
-      continue;
-    }
-
-
-    if(
-      explicitSeedIntent(
-        item.content
-      )
-    ){
-      return true;
-    }
-
-
-    if(
-      isProductIntent(
-        item.content
-      ) &&
-      !isProductFollowup(
-        item.content
-      )
-    ){
-      break;
-    }
-
-  }
-
-
-  return false;
-
-}
-
-
-/* =========================================================
-   PRODUCT TEXT
-   ========================================================= */
-
-function seedProductHay(
-  product={}
-){
-
-  return n([
-    product.name||"",
-    product.sku||"",
-    product.description||"",
-    product.url||""
-  ].join(" "));
-
-}
-
-
-/* =========================================================
-   MIG FARM BRAND CHECK
-   ========================================================= */
-
-function isExplicitlyMigFarmBranded(
-  product={}
-){
-
-  const hay=
-    seedProductHay(product);
-
-  return (
-    /(mig\s*farm|migfarm|ميج\s*فارم|ميغ\s*فارم)/
-      .test(hay)
-  );
-
-}
-
-
-/* =========================================================
-   MIG FARM KNOWN VARIETY CHECK
-   ========================================================= */
-
-function matchesMigFarmSeedMarker(
-  product={}
-){
-
-  const hay=
-    seedProductHay(product);
-
-  return configuredSeedMarkers()
-    .some(
-      marker=>
-        hay.includes(marker)
-    );
-
-}
-
-
-/* =========================================================
-   STRICT MIG FARM SEED CHECK
-   ========================================================= */
-
-function isMigFarmSeedProduct(
-  product={}
-){
-
-  if(
-    !product ||
-    !product.name
-  ){
-    return false;
-  }
-
-
-  return (
-    isExplicitlyMigFarmBranded(
-      product
-    )
-    ||
-    matchesMigFarmSeedMarker(
-      product
-    )
-  );
-
-}
-
-
-/* =========================================================
-   CROP FILTER
-   ========================================================= */
-
-function matchesSeedGroup(
-  product={},
-  group=""
-){
-
-  if(!group){
-    return true;
-  }
-
-
-  const markers=
-    MIG_FARM_SEED_GROUPS[group];
-
-
-  if(
-    !Array.isArray(markers) ||
-    !markers.length
-  ){
-
-    const hay=
-      seedProductHay(product);
-
-    const terms=
-      SEED_CROP_TERMS[group]||[];
-
-
-    return (
-      isExplicitlyMigFarmBranded(
-        product
-      )
-      &&
-      terms.some(
-        term=>
-          hay.includes(
-            n(term)
-          )
-      )
-    );
-
-  }
-
-
-  const hay=
-    seedProductHay(product);
-
-
-  return markers.some(
-    marker=>
-      hay.includes(
-        n(marker)
-      )
-  );
-
-}
-
-
-/* =========================================================
-   REMOVE DUPLICATES
-   ========================================================= */
-
-function dedupeProducts(
-  products=[]
-){
-
-  const seen=
-    new Set();
-
-  const out=[];
-
-
-  for(
-    const product
-    of products
-  ){
-
-    if(
-      !product?.name
-    ){
-      continue;
-    }
-
-
-    const key=
-      n(product.url||"")
-      ||
-      `${n(product.name)}|${String(product.price||"")}`;
-
-
-    if(
-      seen.has(key)
-    ){
-      continue;
-    }
-
-
-    seen.add(key);
-
-    out.push(product);
-
-  }
-
-
-  return out;
-
-}
-
-
-/* =========================================================
-   FILTER MIG FARM SEEDS ONLY
-   ========================================================= */
-
-function filterMigFarmSeedProducts(
-  products=[],
-  message=""
-){
-
-  const group=
-    requestedSeedGroup(
-      message
-    );
-
-
-  return dedupeProducts(
-    products
-  )
-  .filter(
-    isMigFarmSeedProduct
-  )
-  .filter(
-    product=>
-      matchesSeedGroup(
-        product,
-        group
-      )
-  );
-
-}
-
-
-/* =========================================================
-   PRODUCT URL VALIDATION
-   ========================================================= */
-
-function safeProductUrlCandidate(
-  url=""
-){
-
-  try{
-
-    const u=
-      new URL(url);
-
-    const p=
-      u.pathname;
-
-
-    if(
-      !p.startsWith("/shop/")
-    ){
-      return false;
-    }
-
-
-    if(
-      p.startsWith(
-        "/shop/category/"
-      )
-    ){
-      return false;
-    }
-
-
-    if(
-      [
-        "/shop/cart",
-        "/shop/checkout",
-        "/shop/payment",
-        "/shop/confirmation",
-        "/shop/wishlist",
-        "/shop/compare"
-      ]
-      .some(
-        x=>p.startsWith(x)
-      )
-    ){
-      return false;
-    }
-
-
-    return true;
-
-  }
-  catch{
-
-    return false;
-
-  }
-
-}
-
-
-/* =========================================================
-   SITEMAP MIG FARM SEED SCORE
-   ========================================================= */
-
-function urlSeedMarkerScore(
-  url="",
-  group=""
-){
-
-  let raw="";
-
-
-  try{
-
-    raw=
-      n(
-        decodeURIComponent(
-          new URL(url)
-            .pathname
-        )
-      );
-
-  }
-  catch{
-
-    return 0;
-
-  }
-
-
-  const markers=
-    (
-      group &&
-      MIG_FARM_SEED_GROUPS[group]?.length
-    )
-    ?
-    MIG_FARM_SEED_GROUPS[group]
-    :
-    configuredSeedMarkers();
-
-
-  let score=0;
-
-
-  for(
-    const marker
-    of markers
-  ){
-
-    if(
-      raw.includes(
-        n(marker)
-      )
-    ){
-      score+=20;
-    }
-
-  }
-
-
-  return score;
-
-}
-
-
-/* =========================================================
-   DISCOVER MIG FARM SEEDS VIA SITEMAP
-   ========================================================= */
-
-async function discoverMigFarmSeedsFromSitemap(
-  message,
-  limit=20
-){
-
-  const group=
-    requestedSeedGroup(
-      message
-    );
-
-
-  let urls=[];
-
-
-  try{
-
-    urls=
-      await getSitemapUrls();
-
-  }
-  catch{
-
-    return [];
-
-  }
-
-
-  const candidates=
-    urls
-    .filter(
-      safeProductUrlCandidate
-    )
-    .map(
-      url=>({
-        url,
-        score:
-          urlSeedMarkerScore(
-            url,
-            group
-          )
-      })
-    )
-    .filter(
-      x=>x.score>0
-    )
-    .sort(
-      (a,b)=>
-        b.score-a.score
-    )
-    .slice(
-      0,
-      Math.min(
-        24,
-        limit*2
-      )
-    );
-
-
-  const products=
-    (
-      await Promise.all(
-
-        candidates.map(
-          async item=>{
-
-            try{
-
-              return await fetchProduct(
-                item.url
-              );
-
-            }
-            catch{
-
-              return null;
-
-            }
-
-          }
-        )
-
-      )
-    )
-    .filter(Boolean);
-
-
-  return filterMigFarmSeedProducts(
-    products,
-    message
-  )
-  .slice(
-    0,
-    limit
-  );
-
-}
-
-
-/* =========================================================
-   SEARCH MIG FARM SEEDS ONLY
-   ========================================================= */
-
-async function searchMigFarmSeeds(
-  message,
-  history=[],
-  limit=12
-){
-
-  let searched=[];
-
-
-  try{
-
-    searched=
-      await searchProducts(
-        message,
-        history,
-        30
-      );
-
-  }
-  catch{}
-
-
-  let own=
-    filterMigFarmSeedProducts(
-      searched,
-      message
-    );
-
-
-  if(
-    own.length <
-    Math.min(
-      4,
-      limit
-    )
-  ){
-
-    const discovered=
-      await discoverMigFarmSeedsFromSitemap(
-        message,
-        limit
-      );
-
-
-    own=
-      dedupeProducts([
-        ...own,
-        ...discovered
-      ]);
-
-  }
-
-
-  return own.slice(
-    0,
-    limit
-  );
-
-}
-
-
-/* =========================================================
-   FORMAT SEED RESPONSE
-   ========================================================= */
-
-function formatMigFarmSeedProducts(
-  products=[],
-  locale="ar"
-){
-
-  if(
-    !products.length
-  ){
-    return "";
-  }
-
-
-  const en=
-    locale==="en";
-
-
-  const rows=
-    products.map(
-      product=>{
-
-        const price=
-          String(
-            product.price??""
-          )
-          .trim();
-
-
-        const currency=
-          String(
-            product.currency||"AED"
-          )
-          .trim()
-          ||
-          "AED";
-
-
-        const availability=
-          String(
-            product.availability||""
-          )
-          .trim();
-
-
-        const pricePart=
-          price
-          ?
-          `${price} ${currency}`
-          :
-          (
-            en
-            ?
-            "price not shown"
-            :
-            "السعر مب ظاهر"
-          );
-
-
-        return (
-          `• ${product.name} — ${pricePart}`
-          +
-          (
-            availability
-            ?
-            ` - ${availability}`
-            :
-            ""
-          )
-        );
-
-      }
-    );
-
-
-  return en
-
-    ?
-    `I found these MIG FARM seed varieties:\n${rows.join("\n")}`
-
-    :
-    `أكيد 🌱 هذي بذور MIG FARM المطابقة لطلبك:\n${rows.join("\n")}`;
-
-}
-
-
-/* =========================================================
-   SEED QUICK REPLIES
-   ========================================================= */
-
-function migSeedQuickReplies(
-  locale="ar"
-){
-
-  return locale==="en"
-
-    ?
-    [
-      "Cheapest?",
-      "Available?",
-      "Compare them",
-      "Tomato seeds"
-    ]
-
-    :
-    [
-      "الأرخص فيهم؟",
-      "المتوفر منهم؟",
-      "قارن بينهم",
-      "بذور طماطم"
-    ];
-
-}
-
-
-/* =========================================================
-   CORS
-   ========================================================= */
+  leadScore, journeyStage, nextBestQuestion, buildWhatsAppHandoff,
+  buildHandoffSummary, salesQuickReplies, purchaseContinuation, greenhouseLeadReply
+} from "../lib/sales.js";
+import { extendedKnowledgeReply, knowledgeStats } from "../lib/human_knowledge.js";
+import { buildLearningEvent, logLearningEvent, assistantMeta } from "../lib/learning.js";
+
+const VERSION="7.0.0";
+const MODE="free_sales_knowledge_agent_v7";
+const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
+const rateBuckets=globalThis.__migV7Rate || new Map();
+globalThis.__migV7Rate=rateBuckets;
 
 function allowedOrigins(){
-
-  const configured=
-    String(
-      process.env.ALLOWED_ORIGINS||""
-    )
-    .split(",")
-    .map(
-      x=>x.trim()
-    )
-    .filter(Boolean);
-
-
-  return [
-    ...new Set([
-      ...DEFAULT_ORIGINS,
-      ...configured
-    ])
-  ];
-
+  const configured=String(process.env.ALLOWED_ORIGINS||"").split(",").map(x=>x.trim()).filter(Boolean);
+  return [...new Set([...DEFAULT_ORIGINS,...configured])];
 }
-
-
-function corsHeaders(
-  origin
-){
-
-  const approved=
-    origin &&
-    allowedOrigins()
-      .includes(origin);
-
-
+function corsHeaders(origin){
+  const approved=origin&&allowedOrigins().includes(origin);
   return {
-
-    ...(
-      approved
-      ?
-      {
-        "Access-Control-Allow-Origin":
-          origin
-      }
-      :
-      {}
-    ),
-
-    "Access-Control-Allow-Methods":
-      "POST, OPTIONS",
-
-    "Access-Control-Allow-Headers":
-      "Content-Type",
-
-    "Access-Control-Max-Age":
-      "86400",
-
-    "Vary":
-      "Origin"
-
+    ...(approved?{"Access-Control-Allow-Origin":origin}:{}),
+    "Access-Control-Allow-Methods":"POST, OPTIONS",
+    "Access-Control-Allow-Headers":"Content-Type",
+    "Access-Control-Max-Age":"86400","Vary":"Origin"
   };
-
 }
-
-
-function isAllowedOrigin(
-  origin
-){
-
-  return (
-    !origin ||
-    allowedOrigins()
-      .includes(origin)
-  );
-
+function isAllowedOrigin(origin){ return !origin || allowedOrigins().includes(origin); }
+function rateLimit(key){
+  const now=Date.now(),windowMs=60000,max=65,current=rateBuckets.get(key);
+  if(rateBuckets.size>5000){ for(const [k,b] of rateBuckets){ if(now-b.startedAt>windowMs*5) rateBuckets.delete(k); } }
+  if(!current||now-current.startedAt>windowMs){ rateBuckets.set(key,{startedAt:now,count:1}); return true; }
+  current.count+=1; rateBuckets.set(key,current); return current.count<=max;
 }
-
-
-/* =========================================================
-   RATE LIMIT
-   ========================================================= */
-
-function rateLimit(
-  key
-){
-
-  const now=
-    Date.now();
-
-  const windowMs=
-    60000;
-
-  const max=
-    50;
-
-  const current=
-    rateBuckets.get(key);
-
-
-  if(
-    rateBuckets.size>5000
-  ){
-
-    for(
-      const [bucketKey,bucket]
-      of rateBuckets
-    ){
-
-      if(
-        now-bucket.startedAt >
-        windowMs*5
-      ){
-
-        rateBuckets.delete(
-          bucketKey
-        );
-
-      }
-
-    }
-
-  }
-
-
-  if(
-    !current ||
-    now-current.startedAt >
-    windowMs
-  ){
-
-    rateBuckets.set(
-      key,
-      {
-        startedAt:now,
-        count:1
-      }
-    );
-
-    return true;
-
-  }
-
-
-  current.count+=1;
-
-  rateBuckets.set(
-    key,
-    current
-  );
-
-
-  return (
-    current.count<=max
-  );
-
+function normalizeHistory(value){
+  return Array.isArray(value)?value.filter(x=>x&&["user","assistant"].includes(x.role)&&typeof x.content==="string")
+    .slice(-18).map(x=>({role:x.role,content:cleanText(x.content,3500)})):[];
 }
-
-
-/* =========================================================
-   HISTORY NORMALIZATION
-   ========================================================= */
-
-function normalizeHistory(
-  value
-){
-
-  return Array.isArray(value)
-
-    ?
-    value
-    .filter(
-      x=>
-        x &&
-        [
-          "user",
-          "assistant"
-        ]
-        .includes(
-          x.role
-        )
-        &&
-        typeof x.content==="string"
-    )
-    .slice(-14)
-    .map(
-      x=>({
-        role:x.role,
-        content:
-          cleanText(
-            x.content,
-            3000
-          )
-      })
-    )
-
-    :
-    [];
-
+function normalizeProductContext(value){
+  if(!value||typeof value!=="object"||Array.isArray(value)) return null;
+  return {name:cleanText(value.name||value.title||"",500),price:cleanText(String(value.price??""),100),currency:cleanText(value.currency||"AED",20),availability:cleanText(value.availability||value.stock||"",100),description:cleanText(value.description||"",1800),url:safePageUrl(value.url||"")};
 }
-
-
-/* =========================================================
-   PRODUCT CONTEXT
-   ========================================================= */
-
-function normalizeProductContext(
-  value
-){
-
-  if(
-    !value ||
-    typeof value!=="object" ||
-    Array.isArray(value)
-  ){
-
-    return null;
-
-  }
-
-
-  return {
-
-    name:
-      cleanText(
-        value.name||
-        value.title||
-        "",
-        500
-      ),
-
-    price:
-      cleanText(
-        String(
-          value.price??""
-        ),
-        100
-      ),
-
-    currency:
-      cleanText(
-        value.currency||
-        "AED",
-        20
-      ),
-
-    availability:
-      cleanText(
-        value.availability||
-        value.stock||
-        "",
-        100
-      ),
-
-    description:
-      cleanText(
-        value.description||
-        "",
-        1800
-      ),
-
-    url:
-      safePageUrl(
-        value.url||
-        ""
-      )
-
-  };
-
+function absoluteActions(actions=[]){
+  const origin=siteOrigin();
+  return actions.map(a=>{
+    if(a?.type!=="page"||!a.url) return a;
+    try{return {...a,url:new URL(a.url,origin).toString()};}catch{return a;}
+  }).filter(Boolean);
 }
-
-
-/* =========================================================
-   ACTION URL FIX
-   ========================================================= */
-
-function absoluteActionUrls(
-  actions=[]
-){
-
-  const origin=
-    siteOrigin();
-
-
-  return actions.map(
-    a=>{
-
-      if(
-        a.type!=="page" ||
-        !a.url
-      ){
-
-        return a;
-
-      }
-
-
-      try{
-
-        return {
-          ...a,
-          url:
-            new URL(
-              a.url,
-              origin
-            )
-            .toString()
-        };
-
-      }
-      catch{
-
-        return a;
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   TRUSTED PRODUCT PAGE
-   ========================================================= */
-
-function trustedPageUrl(
-  pageUrl
-){
-
-  if(
-    !pageUrl
-  ){
-    return false;
-  }
-
-
+function trustedPageUrl(pageUrl){
+  if(!pageUrl) return false;
   try{
-
-    const u=
-      new URL(pageUrl);
-
-
-    return new Set([
-      new URL(
-        siteOrigin()
-      ).origin,
-
-      "https://www.migfarm.com",
-
-      "https://migfarm.com"
-
-    ])
-    .has(
-      u.origin
-    );
-
-  }
-  catch{
-
-    return false;
-
-  }
-
+    const u=new URL(pageUrl);
+    return new Set([new URL(siteOrigin()).origin,"https://www.migfarm.com","https://migfarm.com"]).has(u.origin);
+  }catch{return false;}
 }
-
-
-/* =========================================================
-   CURRENT PRODUCT PAGE
-   ========================================================= */
-
-async function resolveCurrentProduct(
-  pageUrl,
-  productContext
-){
-
-  if(
-    !pageUrl ||
-    !trustedPageUrl(pageUrl)
-  ){
-
-    return null;
-
-  }
-
-
+async function resolveCurrentProduct(pageUrl,productContext){
+  if(!trustedPageUrl(pageUrl)) return null;
   try{
+    const u=new URL(pageUrl);
+    if(!u.pathname.startsWith("/shop/")||u.pathname.startsWith("/shop/category/")) return null;
+    try{const live=await fetchProduct(pageUrl); if(live?.name) return live;}catch{}
+    return productContext?.name?productContext:null;
+  }catch{return null;}
+}
+function pageReference(message=""){
+  return /(هذا|هذي|ده|دي|هالمنتج|المنتج هذا|المنتج ده|سعره|سعرها|بكم|بكام|متوفر|تفاصيله|تفاصيلها|وش عنه|شو عنه)/.test(normalizeAr(message));
+}
+function currentProductReply(message,product,locale="ar"){
+  if(!product||!pageReference(message)) return null;
+  const t=normalizeAr(message); const name=product.name||"هالمنتج";
+  const price=product.price?`${product.price} ${product.currency||"AED"}`:"السعر مب ظاهر";
+  const availability=product.availability||"التوفر مب واضح";
+  if(/سعر|بكم|بكام|كام/.test(t)) return `${name} سعره ${price}.`;
+  if(/متوفر|موجود|التوفر/.test(t)) return `${name}: ${availability}.`;
+  return `${name} — ${price}${availability?` - ${availability}`:""}${product.description?`\n${String(product.description).slice(0,500)}`:""}`;
+}
 
-    const u=
-      new URL(pageUrl);
-
-
-    if(
-      !u.pathname
-        .startsWith(
-          "/shop/"
-        )
-      ||
-      u.pathname
-        .startsWith(
-          "/shop/category/"
-        )
-    ){
-
-      return null;
-
+function pageAnswer(pages=[],message="",locale="ar"){
+  if(!pages.length) return null;
+  const terms=tokenize(message).filter(x=>x.length>2);
+  if(!terms.length) return null;
+  const candidates=[];
+  for(const page of pages){
+    const text=`${page.title||""}. ${page.description||""}. ${page.text||""}`;
+    const norm=normalizeAr(text);
+    let pageScore=0;
+    for(const term of terms) if(norm.includes(term)) pageScore+=2;
+    if(pageScore<4) continue;
+    const sentences=String(text).split(/(?<=[.!؟])\s+|\n+/).map(x=>x.trim()).filter(x=>x.length>30&&x.length<700);
+    for(const sentence of sentences){
+      const sn=normalizeAr(sentence); let score=pageScore;
+      for(const term of terms) if(sn.includes(term)) score+=3;
+      if(score>=7) candidates.push({sentence,score,page});
     }
-
-
-    try{
-
-      const live=
-        await fetchProduct(
-          pageUrl
-        );
-
-
-      if(
-        live?.name
-      ){
-
-        return live;
-
-      }
-
-    }
-    catch{}
-
-
-    return productContext?.name
-      ?
-      productContext
-      :
-      null;
-
   }
-  catch{
+  candidates.sort((a,b)=>b.score-a.score);
+  if(!candidates.length) return null;
+  const top=candidates.slice(0,2);
+  return {reply:locale==="en"?top.map(x=>x.sentence).join("\n"):`حسب المعلومات الموجودة في الموقع:\n${top.map(x=>x.sentence).join("\n")}`,page:top[0].page,confidence:top[0].score};
+}
 
-    return null;
+function uniqActions(actions=[]){
+  const seen=new Set();
+  return actions.filter(a=>{
+    if(!a) return false;
+    const key=`${a.type||""}:${a.url||""}:${a.label||""}`;
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+}
 
+function sourceNeedsLearning(source=""){
+  return /(fallback|no_live|clarify|repair|off_domain)/.test(String(source||""));
+}
+
+function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar"}){
+  const next=updateState(state,analysis,message,source,results);
+  const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
+  const stage=journeyStage({analysis,profile:nextProfile,state:next,message,results});
+  const lead=leadScore({analysis,profile:nextProfile,state:next,message,source,results});
+  const handoffSummary=buildHandoffSummary({profile:nextProfile,state:next,analysis,message});
+  const meta=assistantMeta({source,stage,lead,profile:nextProfile});
+  const learning=buildLearningEvent({sessionId,message,analysis,profile:nextProfile,source,stage,lead});
+  logLearningEvent(learning);
+
+  next.customer_profile=nextProfile;
+  next.sales_stage=stage;
+  next.lead_score=lead.score;
+  next.lead_temperature=lead.temperature;
+  next.last_handoff_summary=handoffSummary.slice(0,1500);
+
+  let actions=uniqActions(payload.suggested_actions||payload.actions||[]);
+  if((stage==="ready"||stage==="handoff"||lead.temperature==="hot") && !actions.some(a=>a.type==="whatsapp")){
+    actions.push(buildWhatsAppHandoff({profile:nextProfile,state:next,analysis,message}));
   }
-
-}
-
-
-/* =========================================================
-   FALLBACK
-   ========================================================= */
-
-function defaultFallback(
-  locale="ar"
-){
-
-  return locale==="en"
-
-    ?
-    "I couldn't confirm that confidently from MIG FARM's website. Give me one more detail, or I can connect you with the team."
-
-    :
-    "ما قدرت أتأكد من هالمعلومة بثقة من موقع MIG FARM. عطِني تفصيل زيادة بسيط عشان أفهمك صح، أو أوصلك بالفريق.";
-
-}
-
-
-function offDomain(
-  locale="ar"
-){
-
-  return locale==="en"
-
-    ?
-    "I'm focused on MIG FARM, agriculture, products, delivery and website services. Ask me anything in that area and I'll help."
-
-    :
-    "أنا مخصص لـ MIG FARM والزراعة والمنتجات والشحن وخدمات الموقع. اسألني بأي شي بهالمجال وأنا أساعدك.";
-
-}
-
-
-/* =========================================================
-   RESPONSE BUILDER
-   ========================================================= */
-
-function makeResponse({
-
-  payload={},
-
-  status=200,
-
-  cors={},
-
-  sessionId,
-
-  state,
-
-  source,
-
-  message,
-
-  results=[],
-
-  currentProduct=null,
-
-  locale="ar"
-
-}){
-
-  const next=
-    nextConversationState({
-
-      previous:state,
-
-      source,
-
-      message,
-
-      results,
-
-      currentProduct
-
-    });
-
-
-  const topic=
-    next.topic||"";
-
 
   return jsonResponse({
-
-    session_id:
-      sessionId,
-
-    version:
-      VERSION,
-
-    mode:
-      MODE,
-
-    suggested_actions:
-      absoluteActionUrls(
-        payload.suggested_actions||
-        payload.actions||
-        []
-      ),
-
-    escalation:
-      Boolean(
-        payload.escalation
-      ),
-
+    session_id:sessionId,version:VERSION,mode:MODE,
     ...payload,
-
-    suggested_actions:
-      absoluteActionUrls(
-        payload.suggested_actions||
-        payload.actions||
-        []
-      ),
-
-    conversation_state:
-      next,
-
-    quick_replies:
-      payload.quick_replies
-      ||
-      quickRepliesFor(
-        topic,
-        locale,
-        Array.isArray(results) &&
-        results.length>0
-      ),
-
-    source:
-      source||
-      payload.source||
-      ""
-
+    suggested_actions:absoluteActions(actions),
+    escalation:Boolean(payload.escalation||stage==="handoff"),
+    conversation_state:next,
+    customer_profile:nextProfile,
+    sales_stage:stage,
+    lead_score:lead.score,
+    lead_temperature:lead.temperature,
+    handoff_summary:handoffSummary,
+    assistant_meta:meta,
+    learning_event:sourceNeedsLearning(source)?learning:undefined,
+    source
   },status,cors);
-
 }
 
-
-/* =========================================================
-   OPTIONS
-   ========================================================= */
-
-export async function OPTIONS(
-  request
-){
-
-  const origin=
-    request.headers
-      .get("origin")
-    ||
-    "";
-
-
-  if(
-    !isAllowedOrigin(
-      origin
-    )
-  ){
-
-    return new Response(
-      null,
-      {
-        status:403
-      }
-    );
-
-  }
-
-
-  return new Response(
-    null,
-    {
-      status:204,
-      headers:
-        corsHeaders(
-          origin
-        )
-    }
-  );
-
-}
-
-
-/* =========================================================
-   POST
-   ========================================================= */
-
-export async function POST(
-  request
-){
-
-  const origin=
-    request.headers
-      .get("origin")
-    ||
-    "";
-
-
-  const cors=
-    corsHeaders(
-      origin
-    );
-
-
-  if(
-    !isAllowedOrigin(
-      origin
-    )
-  ){
-
-    return jsonResponse(
-      {
-        error:
-          "origin_not_allowed"
-      },
-      403,
-      cors
-    );
-
-  }
-
-
-  let body;
-
-
-  try{
-
-    body=
-      await request.json();
-
-  }
-  catch{
-
-    return jsonResponse(
-      {
-        error:
-          "invalid_json"
-      },
-      400,
-      cors
-    );
-
-  }
-
-
-  const message=
-    cleanText(
-      body?.message,
-      2500
-    );
-
-
-  const sessionId=
-    cleanText(
-      body?.session_id,
-      160
-    )
-    ||
-    crypto.randomUUID();
-
-
-  const locale=
-    safeLocale(
-      body?.locale
-    );
-
-
-  const pageUrl=
-    safePageUrl(
-      body?.page_url
-    );
-
-
-  const pageTitle=
-    cleanText(
-      body?.page_title,
-      500
-    );
-
-
-  const history=
-    normalizeHistory(
-      body?.history
-    );
-
-
-  const productContext=
-    normalizeProductContext(
-      body?.product_context
-    );
-
-
-  const clientState=
-    sanitizeConversationState(
-      body?.conversation_state
-    );
-
-
-  const state=
-    mergeConversationState(
-      clientState,
-      history
-    );
-
-
-  /* EMPTY MESSAGE */
-
-  if(
-    !message
-  ){
-
-    return makeResponse({
-
-      payload:{
-        reply:
-          locale==="en"
-          ?
-          "Write a message first."
-          :
-          "اكتب سؤالك أول."
-      },
-
-      status:400,
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "empty",
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* RATE LIMIT */
-
-  const ip=
-    (
-      request.headers
-        .get(
-          "x-forwarded-for"
-        )
-      ||
-      "unknown"
-    )
-    .split(",")[0]
-    .trim();
-
-
-  if(
-    !rateLimit(
-      `${ip}:${sessionId}`
-    )
-  ){
-
-    return makeResponse({
-
-      payload:{
-        reply:
-          locale==="en"
-          ?
-          "Too many messages. Try again in a minute."
-          :
-          "رسائل وايد بسرعة 😄 جرّب عقب دقيقة."
-      },
-
-      status:429,
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "rate_limit",
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     A — DIRECT KNOWLEDGE
-     ====================================================== */
-
-  const direct=
-    directKnowledgeReply(
-      message,
-      locale
-    );
-
-
-  if(
-    direct
-  ){
-
-    return makeResponse({
-
-      payload:{
-
-        reply:
-          direct.reply,
-
-        suggested_actions:
-          direct.actions||[],
-
-        escalation:
-          Boolean(
-            direct.escalation
-          )
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        direct.source,
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     B — CONTEXT REWRITE
-     ====================================================== */
-
-  const rewrite=
-    contextualRewrite(
-      message,
-      state,
-      history
-    );
-
-
-  if(
-    rewrite.used &&
-    rewrite.query!==message
-  ){
-
-    const contextualDirect=
-      directKnowledgeReply(
-        rewrite.query,
-        locale
-      );
-
-
-    if(
-      contextualDirect
-    ){
-
-      return makeResponse({
-
-        payload:{
-
-          reply:
-            contextualDirect.reply,
-
-          suggested_actions:
-            contextualDirect.actions||[],
-
-          escalation:
-            Boolean(
-              contextualDirect.escalation
-            )
-
-        },
-
-        cors,
-
-        sessionId,
-
-        state,
-
-        source:
-          `context_${contextualDirect.source}`,
-
-        message,
-
-        locale
-
-      });
-
-    }
-
-  }
-
-
-  /* ======================================================
-     C — PRODUCT MEMORY
-     ====================================================== */
-
-  const memory=
-    historyReply(
-      message,
-      history,
-      locale
-    );
-
-
-  if(
-    memory
-  ){
-
-    return makeResponse({
-
-      payload:{
-
-        reply:
-          memory.reply,
-
-        suggested_actions:
-          memory.actions||[]
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        memory.source,
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     D — CURRENT PRODUCT PAGE
-     ====================================================== */
-
-  const currentProduct=
-    await resolveCurrentProduct(
-      pageUrl,
-      productContext
-    );
-
-
-  const currentAnswer=
-    currentProductReply(
-      message,
-      currentProduct,
-      locale
-    );
-
-
-  if(
-    currentAnswer
-  ){
-
-    return makeResponse({
-
-      payload:{
-
-        reply:
-          currentAnswer.reply,
-
-        suggested_actions:
-          pageUrl
-          ?
-          [{
-            type:"page",
-
-            label:
-              locale==="en"
-              ?
-              "Open product"
-              :
-              "افتح المنتج",
-
-            url:
-              pageUrl
-
-          }]
-          :
-          []
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        currentAnswer.source,
-
-      message,
-
-      currentProduct,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     E — AMBIGUITY
-     ====================================================== */
-
-  const ambiguous=
-    ambiguityReply(
-      message,
-      state,
-      history,
-      locale
-    );
-
-
-  if(
-    ambiguous
-  ){
-
-    return makeResponse({
-
-      payload:{
-
-        reply:
-          ambiguous,
-
-        quick_replies:
-          locale==="en"
-          ?
-          [
-            "Delivery",
-            "Nearest branch",
-            "Products"
-          ]
-          :
-          [
-            "أقصد الشحن",
-            "أقصد أقرب فرع",
-            "أقصد منتج"
-          ]
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "clarify_context",
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     F — OFF DOMAIN
-     ====================================================== */
-
-  if(
-    isClearlyOffDomain(
-      message
-    )
-  ){
-
-    return makeResponse({
-
-      payload:{
-        reply:
-          offDomain(
-            locale
-          )
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "off_domain",
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     PRODUCT CLARIFICATION
-     ====================================================== */
-
-  const clarification=
-    productClarificationReply(
-      message,
-      locale
-    );
-
-
-  if(
-    clarification
-  ){
-
-    return makeResponse({
-
-      payload:{
-        reply:
-          clarification.reply
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        clarification.source,
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     LIVE SEARCH
-     ====================================================== */
-
+async function searchCatalog(analysis,state,message,history){
+  const query=buildSearchQuery(analysis,state,message);
   let products=[];
-
-  let pages=[];
-
-
-  const effectiveQuery=
-    rewrite.used
-    ?
-    rewrite.query
-    :
-    message;
-
-
-  const migSeedScope=
-    seedContextActive(
-      message,
-      state,
-      history
-    );
-
-
-  try{
-
-    const recentProductContext=
-
-      isProductFollowup(
-        message
-      )
-
-      &&
-
-      (
-        state.topic==="product"
-
-        ||
-
-        history
-        .slice(-5)
-        .some(
-          x=>
-            x.role==="user"
-            &&
-            isProductIntent(
-              x.content
-            )
-        )
-      );
-
-
-    /* ================================================
-       STRICT MIG FARM SEEDS ONLY
-       ================================================ */
-
-    if(
-      migSeedScope
-    ){
-
-      products=
-        await searchMigFarmSeeds(
-          effectiveQuery,
-          history,
-          12
-        );
-
-
-      products=
-        productPostFilter(
-          products,
-          message
-        )
-        .slice(
-          0,
-          8
-        );
-
-    }
-
-
-    /* ================================================
-       NORMAL PRODUCT SEARCH
-       ================================================ */
-
-    else if(
-
-      isProductIntent(
-        message
-      )
-
-      ||
-
-      rewrite.topic==="product"
-
-      ||
-
-      recentProductContext
-
-    ){
-
-      products=
-        await searchProducts(
-          effectiveQuery,
-          history,
-          12
-        );
-
-
-      products=
-        productPostFilter(
-          products,
-          message
-        )
-        .slice(
-          0,
-          8
-        );
-
-    }
-
-
-    /* ================================================
-       WEBSITE PAGE SEARCH
-       NEVER RUN IT FOR A SEED QUERY
-       ================================================ */
-
-    if(
-      !products.length &&
-      !migSeedScope
-    ){
-
-      pages=
-        await searchSitePages(
-          effectiveQuery,
-          5
-        );
-
-    }
-
+  try{ products=await searchProducts(query,history,24); }
+  catch(error){ console.error("product search failed",error?.message); }
+  products=filterRankProducts(products,analysis,state,message);
+  const categoryKey=analysis.category?.key||state.category||"";
+  if(categoryKey==="seeds" && products.length<4){
+    try{
+      const extra=await discoverMigFarmSeeds(analysis.crop?.key||state.crop||"",8);
+      products=mergeProducts(products,extra);
+    }catch(error){ console.error("seed sitemap discovery failed",error?.message); }
   }
-  catch(error){
+  return {products,categoryKey,query};
+}
 
-    console.error(
+function productNeedInTurn(analysis={}){
+  return Boolean(analysis.category||analysis.crop||analysis.knownProduct||analysis.seedVarieties?.length);
+}
 
-      "MIG assistant lookup failed",
-
-      {
-
-        name:
-          error?.name,
-
-        message:
-          error?.message,
-
-        pageUrl,
-
-        pageTitle,
-
-        effectiveQuery,
-
-        migSeedScope
-
-      }
-
-    );
-
-  }
-
-
-  /* ======================================================
-     PRODUCT RESULTS
-     ====================================================== */
-
-  if(
-    products.length
-  ){
-
-    const actions=
-      products[0]?.url
-      ?
-      [{
-        type:"page",
-
-        label:
-          locale==="en"
-          ?
-          "Open first product"
-          :
-          "افتح أول منتج",
-
-        url:
-          products[0].url
-      }]
-      :
-      [];
-
-
-    const cleanResults=
-      products.map(
-        p=>({
-
-          name:
-            p.name,
-
-          price:
-            p.price,
-
-          currency:
-            p.currency,
-
-          availability:
-            p.availability,
-
-          sku:
-            p.sku,
-
-          url:
-            p.url
-
-        })
-      );
-
-
-    /* MIG FARM SEED RESPONSE */
-
-    if(
-      migSeedScope
-    ){
-
-      return makeResponse({
-
-        payload:{
-
-          reply:
-            formatMigFarmSeedProducts(
-              products,
-              locale
-            ),
-
-          suggested_actions:
-            actions,
-
-          results:
-            cleanResults,
-
-          quick_replies:
-            migSeedQuickReplies(
-              locale
-            ),
-
-          brand_scope:
-            "mig_farm_seeds_only"
-
-        },
-
-        cors,
-
-        sessionId,
-
-        state,
-
-        source:
-          "live_products_migfarm_seeds",
-
-        message,
-
-        results:
-          cleanResults,
-
-        locale
-
-      });
-
-    }
-
-
-    /* NORMAL PRODUCT RESPONSE */
-
+async function multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors}){
+  if(!["shipping","delivery_time"].includes(analysis.intent) || !productNeedInTurn(analysis)) return null;
+  const shipping=directReply(analysis,state,message,sessionId);
+  const {products,categoryKey}=await searchCatalog(analysis,state,message,history);
+  if(!shipping) return null;
+  if(!products.length){
     return makeResponse({
-
-      payload:{
-
-        reply:
-          formatProducts(
-            products,
-            locale
-          ),
-
-        suggested_actions:
-          actions,
-
-        results:
-          cleanResults
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "live_products",
-
-      message,
-
-      results:
-        cleanResults,
-
-      locale
-
+      payload:{reply:`${shipping.reply}\n\nوبالنسبة للمنتج: ما حصلت نتيجة مطابقة بشكل مؤكد في المتجر الحي.`,display_reply:shipping.reply,quick_replies:["دور بالاسم","كلم الفريق"],suggested_actions:shipping.actions||[]},
+      cors,sessionId,state,analysis,signals,profile,message,source:"multi_shipping_no_product",locale
     });
-
   }
-
-
-  /* ======================================================
-     NO MIG FARM SEED MATCH
-     ====================================================== */
-
-  if(
-    migSeedScope
-  ){
-
-    return makeResponse({
-
-      payload:{
-
-        reply:
-          locale==="en"
-
-          ?
-          "I couldn't confirm a matching MIG FARM seed variety in the live store. Tell me the crop, such as tomato, cucumber, pepper or eggplant, and I'll search MIG FARM varieties only."
-
-          :
-          "ما حصلت صنف بذور MIG FARM مطابق بشكل مؤكد في المتجر الحي. اكتب لي المحصول مثل طماطم أو خيار أو فلفل أو باذنجان، وأنا أدور لك على أصناف MIG FARM فقط.",
-
-
-        quick_replies:
-          locale==="en"
-          ?
-          [
-            "Tomato seeds",
-            "Cucumber seeds",
-            "Pepper seeds",
-            "Eggplant seeds"
-          ]
-          :
-          [
-            "بذور طماطم",
-            "بذور خيار",
-            "بذور فلفل",
-            "بذور باذنجان"
-          ],
-
-
-        brand_scope:
-          "mig_farm_seeds_only"
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "migfarm_seed_no_match",
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     PAGE ANSWER
-     ====================================================== */
-
-  const pageAnswer=
-    extractPageAnswer(
-      pages,
-      effectiveQuery,
-      locale
-    );
-
-
-  if(
-    pageAnswer?.reply
-  ){
-
-    return makeResponse({
-
-      payload:{
-
-        reply:
-          pageAnswer.reply,
-
-        confidence:
-          pageAnswer.confidence,
-
-        suggested_actions:
-          pageAnswer.page?.url
-          ?
-          [{
-            type:"page",
-
-            label:
-              locale==="en"
-              ?
-              "Open page"
-              :
-              "افتح الصفحة",
-
-            url:
-              pageAnswer.page.url
-          }]
-          :
-          []
-
-      },
-
-      cors,
-
-      sessionId,
-
-      state,
-
-      source:
-        "live_site_page",
-
-      message,
-
-      locale
-
-    });
-
-  }
-
-
-  /* ======================================================
-     FINAL SAFE FALLBACK
-     ====================================================== */
-
+  const cleanResults=products.map(p=>({name:p.name,price:p.price,currency:p.currency,availability:p.availability,sku:p.sku,url:p.url}));
   return makeResponse({
-
     payload:{
-
-      reply:
-        defaultFallback(
-          locale
-        ),
-
-      suggested_actions:[
-        {
-          type:"whatsapp",
-
-          label:
-            locale==="en"
-            ?
-            "WhatsApp MIG FARM"
-            :
-            "كلمنا واتساب",
-
-          url:
-            BUSINESS.whatsapp
-        }
-      ],
-
-      escalation:true,
-
-      page_context:{
-
-        page_title:
-          pageTitle,
-
-        page_url:
-          pageUrl
-
-      }
-
+      reply:`${shipping.reply}\n\n${formatProductsForMemory(products,locale,`${sessionId}:${message}`)}`,
+      display_reply:`${shipping.reply}\nوبالنسبة للمنتج، حصلت لك ${products.length} خيارات مناسبة 👇`,
+      results:cleanResults,
+      quick_replies:salesQuickReplies({category:categoryKey,stage:"consider",results:cleanResults,profile}),
+      suggested_actions:shipping.actions||[],
+      multi_intent:true,
+      brand_scope:categoryKey==="seeds"?"mig_farm_seeds_only":"category_filtered"
     },
-
-    cors,
-
-    sessionId,
-
-    state,
-
-    source:
-      "safe_fallback",
-
-    message,
-
-    locale
-
+    cors,sessionId,state,analysis,signals,profile,message,source:"multi_shipping_products",results:cleanResults,locale
   });
+}
 
+export async function OPTIONS(request){
+  const origin=request.headers.get("origin")||"";
+  if(!isAllowedOrigin(origin)) return new Response(null,{status:403});
+  return new Response(null,{status:204,headers:corsHeaders(origin)});
+}
+
+export async function POST(request){
+  const origin=request.headers.get("origin")||""; const cors=corsHeaders(origin);
+  if(!isAllowedOrigin(origin)) return jsonResponse({error:"origin_not_allowed"},403,cors);
+  let body; try{body=await request.json();}catch{return jsonResponse({error:"invalid_json"},400,cors);}
+
+  const message=cleanText(body?.message,2500);
+  const sessionId=cleanText(body?.session_id,160)||crypto.randomUUID();
+  const locale=safeLocale(body?.locale);
+  const pageUrl=safePageUrl(body?.page_url);
+  const pageTitle=cleanText(body?.page_title,500);
+  const history=normalizeHistory(body?.history);
+  const productContext=normalizeProductContext(body?.product_context);
+  const state=mergeState(body?.conversation_state,history);
+  const existingProfile=sanitizeCustomerProfile(body?.conversation_state?.customer_profile||body?.customer_profile);
+  const analysis=analyzeTurn(message,state,history,locale);
+  const signals=extractCustomerSignals(message,analysis,state);
+  const profile=mergeCustomerProfile(existingProfile,signals,analysis,state);
+
+  if(!message) return makeResponse({payload:{reply:locale==="en"?"Write a message first.":"اكتب سؤالك أول."},status:400,cors,sessionId,state,analysis,signals,profile,message,source:"empty",locale});
+
+  const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
+  if(!rateLimit(`${ip}:${sessionId}`)) return makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
+
+  // Repair misunderstandings before routing a vague "wrong / I mean..." message.
+  const repair=customerRepairReply(signals,analysis,profile);
+  if(repair) return makeResponse({payload:{reply:repair.reply,quick_replies:repair.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:repair.source,locale});
+
+  // A ready customer who already has products should not be sent back to generic ordering instructions.
+  const purchase=purchaseContinuation({profile,state,analysis,message});
+  if(purchase) return makeResponse({payload:{reply:purchase.reply,quick_replies:purchase.quick_replies||[],suggested_actions:purchase.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:purchase.source,locale});
+
+  // Natural multi-intent: "عندكم بذور طماطم وتوصلون العين؟"
+  const multi=await multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors});
+  if(multi) return multi;
+
+  const direct=directReply(analysis,state,message,sessionId);
+  if(direct) return makeResponse({payload:{reply:direct.reply,quick_replies:direct.quick_replies||[],suggested_actions:direct.actions||[],escalation:direct.escalation},cors,sessionId,state,analysis,signals,profile,message,source:direct.source,locale});
+
+  const humanKnowledge=extendedKnowledgeReply(message,locale,{sessionId,profile,state,analysis});
+  if(humanKnowledge) return makeResponse({payload:{reply:humanKnowledge.reply,quick_replies:humanKnowledge.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:humanKnowledge.source,locale});
+
+  const memory=productMemoryReply(analysis,state,locale);
+  if(memory) return makeResponse({payload:{reply:memory.reply,quick_replies:salesQuickReplies({category:state.category,stage:"compare",results:state.last_products||[],profile})},cors,sessionId,state,analysis,signals,profile,message,source:memory.source,locale});
+
+  const currentProduct=await resolveCurrentProduct(pageUrl,productContext);
+  const current=currentProductReply(message,currentProduct,locale);
+  if(current) return makeResponse({payload:{reply:current,suggested_actions:pageUrl?[{type:"page",label:"افتح المنتج",url:pageUrl}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"current_product",locale});
+
+  const contextual=ambiguousContextReply(message,state,analysis);
+  if(contextual) return makeResponse({payload:{reply:contextual.reply,quick_replies:contextual.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:contextual.source,locale});
+
+  if(isClearlyOffDomain(message)) return makeResponse({payload:{reply:"أنا مخصص لـ MIG FARM والزراعة والمنتجات والشحن وخدمات الموقع. إذا سؤالك متعلق بهالمجال عطِني التفاصيل وأنا أساعدك."},cors,sessionId,state,analysis,signals,profile,message,source:"off_domain",locale});
+
+  // Greenhouse = project qualification, not a random product dump.
+  if((analysis.category?.key||state.category||profile.category)==="greenhouse" && ["product_search","recommendation","unknown"].includes(analysis.intent)){
+    const stage=journeyStage({analysis,profile,state,message});
+    const gh=greenhouseLeadReply({profile,state,analysis,stage});
+    return makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
+  }
+
+  const productLike=["product_search","recommendation"].includes(analysis.intent) || Boolean(analysis.category) || Boolean(analysis.crop);
+  if(productLike){
+    // If the customer asked for a recommendation and we still miss one key detail,
+    // ask ONE question instead of dumping products.
+    if(analysis.intent==="recommendation"){
+      const stage=journeyStage({analysis,profile,state,message});
+      const next=nextBestQuestion({analysis,profile,state,stage});
+      if(next){
+        return makeResponse({payload:{reply:next.reply,quick_replies:next.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:`sales_qualify_${next.field}`,locale});
+      }
+    }
+
+    const {products,categoryKey}=await searchCatalog(analysis,state,message,history);
+    if(products.length){
+      const cleanResults=products.map(p=>({name:p.name,price:p.price,currency:p.currency,availability:p.availability,sku:p.sku,url:p.url}));
+      const reply=formatProductsForMemory(products,locale,`${sessionId}:${message}`);
+      const stage=journeyStage({analysis,profile,state,message,results:cleanResults});
+      const quick=salesQuickReplies({category:categoryKey,stage,results:cleanResults,profile});
+      return makeResponse({payload:{reply,results:cleanResults,quick_replies:quick.length?quick:productSearchQuickReplies(categoryKey,locale,true),brand_scope:categoryKey==="seeds"?"mig_farm_seeds_only":"category_filtered"},cors,sessionId,state,analysis,signals,profile,message,source:categoryKey==="seeds"?"live_migfarm_seeds":"live_category_products",results:cleanResults,locale});
+    }
+
+    if(categoryKey==="seeds"){
+      const fallback=knownSeedFallback(analysis.crop?.key||state.crop,locale);
+      return makeResponse({payload:{reply:fallback||pick(TONE.noProductAr,`${sessionId}:${message}`),quick_replies:productSearchQuickReplies("seeds",locale,false)},cors,sessionId,state,analysis,signals,profile,message,source:"seed_knowledge_no_live_match",locale});
+    }
+    const knownFallback=knownCategoryFallback(categoryKey,locale);
+    return makeResponse({payload:{reply:knownFallback||`${pick(TONE.noProductAr,`${sessionId}:${message}`)} اكتب اسم المنتج أو استخدامه بشكل أدق، أو أقدر أوصلك بالفريق.`,quick_replies:["دور بالاسم","كلم الفريق"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})]},cors,sessionId,state,analysis,signals,profile,message,source:knownFallback?"known_category_no_live_match":"no_live_product_match",locale});
+  }
+
+  // Site-wide retrieval only after verified knowledge and product routing fail.
+  let pages=[];
+  try{ pages=await searchSitePages(message,5); }catch(error){ console.error("site search failed",error?.message); }
+  const pAnswer=pageAnswer(pages,message,locale);
+  if(pAnswer) return makeResponse({payload:{reply:pAnswer.reply,confidence:pAnswer.confidence,suggested_actions:pAnswer.page?.url?[{type:"page",label:"افتح الصفحة",url:pAnswer.page.url}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"confidence_site_rag",locale});
+
+  return makeResponse({payload:{reply:pick(TONE.fallbackAr,`${sessionId}:${message}`),quick_replies:["منتج","شحن","فرع","خدمة"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})],escalation:true,page_context:{page_title:pageTitle,page_url:pageUrl},knowledge_stats:knowledgeStats()},cors,sessionId,state,analysis,signals,profile,message,source:"safe_human_fallback",locale});
 }
