@@ -13,7 +13,7 @@ async function ask(message,state={},history=[]){
 }
 
 let r=await ask('هلا');
-assert.equal(r.version,'7.0.0');
+assert.equal(r.version,'8.4.0');
 assert.match(r.reply,/حياك|هلا|مرحبا/);
 
 r=await ask('شو يعني F1؟');
