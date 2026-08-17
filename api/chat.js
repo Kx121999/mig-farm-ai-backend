@@ -30,9 +30,16 @@ import {
   cognitiveVisibleSetDecision, cognitiveResponseMeta, updateCognitiveDecisionMemory
 } from "../lib/cognition.js";
 import { evidenceSummary, detectEvidenceRisks } from "../lib/evidence.js";
+import {
+  semanticKnowledgeCandidates, semanticSiteCandidates, fuseRetrieval, composeHybridKnowledgeAnswer
+} from "../lib/semantic_rag.js";
+import {
+  buildHybridPlan, mergeHybridMemory, criticReview, applyCriticGuard,
+  hybridResponseMeta, episodicMemoryCandidates
+} from "../lib/hybrid_brain.js";
 
-const VERSION="9.0.0";
-const MODE="cognitive_knowledge_reasoning_v9";
+const VERSION="10.0.0";
+const MODE="hybrid_brain_rag_planner_critic_v10";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -139,13 +146,35 @@ function sourceNeedsLearning(source=""){
   return /(fallback|no_live|clarify|repair|off_domain)/.test(String(source||""));
 }
 
-async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null}){
+async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
   payload=enforceResponseQuality(payload);
   const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
+  const executionPlan=plan||buildHybridPlan({message,analysis,cognition:frame,state,profile});
+  const retrievalBundle=retrieval||fuseRetrieval({
+    message,
+    products:Array.isArray(results)?results:[],
+    memory:episodicMemoryCandidates(state?.hybrid_memory||{})
+  });
+
+  const evidence=evidenceSummary({source,payload,results,analysis});
+  const review=criticReview({payload,source,results,evidence,cognition:frame,retrieval:retrievalBundle,plan:executionPlan});
+  payload=enforceResponseQuality(applyCriticGuard(payload,review));
+
   const next=updateState(state,analysis,message,source,results,payload);
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
+
+  const evidenceRisks=detectEvidenceRisks({source,payload,results});
+  const cognitive=cognitiveResponseMeta({frame,memory:cognitiveMemory,decision,evidence,risks:[...evidenceRisks,...(review.flags||[])]});
+  const preHybrid=hybridResponseMeta({plan:executionPlan,memory:state?.hybrid_memory||{},review,retrieval:retrievalBundle,evidence,cognition:cognitive});
+  const hybridMemory=mergeHybridMemory(state?.hybrid_memory||{}, {
+    message,analysis,state,profile,results,source,payload,decision,cognition:frame,
+    retrieval:retrievalBundle,turn:next.turn,confidence:preHybrid.confidence
+  });
+  next.hybrid_memory=hybridMemory;
+  const hybrid=hybridResponseMeta({plan:executionPlan,memory:hybridMemory,review,retrieval:retrievalBundle,evidence,cognition:cognitive});
+
   const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
   const stage=journeyStage({analysis,profile:nextProfile,state:next,message,results});
   const lead=leadScore({analysis,profile:nextProfile,state:next,message,source,results});
@@ -166,9 +195,6 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   }
 
   const quality=conversationQualityMeta({previous:state,next,analysis,message,source,payload,results});
-  const evidence=evidenceSummary({source,payload,results,analysis});
-  const evidenceRisks=detectEvidenceRisks({source,payload,results});
-  const cognitive=cognitiveResponseMeta({frame,memory:cognitiveMemory,decision,evidence,risks:evidenceRisks});
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -198,6 +224,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     conversation_quality:quality,
     cognitive,
     evidence,
+    hybrid_brain:hybrid,
     learning_event:sourceNeedsLearning(source)?learning:undefined,
     source
   },status,cors);
@@ -416,11 +443,28 @@ export async function POST(request){
     return await makeResponse({payload:{reply:knownFallback||`${pick(TONE.noProductAr,`${sessionId}:${message}`)} اكتب اسم المنتج أو استخدامه بشكل أدق، أو أقدر أوصلك بالفريق.`,quick_replies:["دور بالاسم","كلم الفريق"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})]},cors,sessionId,state,analysis,signals,profile,message,source:knownFallback?"known_category_no_live_match":"no_live_product_match",locale});
   }
 
-  // Site-wide retrieval only after verified knowledge and product routing fail.
+  // V10 Hybrid RAG: fuse managed knowledge, site retrieval and episodic memory.
   let pages=[];
-  try{ pages=await searchSitePages(message,5); }catch(error){ console.error("site search failed",error?.message); }
-  const pAnswer=pageAnswer(pages,message,locale);
-  if(pAnswer) return await makeResponse({payload:{reply:pAnswer.reply,confidence:pAnswer.confidence,suggested_actions:pAnswer.page?.url?[{type:"page",label:"افتح الصفحة",url:pAnswer.page.url}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"confidence_site_rag",locale});
+  try{ pages=await searchSitePages(message,7); }catch(error){ console.error("site search failed",error?.message); }
+  const knowledgeCandidates=semanticKnowledgeCandidates(message,{locale,analysis,state,profile,cognition},6);
+  const siteCandidates=semanticSiteCandidates(message,pages,7);
+  const memoryCandidates=episodicMemoryCandidates(state?.hybrid_memory||{});
+  const hybridRetrieval=fuseRetrieval({message,knowledge:knowledgeCandidates,pages:siteCandidates,memory:memoryCandidates});
+  const hybridAnswer=composeHybridKnowledgeAnswer(hybridRetrieval,locale);
+  if(hybridAnswer){
+    const topPage=hybridAnswer.citations?.find(x=>x.url);
+    return await makeResponse({
+      payload:{
+        reply:hybridAnswer.reply,display_reply:hybridAnswer.display_reply,confidence:hybridAnswer.confidence,
+        hybrid_citations:hybridAnswer.citations||[],
+        suggested_actions:topPage?[{type:"page",label:"افتح المصدر",url:topPage.url}]:[]
+      },
+      cors,sessionId,state,analysis,signals,profile,message,source:hybridAnswer.source,locale,retrieval:hybridRetrieval
+    });
+  }
 
-  return await makeResponse({payload:{reply:pick(TONE.fallbackAr,`${sessionId}:${message}`),quick_replies:["منتج","شحن","فرع","خدمة"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})],escalation:true,page_context:{page_title:pageTitle,page_url:pageUrl},knowledge_stats:knowledgeStats()},cors,sessionId,state,analysis,signals,profile,message,source:"safe_human_fallback",locale});
+  const pAnswer=pageAnswer(pages,message,locale);
+  if(pAnswer) return await makeResponse({payload:{reply:pAnswer.reply,confidence:pAnswer.confidence,suggested_actions:pAnswer.page?.url?[{type:"page",label:"افتح الصفحة",url:pAnswer.page.url}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"confidence_site_rag",locale,retrieval:hybridRetrieval});
+
+  return await makeResponse({payload:{reply:pick(TONE.fallbackAr,`${sessionId}:${message}`),quick_replies:["منتج","شحن","فرع","خدمة"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})],escalation:true,page_context:{page_title:pageTitle,page_url:pageUrl},knowledge_stats:knowledgeStats()},cors,sessionId,state,analysis,signals,profile,message,source:"safe_human_fallback",locale,retrieval:hybridRetrieval});
 }
