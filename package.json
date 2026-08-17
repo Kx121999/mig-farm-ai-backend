@@ -1,10 +1,10 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "7.0.0",
+  "version": "8.4.0",
   "private": true,
   "type": "module",
-  "description": "Free sales and knowledge assistant for MIG FARM Odoo website",
+  "description": "MIG FARM deterministic sales, commerce, knowledge and conversation quality assistant for Odoo",
   "scripts": {
-    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/api_direct.mjs"
+    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/v8_phase4.mjs && node tests/api_direct.mjs"
   }
 }
