@@ -1,0 +1,28 @@
+MIG FARM AI — V8 PHASE 3 GITHUB EDITION
+
+ارفع كل محتويات هذا ZIP إلى Root الريبو بنفس المسارات.
+
+الجديد:
+- data/knowledge.json         قاعدة المعرفة الوحيدة التي ستعدلها لاحقًا.
+- lib/knowledge_loader.js    يقرأ knowledge.json ويعمل matching + validation.
+- api/chat.js                تم تحويله من Admin Panel إلى GitHub Knowledge.
+- api/health.js              يعرض حالة GitHub Knowledge.
+- api/knowledge.js           يعطل Admin API القديم ويرجع 410.
+- admin/index.html           يستبدل لوحة التوكن القديمة بصفحة معلومات فقط.
+- tests/v8_phase3_github.mjs اختبار النسخة الجديدة.
+- package.json               يشغل اختبار GitHub Edition.
+
+مهم:
+- لا تحتاج MIG_ADMIN_TOKEN.
+- لا تحتاج Redis لإدارة المعرفة.
+- لا تحتاج تعديل Odoo.
+- الملف القديم lib/admin_knowledge.js يمكن أن يظل في الريبو؛ لم يعد api/chat.js يستورده أو يستخدمه.
+- tests/v8_phase3.mjs القديم يمكن أن يظل موجودًا؛ package.json لم يعد يشغله.
+- بعد أي تعديل في data/knowledge.json اعمل Commit فقط، وVercel سيعمل Deploy تلقائيًا.
+
+لإضافة معلومة:
+أضف Object جديد داخل entries في data/knowledge.json مع:
+id / type / category / title / question / answer / keywords / locale / enabled / priority / verified / source_label
+
+الأمان:
+أي محتوى جرعات أو نسب خلط يجب أن يحتوي safety_approved=true وإلا اختبار validation يفشل.
