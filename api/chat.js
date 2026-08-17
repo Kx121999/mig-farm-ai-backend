@@ -24,9 +24,10 @@ import { readServerSession, writeServerSession, mergeSessionState, mergeSessionP
 import { searchProductIndex, productIndexStatus } from "../lib/product_index.js";
 import { clientProducts, commerceCapabilities } from "../lib/commerce.js";
 import { answerGitHubKnowledge, githubKnowledgeStatus } from "../lib/knowledge_loader.js";
+import { enforceResponseQuality, conversationQualityMeta } from "../lib/quality.js";
 
-const VERSION="7.0.0";
-const MODE="free_sales_knowledge_agent_v7";
+const VERSION="8.4.0";
+const MODE="github_commerce_conversation_quality_v8";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -134,7 +135,8 @@ function sourceNeedsLearning(source=""){
 }
 
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar"}){
-  const next=updateState(state,analysis,message,source,results);
+  payload=enforceResponseQuality(payload);
+  const next=updateState(state,analysis,message,source,results,payload);
   const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
   const stage=journeyStage({analysis,profile:nextProfile,state:next,message,results});
   const lead=leadScore({analysis,profile:nextProfile,state:next,message,source,results});
@@ -153,6 +155,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   if((stage==="ready"||stage==="handoff"||lead.temperature==="hot") && !actions.some(a=>a.type==="whatsapp")){
     actions.push(buildWhatsAppHandoff({profile:nextProfile,state:next,analysis,message}));
   }
+
+  const quality=conversationQualityMeta({previous:state,next,analysis,message,source,payload,results});
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -179,6 +183,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
+    conversation_quality:quality,
     learning_event:sourceNeedsLearning(source)?learning:undefined,
     source
   },status,cors);
