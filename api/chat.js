@@ -185,18 +185,22 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
 async function searchCatalog(analysis,state,message,history){
   const query=buildSearchQuery(analysis,state,message);
   let products=[];
+
+  // V8.1.1: filter indexed candidates BEFORE deciding whether index coverage is enough.
+  // A large generic seed index is not considered a valid tomato result set.
   try{
     const indexed=await searchProductIndex(query,analysis,state,12);
-    products=indexed.products||[];
+    products=filterRankProducts(indexed.products||[],analysis,state,message);
   }catch(error){ console.error("product index search failed",error?.message); }
 
   if(products.length<4){
     try{
-      const live=await searchProducts(query,history,24);
-      products=mergeProducts(products,live);
+      const liveRaw=await searchProducts(query,history,24);
+      const live=filterRankProducts(liveRaw,analysis,state,message);
+      products=filterRankProducts(mergeProducts(products,live),analysis,state,message);
     }catch(error){ console.error("product search failed",error?.message); }
   }
-  products=filterRankProducts(products,analysis,state,message);
+
   const categoryKey=analysis.category?.key||state.category||"";
   if(categoryKey==="seeds" && products.length<4){
     try{
