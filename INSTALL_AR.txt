@@ -1,28 +1,36 @@
-MIG FARM V8 - PHASE 1 (STAGED UNDER V7)
+MIG FARM AI — V8 PHASE 3 KNOWLEDGE ADMIN
 
-الهدف:
-- تحسين ترتيب نتائج المنتجات بدون تغيير واجهة الشات الحالية.
-- جمع Metrics مجمعة بدون تخزين نص رسائل العملاء.
-- إضافة Endpoint داخلي محمي للمقاييس.
-- عدم تغيير VERSION الظاهر للعميل قبل نجاح الاختبارات النهائية.
+الملفات التي ترفع إلى GitHub:
+- lib/admin_knowledge.js        جديد
+- api/knowledge.js              جديد
+- api/chat.js                   استبدال
+- api/health.js                 استبدال
+- tests/v8_phase3.mjs           جديد
+- package.json                  استبدال
+- admin/index.html              جديد
 
-ارفع بالترتيب:
-1) lib/ranker.js          (ملف جديد)
-2) lib/metrics.js         (ملف جديد)
-3) استبدل lib/catalog.js
-4) استبدل lib/learning.js
-5) api/metrics.js         (ملف جديد)
-6) tests/v8_core.mjs      (ملف جديد)
+بعد الـDeploy:
+1) في Vercel Environment Variables أضف:
+   MIG_ADMIN_TOKEN=<قيمة سرية قوية>
 
-لا تعدل api/chat.js ولا api/health.js في هذه المرحلة.
+2) للتخزين الدائم استخدم نفس Redis REST المدعوم في Phase 2:
+   UPSTASH_REDIS_REST_URL
+   UPSTASH_REDIS_REST_TOKEN
 
-بعد الرفع:
-- V7 يظل ظاهرًا للمستخدم.
-- الـRanking الجديد يعمل تلقائيًا لأن catalog.js يستدعي ranker.js.
-- الـMetrics تبدأ تلقائيًا لأن learning.js يسجلها.
-- /api/metrics لن يعرض أي بيانات إلا بعد إضافة Environment Variable:
-  MIG_METRICS_TOKEN=<secret value>
+   أو:
+   KV_REST_API_URL
+   KV_REST_API_TOKEN
+
+3) افتح:
+   https://<your-vercel-domain>/admin/
+   ثم أدخل MIG_ADMIN_TOKEN.
 
 مهم:
-الـMetrics Runtime aggregate داخل Vercel serverless، لذلك قد تُصفّر عند Cold Start.
-هي مناسبة الآن لمراقبة الاتجاهات والاختبار، وليست Database دائمة.
+- بدون Redis: اللوحة تعمل، لكن التخزين Runtime وقد يضيع عند Cold Start.
+- مع Redis: المعرفة والإصدارات السابقة تكون دائمة.
+- لا يتم تخزين رسائل العملاء في Knowledge Admin.
+- أي معلومة جرعة/خلط تحتاج safety_approved=true وإلا الحفظ يُرفض.
+- المعلومات المتغيرة مثل الدفع/الشحن/VAT/السعر/التوفر تعطي Warning إذا لم تكن verified.
+- Rollback متاح من اللوحة.
+- تغييرات المعرفة تُقرأ من Redis مع Cache قصير افتراضي 12 ثانية.
+- واجهة الشات الحالية في Odoo لا تحتاج تغيير في Phase 3.
