@@ -1,0 +1,16 @@
+MIG FARM AI V12 patch files
+- api/chat.js
+- api/health.js
+- api/admin/knowledge-gaps.js
+- lib/dialogue.js
+- lib/neural_agent.js
+- lib/persistent_store.js
+- lib/cognitive_os.js
+- tests/v11_neural.mjs
+- tests/v12_persistent_os.mjs
+- tests/v12_persistent_store_mock.mjs
+- tests/api_direct.mjs
+- package.json
+- RELEASE_NOTES_V12_AR.txt
+- UPLOAD_V12_AR.txt
+- VERCEL_ENV_V12_AR.txt

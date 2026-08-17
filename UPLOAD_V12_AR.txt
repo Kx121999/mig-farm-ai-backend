@@ -1,0 +1,16 @@
+طريقة رفع V12
+=============
+
+1) فك ZIP.
+2) ارفع كل الملفات والمجلدات إلى Root نفس GitHub repository المستخدم حاليًا.
+3) اعمل Replace للملفات الموجودة بنفس المسارات.
+4) لا تعدل Odoo ولا GTM.
+5) انتظر Vercel Deployment.
+6) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+
+يجب أن يظهر:
+version: 12.0.0
+mode: persistent_cognitive_os_neural_agent_v12
+
+V12 يعمل حتى بدون Storage خارجي، لكن الذاكرة بين الزيارات لن تصبح Persistent فعلًا إلا بعد إضافة Redis REST Environment Variables الموضحة في VERCEL_ENV_V12_AR.txt.

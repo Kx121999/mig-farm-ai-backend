@@ -1,0 +1,24 @@
+MIG FARM AI V12.0 — Persistent Cognitive OS
+============================================
+
+V12 يضيف طبقة ذاكرة معرفية مستمرة فوق V11 من غير ما يكسر الـCommerce أو الـNeural Agent الحالي.
+
+أهم الإضافات:
+- Persistent bounded customer memory عبر Redis REST اختياري.
+- Memory consolidation: حفظ القيود والاختيارات المهمة بدل تخزين المحادثة كاملة.
+- Temporal product memory: حفظ ملاحظات السعر والتوفر بتاريخها مع اعتبار المتجر الحي المصدر الحالي دائمًا.
+- Persistent knowledge graph bounded يربط الهدف والمحصول والمنتجات والأدلة.
+- Retrieval Router يقرر متى يحتاج live catalog / managed knowledge / site / persistent memory.
+- Cross-session preference hydration للميزانية والإمارة وطريقة الزراعة وتفضيل السعر والتوفر.
+- Knowledge gap queue لتجميع نقاط المعرفة غير المحسومة بشكل آمن.
+- Journey memory لتقدير مرحلة العميل: discover / explore / consider / purchase_intent.
+- Neural Agent V12 مع أداتين إضافيتين:
+  recall_persistent_memory
+  search_temporal_memory
+- Historical price/stock لا يتم اعتباره حقيقة حالية؛ current commerce truth يظل من live catalog فقط.
+- Privacy: لا يتم تخزين session_id الخام ولا المحادثة الكاملة، والتخزين bounded وله TTL.
+- Fail-safe: لو Redis غير متوصل يظل V12 يعمل ويعود إلى الذاكرة المحلية/الجلسة بدون تعطيل الشات.
+
+النسخة:
+version: 12.0.0
+mode: persistent_cognitive_os_neural_agent_v12
