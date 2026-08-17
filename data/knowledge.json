@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "edition": "github",
+  "updated_at": "2026-08-17",
+  "settings": {
+    "enabled": true,
+    "min_match_score": 10,
+    "max_answer_entries": 2
+  },
+  "entries": [
+    {
+      "id": "company-identity",
+      "type": "fact",
+      "category": "company",
+      "title": "من هي MIG FARM",
+      "question": "من أنتم؟",
+      "answer": "MIG FARM متخصصة في المستلزمات والخدمات الزراعية في الإمارات، وتشمل البذور والأسمدة والمبيدات وأدوات ومعدات الزراعة والري والبيوت المحمية والزراعة المائية.",
+      "keywords": [
+        "من انتم",
+        "ميج فارم",
+        "MIG FARM",
+        "الشركة",
+        "مستلزمات زراعية"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 18,
+      "verified": true,
+      "source_label": "MIG FARM business profile",
+      "intents": [
+        "company",
+        "identity"
+      ]
+    },
+    {
+      "id": "shipping-uae",
+      "type": "policy",
+      "category": "shipping",
+      "title": "الشحن داخل الإمارات",
+      "question": "عندكم شحن داخل الإمارات؟",
+      "answer": "نعم، التوصيل متاح داخل الإمارات. قيمة التوصيل القياسية الحالية 13 درهم.",
+      "keywords": [
+        "شحن",
+        "توصيل",
+        "داخل الامارات",
+        "العين",
+        "الشارقة",
+        "دبي",
+        "ابوظبي"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 20,
+      "verified": true,
+      "source_label": "MIG FARM configured delivery policy",
+      "intents": [
+        "shipping",
+        "delivery_time"
+      ]
+    },
+    {
+      "id": "sharjah-branch",
+      "type": "fact",
+      "category": "branches",
+      "title": "فرع الشارقة",
+      "question": "رقم فرع الشارقة",
+      "answer": "للتواصل مع فرع الشارقة: +971 54 702 5904.",
+      "keywords": [
+        "فرع الشارقة",
+        "الشارقة",
+        "رقم الشارقة",
+        "هاتف الشارقة"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 18,
+      "verified": true,
+      "source_label": "MIG FARM contact details",
+      "intents": [
+        "branches",
+        "contact"
+      ]
+    },
+    {
+      "id": "alain-branch",
+      "type": "fact",
+      "category": "branches",
+      "title": "فرع العين",
+      "question": "رقم فرع العين",
+      "answer": "للتواصل مع فرع العين: +971 58 176 8215.",
+      "keywords": [
+        "فرع العين",
+        "العين",
+        "رقم العين",
+        "هاتف العين"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 18,
+      "verified": true,
+      "source_label": "MIG FARM contact details",
+      "intents": [
+        "branches",
+        "contact"
+      ]
+    },
+    {
+      "id": "email",
+      "type": "fact",
+      "category": "contact",
+      "title": "البريد الإلكتروني",
+      "question": "ما هو البريد الإلكتروني؟",
+      "answer": "البريد الإلكتروني: sales@migfarm.com.",
+      "keywords": [
+        "ايميل",
+        "البريد",
+        "email",
+        "sales"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 15,
+      "verified": true,
+      "source_label": "MIG FARM contact details",
+      "intents": [
+        "contact"
+      ]
+    },
+    {
+      "id": "payment-status",
+      "type": "notice",
+      "category": "payment",
+      "title": "طرق الدفع",
+      "question": "ما هي طرق الدفع المتاحة؟",
+      "answer": "طرق الدفع النشطة قد تتغير حسب إعدادات المتجر وقت الطلب. افتح صفحة الدفع لتأكيد الخيارات المتاحة حاليًا.",
+      "keywords": [
+        "دفع",
+        "كاش",
+        "اونلاين",
+        "بطاقة",
+        "paymob",
+        "الدفع"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 22,
+      "verified": true,
+      "source_label": "Dynamic checkout status",
+      "intents": [
+        "payment"
+      ]
+    },
+    {
+      "id": "vat-status",
+      "type": "notice",
+      "category": "vat",
+      "title": "الضريبة",
+      "question": "هل السعر شامل الضريبة؟",
+      "answer": "لا أؤكد احتساب أو تضمين الضريبة إلا إذا كان ذلك ظاهرًا بوضوح في المتجر أو الفاتورة وقت الطلب.",
+      "keywords": [
+        "ضريبة",
+        "vat",
+        "شامل الضريبة",
+        "5%"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 22,
+      "verified": true,
+      "source_label": "MIG FARM current system constraint",
+      "intents": [
+        "vat"
+      ]
+    },
+    {
+      "id": "pesticide-dose-safety",
+      "type": "policy",
+      "category": "safety",
+      "title": "جرعات المبيدات والأسمدة",
+      "question": "ما هي الجرعة؟",
+      "answer": "الجرعة لا ينفع تتحدد من غير اسم المنتج والمحصول والمشكلة ومرحلة الاستخدام وتعليمات الملصق. ابعت اسم المنتج أو صورة الملصق ونحدد الخطوة الآمنة.",
+      "keywords": [
+        "جرعة",
+        "كم مل",
+        "كم ملي",
+        "خلط",
+        "مبيد",
+        "سماد"
+      ],
+      "locale": "ar",
+      "enabled": true,
+      "priority": 30,
+      "verified": true,
+      "safety_approved": true,
+      "source_label": "MIG FARM safety rule",
+      "intents": [
+        "pesticide",
+        "fertilizer",
+        "product_info",
+        "unknown"
+      ]
+    }
+  ]
+}
