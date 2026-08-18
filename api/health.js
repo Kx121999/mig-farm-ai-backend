@@ -25,12 +25,12 @@ export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V22 Multimodal Agricultural & Product Vision Sales OS",
-    version:"22.0.0",
-    mode:"multimodal_agricultural_product_vision_sales_os_v22",
+    service:"MIG FARM V22.1 Multimodal Vision Stability & Product Truth OS",
+    version:"22.1.0",
+    mode:"multimodal_agricultural_product_vision_stability_os_v22_1",
     features:[
-      "multimodal_image_input","product_visual_recognition","readable_label_text_to_catalog_match","sku_barcode_visual_matching","visual_product_identity_guard","multi_image_evidence_fusion","plant_visual_triage","crop_visual_diagnostic_atlas","observation_before_inference","one_best_next_photo","image_quality_retake_protocol","pesticide_label_visual_claim_guard","visual_dosage_hallucination_guard","unknown_product_visual_mode","image_prompt_injection_guard","visual_to_live_odoo_verification",
-      "live_product_truth_engine","field_level_provenance","variant_identity_guard","stale_snapshot_conflict_detection","product_relationship_graph","verified_alternative_ladder","shopping_adjacency_without_compatibility_claims","explicit_product_fact_index","need_to_product_fact_matching","verified_bundle_builder","verified_quote_draft","live_price_stock_total_guard","order_not_placed_guard",
+      "multimodal_image_input","active_visual_context_persistence","visual_followup_image_reuse","vision_first_routing","vision_tool_whitelist_enforcement","visual_grounding_retry","generic_visual_fallback_block","product_visual_recognition","readable_label_text_to_catalog_match","sku_barcode_visual_matching","visual_product_identity_guard","multi_image_evidence_fusion","plant_visual_triage","crop_visual_diagnostic_atlas","observation_before_inference","one_best_next_photo","image_quality_retake_protocol","pesticide_label_visual_claim_guard","visual_dosage_hallucination_guard","unknown_product_visual_mode","image_prompt_injection_guard","visual_to_live_odoo_verification",
+      "live_product_truth_engine","field_level_provenance","variant_identity_guard","stale_snapshot_conflict_detection","product_relationship_graph","verified_alternative_ladder","shopping_adjacency_without_compatibility_claims","explicit_product_fact_index","generated_description_fact_exclusion","labelled_fact_colon_guard","product_fact_reliability_provenance","need_to_product_fact_matching","verified_bundle_builder","verified_quote_draft","live_price_stock_total_guard","order_not_placed_guard",
       "full_product_dossier_intelligence","704_product_dossiers","exact_sales_and_ecommerce_descriptions","product_description_semantic_retrieval","product_dossier_tool","product_comparison_grounding","live_odoo_dossier_fusion","archived_vs_live_precedence_guard","missing_specification_guard",
       "conversion_decision_brain","explicit_purchase_readiness","objection_root_cause_resolution","ethical_persuasion_policy","close_timing_guard","evidence_to_sales_decision","question_budget_enforcement","technical_before_commerce_guard","no_buying_override","conversion_reply_quality_guard",
       "current_turn_semantic_priority","stale_context_quarantine","zero_tool_casual_mode","browse_only_no_sales_pressure","semantic_reply_alignment_guard","repair_topic_supersession","followup_dependency_detection","old_agronomy_leak_guard","adaptive_human_acknowledgement","4mb_agricultural_master_knowledge","large_free_form_agricultural_retrieval","agricultural_master_tool",
@@ -68,7 +68,7 @@ export async function GET(){
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v22:false},
+    persistent_store:{...persistence,required_for_v22_1:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
