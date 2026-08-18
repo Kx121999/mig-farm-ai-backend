@@ -10,16 +10,17 @@ import { neuralBrainHealth } from "../lib/neural_agent.js";
 import { persistentStoreHealth } from "../lib/persistent_store.js";
 import { cognitiveOSHealth } from "../lib/cognitive_os.js";
 import { autonomousCommerceHealth } from "../lib/autonomous_commerce.js";
+import { uaeAgricultureHealth } from "../lib/uae_agriculture_intelligence.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM Autonomous Commerce Intelligence OS",
-    version:"13.0.0",
-    mode:"autonomous_commerce_executive_v13",
+    service:"MIG FARM UAE Agricultural Intelligence & Autonomous Commerce OS",
+    version:"14.0.0",
+    mode:"uae_agricultural_intelligence_autonomous_commerce_v14",
     features:[
-      "autonomous_commerce_mission_decomposition","single_question_clarification_gate","multi_step_commerce_orchestration",
+      "uae_agricultural_intelligence","uae_regulatory_knowledge","official_source_manifest","legal_freshness_guard","emirate_authority_routing","climate_soil_water_knowledge","greenhouse_hydroponics_knowledge","crop_management_uae","agricultural_safety_guard","autonomous_commerce_mission_decomposition","single_question_clarification_gate","multi_step_commerce_orchestration",
       "live_portfolio_optimizer","budget_constrained_bundle_search","deterministic_live_comparison","grounded_price_claim_guard",
       "agricultural_dosage_claim_guard","deterministic_safe_finalizer","purchase_plan_tool","commerce_tool_budgeting",
       "counterfactual_alternatives","bounded_neural_tool_calling","responses_api_agent_loop","live_catalog_tool","verified_knowledge_tool",
@@ -37,10 +38,11 @@ export async function GET(){
     cognition:cognitionHealth(),
     hybrid_brain:hybridBrainHealth(),
     autonomous_commerce:autonomousCommerceHealth(),
+    uae_agriculture:uaeAgricultureHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v13:false},
+    persistent_store:{...persistence,required_for_v14:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });

@@ -58,9 +58,12 @@ import {
   buildCommerceMission, optimizeLivePortfolio, deterministicComparison, verifyCommerceResponse,
   groundedCommerceFallback, autonomousCommerceMeta
 } from "../lib/autonomous_commerce.js";
+import {
+  searchUaeAgriculture, answerUaeAgricultureKnowledge, uaeAgricultureHealth
+} from "../lib/uae_agriculture_intelligence.js";
 
-const VERSION="13.0.0";
-const MODE="autonomous_commerce_executive_v13";
+const VERSION="14.0.0";
+const MODE="uae_agricultural_intelligence_autonomous_commerce_v14";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -182,7 +185,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=13;
+  next.v=14;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
@@ -282,9 +285,10 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     hybrid_brain:hybrid,
     cognitive_os:cognitiveOS,
     autonomous_commerce:autonomousMeta,
+    uae_agriculture:uaeAgricultureHealth(),
     neural_brain:{
       ...neuralBrainHealth(),
-      used:source==="neural_agent_v13",
+      used:source==="neural_agent_v14",
       model_used:neuralModel||undefined,
       response_id:neuralResponseId||undefined,
       tool_trace:neuralTrace,
@@ -326,7 +330,7 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV13NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null}){
+async function tryV14NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
   if(mission?.next_question && ["recommend","bundle","budget_optimize","solution_plan"].includes(mission.kind)){
@@ -361,6 +365,18 @@ async function tryV13NeuralAgent({analysis,state,message,history,locale,profile,
       const toolAnalysis=analyzeTurn(query,state,history,locale);
       const items=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
       return {query,items:items.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score}))};
+    },
+    search_uae_agriculture:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const items=searchUaeAgriculture(query,{limit,regulationsOnly:false});
+      return {query,verified_at:"2026-08-17",country:"UAE",items:items.map(x=>({id:x.id,title:x.topic,answer:x.answer_ar,authority:x.authority,source_url:x.source_url,verified_at:x.verified_at,kind:x.kind,score:x.score,warning:x.warning||undefined}))};
+    },
+    search_uae_regulations:async args=>{
+      const query=cleanText(args?.query||message,700);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
+      const items=searchUaeAgriculture(query,{limit,regulationsOnly:true});
+      return {query,verified_at:"2026-08-17",country:"UAE",freshness_warning:"Regulatory requirements, fees and implementing decisions can change; verify the cited official source before acting.",items:items.map(x=>({id:x.id,title:x.topic,answer:x.answer_ar,authority:x.authority,source_url:x.source_url,verified_at:x.verified_at,legal_reference:x.legal_reference||undefined,score:x.score,warning:x.warning||undefined}))};
     },
     search_site:async args=>{
       const query=cleanText(args?.query||message,700);
@@ -445,7 +461,7 @@ async function tryV13NeuralAgent({analysis,state,message,history,locale,profile,
         quick_replies:products.length?salesQuickReplies({category:analysis?.category?.key||state?.category,stage:"consider",results:products,profile}):[],
         neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||""
       },
-      source:"neural_agent_v13",results,retrieval,plan
+      source:"neural_agent_v14",results,retrieval,plan
     };
   }catch(error){
     console.error("V13 autonomous neural fallback:",error?.message);
@@ -582,6 +598,24 @@ export async function POST(request){
     console.error("github knowledge failed",error?.message);
   }
 
+  // V14 UAE Agriculture Intelligence: deterministic, source-stamped answer layer for UAE agronomy and regulations.
+  // Regulatory answers are intentionally checked before generic FAQ/human-knowledge routing to avoid stale or invented legal claims.
+  try{
+    const uaeKnowledge=answerUaeAgricultureKnowledge(message,locale);
+    if(uaeKnowledge){
+      return await makeResponse({
+        payload:{
+          reply:uaeKnowledge.reply,display_reply:uaeKnowledge.reply,
+          uae_knowledge_matches:uaeKnowledge.entries||[],
+          uae_regulatory:Boolean(uaeKnowledge.regulatory),
+          uae_knowledge_verified_at:uaeKnowledge.verified_at,
+          quick_replies:uaeKnowledge.regulatory?["الجهة المختصة؟","المستندات المطلوبة؟","الخطوات؟"]:["حسب الإمارة","حسب المحصول","نظام الري المناسب"]
+        },
+        cors,sessionId,state,analysis,signals,profile,message,source:uaeKnowledge.source,locale,cognition
+      });
+    }
+  }catch(error){ console.error("UAE agriculture intelligence failed",error?.message); }
+
   // Repair misunderstandings before routing a vague "wrong / I mean..." message.
   const repair=customerRepairReply(signals,analysis,profile);
   if(repair) return await makeResponse({payload:{reply:repair.reply,quick_replies:repair.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:repair.source,locale});
@@ -634,8 +668,8 @@ export async function POST(request){
     return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
   }
 
-  // V13: autonomous commerce executive + bounded neural tool-calling. Persistence is optional; live commerce grounding is mandatory for current product decisions.
-  const neural=await tryV13NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute});
+  // V14: UAE agricultural intelligence + autonomous commerce. Official UAE regulatory knowledge is date-stamped; persistence remains optional.
+  const neural=await tryV14NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
