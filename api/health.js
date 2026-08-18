@@ -12,15 +12,17 @@ import { cognitiveOSHealth } from "../lib/cognitive_os.js";
 import { autonomousCommerceHealth } from "../lib/autonomous_commerce.js";
 import { uaeAgricultureHealth } from "../lib/uae_agriculture_intelligence.js";
 import { agriculturalEngineerHealth } from "../lib/agricultural_engineer.js";
+import { salesEmployeeHealth } from "../lib/sales_employee.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM Senior Agricultural Engineer & UAE Autonomous Commerce OS",
-    version:"15.0.0",
-    mode:"agricultural_engineer_uae_intelligence_autonomous_commerce_v15",
+    service:"MIG FARM Adaptive Human Agricultural Sales Employee & Engineer OS",
+    version:"16.0.0",
+    mode:"adaptive_human_agricultural_sales_employee_v16",
     features:[
+      "adaptive_human_sales_employee","free_form_sales_conversation","non_template_response_generation","dialect_and_style_mirroring","adaptive_response_length","consultative_sales_reasoning","objection_handling","natural_sales_closing","business_fact_tool","sales_playbook_tool","no_forced_cta","answer_first_policy","single_question_qualification","technical_problem_before_product_policy",
       "senior_agricultural_engineer_reasoning","free_form_agricultural_language_understanding","dialect_and_slang_normalization","agricultural_curriculum_knowledge_base","differential_crop_diagnosis","symptom_to_hypothesis_reasoning","crop_stage_system_context_extraction","agricultural_engineering_calculators","soil_water_nutrition_engineering","greenhouse_hydroponics_expert_knowledge","plant_pathology_entomology_ipm","seed_nursery_postharvest_engineering","measurement_first_diagnostics","single_symptom_diagnosis_guard","label_only_pesticide_dosage_policy",
       "uae_agricultural_intelligence","uae_regulatory_knowledge","official_source_manifest","legal_freshness_guard","emirate_authority_routing","climate_soil_water_knowledge","greenhouse_hydroponics_knowledge","crop_management_uae","agricultural_safety_guard","autonomous_commerce_mission_decomposition","single_question_clarification_gate","multi_step_commerce_orchestration",
       "live_portfolio_optimizer","budget_constrained_bundle_search","deterministic_live_comparison","grounded_price_claim_guard",
@@ -42,10 +44,11 @@ export async function GET(){
     autonomous_commerce:autonomousCommerceHealth(),
     uae_agriculture:uaeAgricultureHealth(),
     agricultural_engineer:agriculturalEngineerHealth(),
+    sales_employee:salesEmployeeHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v15:false},
+    persistent_store:{...persistence,required_for_v16:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
