@@ -1,0 +1,9 @@
+MIG FARM AI V14 — UAE AGRICULTURAL INTELLIGENCE MAX
+
+1) فك الملف ZIP.
+2) ارفع كل المحتويات إلى Root مستودع GitHub بنفس المسارات.
+3) Replace للملفات الموجودة، وأضف مجلد knowledge والملف الجديد lib/uae_agriculture_intelligence.js.
+4) لا يحتاج تعديل في Odoo أو GTM.
+5) بعد نشر Vercel افتح /api/health وتأكد من version=14.0.0.
+
+مهم: قاعدة القوانين مؤرخة بتاريخ تحقق 2026-08-17 وتستخدم مصادر حكومية رسمية. الرسوم والاشتراطات التنظيمية يجب التحقق منها وقت المعاملة.

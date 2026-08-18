@@ -1,10 +1,10 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "13.0.0",
+  "version": "14.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM autonomous commerce intelligence OS with live portfolio optimization, bounded neural tool calling, deterministic grounding and optional persistence",
+  "description": "MIG FARM UAE agricultural intelligence and autonomous commerce OS with verified UAE regulatory knowledge, climate/soil/water/crop guidance, bounded neural tools and live commerce grounding",
   "scripts": {
-    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/v8_phase4.mjs && node tests/v9_cognitive.mjs && node tests/v10_hybrid.mjs && node tests/v11_neural.mjs && node tests/v12_persistent_os.mjs && node tests/v12_persistent_store_mock.mjs && node tests/v13_autonomous_commerce.mjs && node tests/api_direct.mjs"
+    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/v8_phase4.mjs && node tests/v9_cognitive.mjs && node tests/v10_hybrid.mjs && node tests/v11_neural.mjs && node tests/v12_persistent_os.mjs && node tests/v12_persistent_store_mock.mjs && node tests/v13_autonomous_commerce.mjs && node tests/v14_uae_agriculture.mjs && node tests/api_direct.mjs"
   }
 }
