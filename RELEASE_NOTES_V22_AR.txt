@@ -1,0 +1,43 @@
+MIG FARM AI V22 — Multimodal Agricultural & Product Vision Sales OS
+الإصدار: 22.0.0
+
+ما الجديد فعليًا:
+1) إدخال صور داخل /api/chat حتى 4 صور في الرسالة الواحدة.
+2) GPT-5.6 يستقبل النص والصورة في نفس دورة القرار، مع Tool Calling الحالي.
+3) التعرف على منتج MIG FARM من النص المقروء على العبوة/الاسم/SKU/الباركود ثم مطابقته مع 704 Product Dossiers.
+4) فصل هوية المنتج البصرية عن السعر والمخزون: السعر والتوفر الحاليان لا يزالان يحتاجان تحقق Odoo Live.
+5) قاعدة Visual Product Signatures تشمل 704 منتج.
+6) Agricultural Visual Diagnostic Atlas يحتوي 540 بطاقة: 45 محصول × 12 عائلة أعراض بصرية.
+7) تحليل صور النبات كتقييم/فرز تشخيصي مبدئي وليس تشخيصًا يقينيًا من صورة واحدة.
+8) Multi-image evidence fusion: صورة النبات الكامل + موضع الإصابة + أسفل الورقة/الجذر تُعامل كحزمة أدلة واحدة.
+9) One-best-next-photo: عند نقص الدليل يطلب صورة واحدة مستهدفة بدل استجواب العميل.
+10) Visual Label Claim Guard: لا يعتمد جرعة مبيد/معدل استخدام من صورة غير واضحة أو قراءة غير موثقة.
+11) Deterministic Visual Reply Safety Gate بعد توليد GPT: يمنع خروج جرعة بصرية غير متحقق منها أو سعر/توفر بصري بدون تحقق Live حتى لو أخطأ الموديل.
+12) Image Prompt Injection Guard: النص الموجود داخل الصورة يُعامل كبيانات/دليل وليس تعليمات للنظام.
+13) Unknown Product Mode: لا يدّعي أن منتجًا غير مطابق للكتالوج هو منتج MIG FARM.
+14) Odoo Chat UI V22 مرفق ويضيف زر كاميرا، معاينة الصور، حذف قبل الإرسال، ضغط/تصغير محلي، ودعم image-only turns.
+
+القاعدة الحالية:
+- Product Dossiers: 704
+- Product explicit facts: 1,063
+- Product relationship graph edges: 11,776
+- Agricultural Master: 2,802 cards
+- Senior Agricultural Engineer: 516 knowledge cards
+- UAE agriculture/regulatory layer مستمرة
+- V22 visual product signatures: 704
+- V22 visual agronomy cards: 540
+- Knowledge folder: حوالي 17.23 MiB (18,063,258 bytes)
+
+أدوات V22 الجديدة داخل Neural Brain:
+- match_visual_product
+- verify_visual_product_live
+- guard_visual_label_claim
+- search_visual_agronomy
+- get_retake_advice
+
+سياسات أساسية:
+- لا تعريف نهائي لمنتج من اللون/شكل العبوة فقط.
+- لا جرعة مبيد من صورة غير واضحة.
+- لا سعر أو مخزون حالي من Snapshot قديم.
+- لا علاج لمشكلة نبات لمجرد تشابه بصري.
+- عند ضعف الصورة: اطلب الصورة الأكثر فائدة فقط.

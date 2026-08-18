@@ -1,0 +1,31 @@
+{
+  "release": "MIG FARM AI V22 Multimodal Agricultural & Product Vision Sales OS",
+  "version": "22.0.0",
+  "mode": "multimodal_agricultural_product_vision_sales_os_v22",
+  "build_date": "2026-08-18",
+  "knowledge_bytes": 18063258,
+  "knowledge_mib": 17.23,
+  "vision": {
+    "max_images_per_turn": 4,
+    "product_visual_signatures": 704,
+    "visual_agronomy_cards": 540,
+    "crop_count": 45,
+    "visual_symptom_families": 12,
+    "deterministic_reply_safety_gate": true
+  },
+  "inherited_intelligence": {
+    "product_dossiers": 704,
+    "product_explicit_facts": 1063,
+    "product_graph_edges": 11776,
+    "agricultural_master_cards": 2802,
+    "agricultural_engineer_cards": 516
+  },
+  "regression": {
+    "v6_to_v18_segment": "PASS",
+    "v19_to_v22_segment": "PASS",
+    "v22_vision_intelligence": "PASS",
+    "v22_api_regression": "PASS",
+    "odoo_ui_xml_parse": "PASS",
+    "odoo_ui_javascript_syntax": "PASS"
+  }
+}

@@ -1,0 +1,33 @@
+طريقة رفع V22
+
+أولًا — Backend / GitHub:
+1) فك ملف الإصدار.
+2) ارفع محتوياته إلى Root repository الحالي بنفس المسارات.
+3) اعمل Replace للملفات المتعارضة.
+4) تأكد خصوصًا من رفع مجلد knowledge كاملًا؛ ملفات V22 البصرية موجودة داخله.
+5) اترك OPENAI_API_KEY الحالي كما هو. لا يوجد API Key جديد مطلوب.
+6) انتظر Vercel Deployment ثم افتح /api/health.
+
+المتوقع:
+version = 22.0.0
+mode = multimodal_agricultural_product_vision_sales_os_v22
+vision_intelligence.version = 22.0
+vision_intelligence.product_visual_signatures = 704
+vision_intelligence.visual_agronomy_cards = 540
+neural_brain.version = 22.0
+
+ثانيًا — Odoo Chat UI:
+Backend V22 يقبل الصور فورًا، لكن واجهة الشات الحالية لن يظهر فيها زر رفع الصور إلا بعد تحديث الـGlobal View.
+استخدم الملف:
+ODOO_CHAT_UI_V22_VISION.txt
+بدل نسخة واجهة الشات القديمة أو ادمج تغييرات V22 فيها.
+
+الواجهة الجديدة:
+- زر كاميرا 📷
+- PNG/JPEG/WebP
+- حتى 4 صور
+- Resize محلي حتى 1280px تقريبًا لتقليل Payload
+- معاينة وحذف الصورة قبل الإرسال
+- يمكن إرسال صورة بدون كتابة نص
+
+لا تعدّل GTM لهذا الإصدار.
