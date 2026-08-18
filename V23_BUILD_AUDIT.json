@@ -1,0 +1,43 @@
+{
+  "release": "MIG FARM AI V23 Server-Authoritative Product Context Intelligence OS",
+  "version": "23.0.0",
+  "mode": "server_authoritative_product_context_intelligence_os_v23",
+  "base_release": "22.5.0",
+  "core_fixes": [
+    "package, health and UI version alignment",
+    "automatic discovery of every test suite",
+    "server-side active product persistence",
+    "refresh-safe product context restore",
+    "same-category product switch detection",
+    "verified bound identity before dossier or live commerce fusion",
+    "untrusted product-name echo suppression"
+  ],
+  "intelligence_additions": [
+    "explicit product mention resolver",
+    "visible ordinal product binding",
+    "multi-product comparison context",
+    "evidence-only product comparison",
+    "dosage evidence guard",
+    "suitability evidence guard",
+    "product and comparison context TTL",
+    "product context decision trace"
+  ],
+  "release_validation": {
+    "expected_test_suites": 44,
+    "javascript_syntax": "PASS",
+    "json_parse": "PASS",
+    "package_health_version_alignment": "PASS",
+    "odoo_xml_parse": "PASS",
+    "odoo_cdata_balance": "PASS",
+    "odoo_embedded_javascript_syntax": "PASS"
+  },
+  "safety_contract": {
+    "current_price_and_stock": "live_odoo_only",
+    "product_identity": "verified_sku_external_id_or_name_match",
+    "technical_product_facts": "explicit_reliable_product_data_only",
+    "dosage": "explicit_product_fact_or_verified_label_only",
+    "suitability": "recorded_evidence_only",
+    "missing_fact": "state_unknown_and_request_evidence",
+    "generated_catalog_copy": "not_technical_specification"
+  }
+}

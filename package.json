@@ -1,10 +1,12 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "22.3.0",
+  "version": "23.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM V22.3 recognition-first visual product pipeline: forced product recognition before identity guard/retake, medium-candidate confirmation, retake-loop prevention, different-image tracking, live Odoo verification, V22.2 intent precision, V21 product truth, 704 product dossiers and agricultural engineering intelligence",
+  "description": "MIG FARM V23 server-authoritative product context intelligence: refresh-safe active product memory, same-category switch detection, bound multi-product comparison, evidence-guarded dosage and suitability, recognition-first vision, live Odoo truth and 704 product dossiers",
   "scripts": {
-    "test": "node tests/smoke.mjs && node tests/v7_smoke.mjs && node tests/v8_core.mjs && node tests/v8_phase2.mjs && node tests/v8_hotfix.mjs && node tests/v8_phase3_github.mjs && node tests/v8_phase4.mjs && node tests/v9_cognitive.mjs && node tests/v10_hybrid.mjs && node tests/v11_neural.mjs && node tests/v12_persistent_os.mjs && node tests/v12_persistent_store_mock.mjs && node tests/v13_autonomous_commerce.mjs && node tests/v14_uae_agriculture.mjs && node tests/v15_agricultural_engineer.mjs && node tests/v15_language_variants.mjs && node tests/api_direct.mjs && node tests/v16_sales_employee.mjs && node tests/v16_natural_language.mjs && node tests/v17_sales_conversation_os.mjs && node tests/v17_freeform_sales_language.mjs && node tests/v18_current_turn_brain.mjs && node tests/v18_agricultural_master.mjs && node tests/v18_api_regression.mjs && node tests/v19_conversion_decision.mjs && node tests/v19_api_regression.mjs && node tests/v20_product_intelligence.mjs && node tests/v20_api_regression.mjs && node tests/v21_product_truth_os.mjs && node tests/v21_api_regression.mjs && node tests/v22_vision_intelligence.mjs && node tests/v22_api_regression.mjs && node tests/v22_1_visual_context_regression.mjs && node tests/v22_1_neural_visual_grounding.mjs && node tests/v22_2_visual_intent_precision.mjs && node tests/v22_2_api_regression.mjs && node tests/v22_3_visual_recognition_pipeline.mjs && node tests/v22_3_neural_preflight.mjs && node tests/v22_3_api_regression.mjs"
+    "test": "node tools/run_all_tests.mjs",
+    "validate": "node tools/validate_release.mjs",
+    "release:check": "npm run validate && npm test"
   }
 }
