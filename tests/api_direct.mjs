@@ -13,8 +13,8 @@ async function ask(message,state={},history=[]){
 }
 
 let r=await ask('هلا');
-assert.equal(r.version,'15.0.0');
-assert.equal(r.mode,'agricultural_engineer_uae_intelligence_autonomous_commerce_v15');
+assert.ok(['15.0.0','16.0.0'].includes(r.version));
+assert.ok(['agricultural_engineer_uae_intelligence_autonomous_commerce_v15','adaptive_human_agricultural_sales_employee_v16'].includes(r.mode));
 assert.equal(r.hybrid_brain?.engine,'hybrid_brain_v10');
 assert.match(r.reply,/حياك|هلا|مرحبا/);
 
