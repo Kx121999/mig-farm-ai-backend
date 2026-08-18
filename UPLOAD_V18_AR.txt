@@ -1,0 +1,21 @@
+MIG FARM AI V18 — طريقة الرفع
+================================
+
+1) فك ضغط ZIP.
+2) ارفع محتوياته إلى Root مستودع GitHub بنفس المسارات.
+3) اعمل Replace للملفات الموجودة عندما يطلب GitHub ذلك.
+4) تأكد أن ملف knowledge/AGRICULTURAL_MASTER_KNOWLEDGE_V18.json موجود بالكامل (حجمه غير المضغوط حوالي 4.46 MB).
+5) انتظر Vercel Deployment.
+6) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+7) تحقق من:
+   version = 18.0.0
+   mode = current_turn_semantic_human_sales_employee_v18
+   human_conversation_brain.version = 18.0
+   agricultural_master.megabytes >= 4
+   agricultural_master.cards >= 2500
+   neural_brain.version = 18.0
+   neural_brain.tools يحتوي search_agricultural_master
+
+لا يوجد تعديل مطلوب في Odoo أو GTM.
+لا يوجد API Key جديد مطلوب إذا GPT-5.6 الحالي شغال بالفعل.
