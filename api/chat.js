@@ -95,9 +95,11 @@ import {
   buildSemanticFrame, enrichAnalysisWithSemanticFrame, mergeHumanTurnWithSemanticFrame,
   semanticFrameForClient, semanticHumanBrainHealth
 } from "../lib/semantic_human_brain.js";
+import { handleAutonomousAction, autonomousActionHealth } from "../lib/autonomous_action_os.js";
+import { evaluateAndRecordTurn, selfLearningHealth } from "../lib/self_learning_os.js";
 
-const VERSION="24.0.0";
-const MODE="semantic_human_conversation_orchestrator_os_v24";
+const VERSION="25.0.0";
+const MODE="autonomous_sales_learning_agent_os_v25";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -248,7 +250,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=24;
+  next.v=25;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
   const productContextUpdate=evolveProductContext({previous:state,next,message,analysis,source,results,payload});
@@ -318,6 +320,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   }
 
   const quality=conversationQualityMeta({previous:state,next,analysis,message,source,payload,results});
+  const selfLearning=evaluateAndRecordTurn({message,semanticFrame,analysis,payload,source,evidence,quality,actionState:payload?.autonomous_action||next?.autonomous_action});
+  if(selfLearning.gap_fingerprint){try{await recordKnowledgeGaps([selfLearning.gap_fingerprint]);}catch{}}
   const autonomousMission=buildCommerceMission({message,analysis,cognition:frame,state:next,profile:nextProfile,locale});
   const autonomousMeta=autonomousCommerceMeta({mission:autonomousMission});
 
@@ -348,11 +352,15 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       product_truth_os:productTruthHealth(),
       product_context_intelligence:productContextHealth(),
       semantic_human_brain:semanticHumanBrainHealth(),
+      autonomous_actions:autonomousActionHealth(),
+      self_learning:selfLearningHealth(),
       vision_intelligence:visionHealth(),
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
     conversation_quality:quality,
+    self_learning:selfLearning,
+    autonomous_actions:{...autonomousActionHealth(),current_status:payload?.autonomous_action?.status||next?.autonomous_action?.status||"idle"},
     product_context_intelligence:{...productContextHealth(),event:productContextUpdate.event,active:Boolean(productContextUpdate.active),comparison_active:Boolean(productContextUpdate.comparison)},
     semantic_human_brain:{...semanticHumanBrainHealth(),frame:semanticFrameForClient(semanticFrame)},
     cognitive,
@@ -662,7 +670,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{semantic_frame:semanticFrame,analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:{...mission,tool_budget:semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:conversionDecision,vision_context:visionFrame,recent_dialogue:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      context:{semantic_frame:semanticFrame,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:{...mission,tool_budget:semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
       toolHandlers,images,allowedTools:humanTurn?.tool_policy?.allowed
     });
     if(!result?.handled||!result.reply) return null;
@@ -737,6 +745,27 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
 function productFactText(fact={}){
   return cleanText(fact?.label?`${fact.label}: ${fact.value}`:(fact?.text||fact?.value||""),260);
 }
+function naturalFactLabel(kind=""){
+  const labels={seed_count:"عدد البذور",germination:"نسبة الإنبات",purity:"النقاوة",fruit_length:"طول الثمرة",color:"اللون",maturity:"النضج",resistance:"المقاومة",origin:"بلد المنشأ",storage:"التخزين",treatment:"المعاملة"};
+  return labels[String(kind||"").toLowerCase()]||"معلومة موثقة";
+}
+function conciseVerifiedFacts(facts=[]){
+  const grouped=new Map();
+  for(const fact of Array.isArray(facts)?facts:[]){
+    const kind=cleanText(fact?.kind||fact?.label||"fact",60),value=productFactText(fact);if(!value)continue;
+    const previous=grouped.get(kind);const hasArabic=/[\u0600-\u06ff]/.test(value);
+    if(!previous||hasArabic&&!/[\u0600-\u06ff]/.test(previous.value))grouped.set(kind,{kind,value});
+  }
+  return [...grouped.values()].slice(0,4).map(x=>`${naturalFactLabel(x.kind)}: ${x.value}`);
+}
+function naturalCategory(category=""){
+  const value=cleanText(category,180);if(/cucumber seeds/i.test(value))return "بذور خيار";if(/tomato seeds/i.test(value))return "بذور طماطم";if(/pepper seeds/i.test(value))return "بذور فلفل";if(/seeds/i.test(value))return "بذور";return value;
+}
+function conciseProductDescription(value=""){
+  let text=cleanText(value,1800).replace(/^[🥒🌱🍅🌶️\s]+/u,"").replace(/\s*المميزات الفنية[\s\S]*$/," ").replace(/\s*بيانات المنتج[\s\S]*$/," ");
+  const marker=text.indexOf("الوصف العام");if(marker>=0)text=text.slice(marker+"الوصف العام".length).trim();
+  return conciseText(text,460);
+}
 function verifiedFactsForBoundProduct(ctx={}){
   const identifier=cleanText(ctx.sku||ctx.external_id||ctx.name||"",500);if(!identifier)return null;
   const facts=getStructuredProductFacts(identifier);if(!facts)return null;
@@ -800,10 +829,10 @@ async function tryBoundProductContextReply({message="",selectedProduct=null,stat
     if(!dossier) return {reply:`ملف المنتج المحدد مش متاح عندي بهوية مؤكدة. اختاره من كارت المنتج أو اكتب الاسم وSKU الصحيحين وأنا أراجعه بدون تخمين.`,source:"v23_bound_product_missing_dossier",bound_product:{sku:cleanText(ctx.sku||"",160)},intent:intent||"details"};
     const name=dossier.name||ctx.name||identifier;
     const sku=dossier.sku||ctx.sku||"";
-    const category=dossier.category||"";
+    const category=naturalCategory(dossier.category||"");
     const provenance=dossier.description_provenance||"";
-    const explicit=Array.isArray(dossier.explicit_facts)?dossier.explicit_facts.slice(0,6):[];
-    const description=conciseText(dossier.sales_description||dossier.ecommerce_description||"",1000);
+    const explicit=Array.isArray(dossier.explicit_facts)?dossier.explicit_facts.slice(0,10):[];
+    const description=conciseProductDescription(dossier.sales_description||dossier.ecommerce_description||"");
 
     if(wantsDose){
       const doseFacts=explicit.map(productFactText).filter(x=>/(جرعه|جرعة|معدل|خلط|ملي|مل|لتر|هكتار|فدان|dose|dosage|rate|mix)/i.test(x));
@@ -818,14 +847,12 @@ async function tryBoundProductContextReply({message="",selectedProduct=null,stat
       return {reply:`أنا مثبت المنتج على ${name}${sku?` (${sku})`:""}، لكن ملاءمته${target} مش مذكورة بشكل مؤكد في بياناته عندي. عشان ما أديكش ترشيح غلط، ابعت صورة الملصق أو اذكر المحصول والمرحلة والمشكلة للفريق الهندسي.`,source:"v23_bound_product_suitability_guard",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"suitability",quick_replies:["أرسل صورة الملصق","كلم المهندس"]};
     }
 
-    let reply=`${name}${sku?` (${sku})`:""}`;
-    if(category) reply+=` — ${category}.`;
-    if(explicit.length){
-      const rows=explicit.map(x=>cleanText(x?.label?`${x.label}: ${x.value}`:(x?.text||x?.value||""),220)).filter(Boolean);
-      if(rows.length) reply+=`\n\nالمواصفات المؤكدة من بيانات المنتج:\n• ${rows.join("\n• ")}`;
-    }
-    if(description) reply+=`\n\nالوصف المسجل: ${description}`;
-    if(provenance==="generated_202") reply+=`\n\nملاحظة: الوصف المتاح لهذا المنتج استكمال كتالوجي عام، لذلك مش هاعتبره مواصفة تقنية خاصة إلا لو كانت مكتوبة صراحة في بيانات المنتج.`;
+    let reply=`${name}${sku?`\nSKU: ${sku}`:""}`;
+    if(category) reply+=`\nالفئة: ${category}`;
+    const rows=conciseVerifiedFacts(explicit);
+    if(rows.length) reply+=`\n\nالمهم بسرعة:\n• ${rows.join("\n• ")}`;
+    if(description) reply+=`\n\nالاستخدام والوصف:\n${description}`;
+    if(provenance==="generated_202") reply+=`\n\nملاحظة: الوصف عام؛ المواصفات الفنية المؤكدة هي النقط المكتوبة فوق فقط.`;
     return {reply,source:"v23_bound_product_dossier",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"details",quick_replies:["بكام؟","هل متوفر؟","ينفع لاستخدامي؟"]};
   }
   return null;
@@ -848,9 +875,9 @@ async function tryBoundProductComparisonReply({products=[],message="",history=[]
   if(rows.length<2)return {reply:"ما قدرتش أثبت هوية المنتجين من ملفات MIG FARM، فمش هعمل مقارنة تخمينية. اختر المنتجين من الكروت مرة ثانية.",source:"v23_comparison_identity_guard",bound_products:refs,intent:"comparison"};
   const blocks=rows.map(({ref,facts,liveTruth})=>{
     const name=facts.name||ref.name;const sku=facts.sku||ref.sku||"";
-    const explicit=(Array.isArray(facts.explicit_facts)?facts.explicit_facts:[]).slice(0,4).map(productFactText).filter(Boolean);
-    const lines=[`• ${name}${sku?` (${sku})`:""}`];
-    if(facts.category)lines.push(`  الفئة: ${facts.category}`);
+    const explicit=conciseVerifiedFacts(Array.isArray(facts.explicit_facts)?facts.explicit_facts:[]).slice(0,3);
+    const lines=[`${name}${sku?`\n  SKU: ${sku}`:""}`];
+    if(facts.category)lines.push(`  الفئة: ${naturalCategory(facts.category)}`);
     if(explicit.length)lines.push(...explicit.map(x=>`  ${x}`));else lines.push("  المواصفات الفارقة غير موثقة بشكل كافٍ في الملف.");
     if(needsLive){
       if(liveTruth?.identity?.live_verified){
@@ -860,7 +887,7 @@ async function tryBoundProductComparisonReply({products=[],message="",history=[]
     }
     return lines.join("\n");
   });
-  const reply=`مقارنة موثقة بين المنتجين:\n\n${blocks.join("\n\n")}\n\nهنا قارنت فقط المعلومات المكتوبة صراحة. أي مواصفة غير موجودة تظل غير مؤكدة، ومش هاعتبر تشابه المنتجات دليلًا على نفس الاستخدام.`;
+  const reply=`مقارنة موثقة وسريعة:\n\n${blocks.join("\n\n")}\n\nقارنت البيانات المثبتة فقط؛ أي مواصفة مش ظاهرة تظل غير مؤكدة.`;
   return {reply,source:"v23_bound_product_comparison",bound_products:rows.map(x=>({name:x.facts.name||x.ref.name,sku:x.facts.sku||x.ref.sku||"",external_id:x.facts.external_id||x.ref.external_id||""})),results:rendered.slice(0,4),intent:"comparison",quick_replies:["قارن السعر","قارن التوفر","اختار منتج تاني"]};
 }
 
@@ -1018,9 +1045,27 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
+  // V25: short human/social questions are deterministic and current-turn only.
+  // They must never enter neural/agronomy routing with an old product or dose context.
+  if(["greeting","wellbeing","thanks","goodbye","acknowledgment","negative_ack","identity","human"].includes(analysis.intent)){
+    const protectedDirect=directReply(analysis,turnState,message,sessionId);
+    if(protectedDirect)return await makeResponse({payload:{reply:protectedDirect.reply,quick_replies:protectedDirect.quick_replies||[],suggested_actions:protectedDirect.actions||[],escalation:protectedDirect.escalation,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:protectedDirect.source,locale,cognition});
+  }
+
   // V23 Product Context Intelligence: the server resolves card selection, persisted focus,
   // explicit product mentions, visible ordinals and multi-product comparisons before any agronomy/RAG route.
   const productFocus=resolveProductContext({message,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,state,analysis,semanticFrame});
+  const actionOutcome=await handleAutonomousAction({
+    message,semanticFrame,state,locale,
+    selectedProduct:productFocus.product||selectedProductContext,
+    selectedProducts:productFocus.products?.length?productFocus.products:selectedProductContexts,
+    actionRequest:body?.autonomous_action_request||body?.action_request||null
+  });
+  if(actionOutcome?.state)state.autonomous_action=actionOutcome.state;
+  if(actionOutcome?.handled)return await makeResponse({
+    payload:actionOutcome.payload||{},cors,sessionId,state,analysis,signals,profile,message,
+    source:actionOutcome.source||"v25_autonomous_action",results:actionOutcome.state?.lines||[],locale,cognition
+  });
   if(productFocus.action==="clear"){
     delete state.active_product_context;
     delete state.comparison_context;
