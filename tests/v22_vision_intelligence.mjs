@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { normalizeVisionImages, buildVisionFrame, matchVisualProduct, guardVisualLabelClaim, searchVisualAgronomy, enforceVisualReplySafety, visionHealth } from "../lib/vision_intelligence.js";
 
 const h=visionHealth();
-assert.equal(h.version,"22.1");
+assert.equal(h.version,"22.2");
 assert.equal(h.product_visual_signatures,704);
 assert.equal(h.visual_agronomy_cards,540);
 assert.equal(h.max_images_per_turn,4);
