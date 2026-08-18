@@ -9,7 +9,7 @@ async function ask(message,state={},history=[]){
 const stale={category:"fertilizer",crop:"tomato",topic:"product",visible_products:[{name:"سماد بوتاسيوم",price:"50",currency:"AED"}],last_products:[{name:"سماد بوتاسيوم",price:"50",currency:"AED"}],turn:4};
 const history=[{role:"user",content:"عايز بذور ومش عارف أجيب إيه"},{role:"assistant",content:"تمام عندنا اختيارات"},{role:"user",content:"طب البوتاسيوم بيعمل إيه"},{role:"assistant",content:"البوتاسيوم مهم لتنظيم الماء وجودة الثمار"}];
 let r=await ask("لا يا عم أنا بس بسأل مش هشتري دلوقتي",stale,history);
-assert.ok(["18.0.0","19.0.0","20.0.0","21.0.0","22.0.0"].includes(r.version)); assert.ok(["current_turn_semantic_human_sales_employee_v18","conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20","live_product_truth_sales_action_os_v21","multimodal_agricultural_product_vision_sales_os_v22"].includes(r.mode));
+assert.ok(["18.0.0","19.0.0","20.0.0","21.0.0","22.0.0","22.1.0"].includes(r.version)); assert.ok(["current_turn_semantic_human_sales_employee_v18","conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20","live_product_truth_sales_action_os_v21","multimodal_agricultural_product_vision_sales_os_v22","multimodal_agricultural_product_vision_stability_os_v22_1"].includes(r.mode));
 assert.match(r.reply,/اسأل|براحتك|مش لازم/); assert.doesNotMatch(r.reply,/بوتاسيوم|كالسيوم|مغنيسيوم|نيتروجين|تسميد/);
 assert.equal(r.human_conversation?.mode,"browse_only_social");
 

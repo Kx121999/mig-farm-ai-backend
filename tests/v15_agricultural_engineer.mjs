@@ -40,7 +40,7 @@ const label=agricultureCalculator("label_tank_mix",{label_rate_per_100l:50,tank_
 assert.equal(label.ok,true); assert.equal(label.value,100);
 
 const nh=neuralBrainHealth();
-assert.ok(["15.0","16.0","17.0","18.0","19.0","20.0","21.0","22.0"].includes(nh.version));
+assert.ok(["15.0","16.0","17.0","18.0","19.0","20.0","21.0","22.0","22.1"].includes(nh.version));
 for(const tool of ["search_agricultural_engineering","diagnose_crop_problem","agriculture_calculator","search_uae_regulations"]){
   assert.ok(nh.tools.includes(tool),`missing neural tool ${tool}`);
 }

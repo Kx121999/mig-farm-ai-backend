@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { productIntelligenceHealth, searchProductDossiers, getProductDossier, compareProductDossiers } from "../lib/product_intelligence.js";
 
 const h=productIntelligenceHealth();
-assert.equal(h.version,"20.0");
+assert.ok(["20.0","22.1"].includes(h.version));
 assert.equal(h.products,704);
 assert.equal(h.descriptions,704);
 assert.equal(h.original_descriptions,502);
@@ -19,6 +19,7 @@ assert.match(pump.live_data_policy,/live Odoo/i);
 const generated=getProductDossier('1" MAX FLOT hose connector',{includeFull:true});
 assert.equal(generated.description_provenance,"generated_202");
 assert.match(generated.sales_description,/irrigation component|مكوّن ري/i);
+assert.equal(generated.description_reliability,"generated_catalog_copy_not_technical_spec");
 
 const cucumber=searchProductDossiers("بذور خيار F1",{limit:5});
 assert.ok(cucumber.some(x=>/خيار|cucumber/i.test(x.name)));

@@ -21,5 +21,5 @@ const repaired=isolateStateForCurrentTurn(staleState,h); assert.equal(repaired.c
 h=analyzeHumanConversationTurn("طب والتاني؟",{analysis:{intent:"unknown"},state:staleState});
 assert.equal(h.mode,"followup"); assert.equal(h.followup_dependency,true); assert.equal(h.context_policy.allow_stale_product_context,true);
 
-const health=humanConversationHealth(); assert.equal(health.version,"18.0"); assert.ok(health.capabilities.includes("stale_context_quarantine"));
+const health=humanConversationHealth(); assert.ok(["18.0","22.1"].includes(health.version)); assert.ok(health.capabilities.includes("stale_context_quarantine")); assert.ok(health.capabilities.includes("vision_first_override"));
 console.log("V18 current-turn human conversation brain PASS");

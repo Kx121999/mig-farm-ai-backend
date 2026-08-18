@@ -9,5 +9,5 @@ x=analyzeSalesConversation("عندكم بذور خيار ولا لا",{analysis:
 x=analyzeSalesConversation("أنا محتاج حاجة كويسة بس مش عايز أدفع كتير",{analysis:{intent:"recommendation"}}); assert.equal(x.objection,"price");
 const hits=searchSalesPlaybook("السعر غالي ومحتاج بديل",{limit:5}); assert.ok(hits.length>=1); assert.ok(hits[0].principle);
 const h=salesEmployeeHealth(); assert.ok(["16.0","17.0","18.0","19.0","20.0","21.0"].includes(h.version)); assert.ok(h.playbook_entries>=100);
-process.env.OPENAI_API_KEY="test"; const nh=neuralBrainHealth(); assert.ok(["16.0","17.0","18.0","19.0","20.0","21.0","22.0"].includes(nh.version)); assert.ok(nh.tools.includes("get_business_fact")); assert.ok(nh.tools.includes("search_sales_playbook"));
+process.env.OPENAI_API_KEY="test"; const nh=neuralBrainHealth(); assert.ok(["16.0","17.0","18.0","19.0","20.0","21.0","22.0","22.1"].includes(nh.version)); assert.ok(nh.tools.includes("get_business_fact")); assert.ok(nh.tools.includes("search_sales_playbook"));
 console.log("V16 sales employee PASS");

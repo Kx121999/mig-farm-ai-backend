@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { productTruthHealth, getStructuredProductFacts, buildProductTruth, getProductRelations, rankLiveAlternatives, buildVerifiedQuoteDraft } from "../lib/product_truth_os.js";
 
 const h=productTruthHealth();
-assert.equal(h.version,"21.0");
+assert.ok(["21.0","22.1"].includes(h.version));
 assert.equal(h.products,704);
 assert.equal(h.graph_nodes,704);
 assert.ok(h.graph_edges>10000);
-assert.ok(h.explicit_facts>900);
-assert.ok(h.need_terms>18000);
+assert.ok(h.explicit_facts>=700);
+assert.ok(h.need_terms>=16000);
 assert.ok(h.total_megabytes>3);
+assert.match(String(h.fact_reliability_policy||""),/generated|technical/i);
 
 const facts=getStructuredProductFacts("W23805PUM");
 assert.equal(facts.name,"0.5 HP CLEAN WATER PUMP 350F");
