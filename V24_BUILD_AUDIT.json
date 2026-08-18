@@ -1,0 +1,55 @@
+{
+  "release": "MIG FARM AI V24 Semantic Human Conversation Orchestrator OS",
+  "version": "24.0.0",
+  "mode": "semantic_human_conversation_orchestrator_os_v24",
+  "built_at": "2026-08-18",
+  "status": "PASS",
+  "validation": {
+    "javascript_files_checked": 95,
+    "json_files_checked": 17,
+    "test_suites_passed": 46,
+    "test_suites_failed": 0,
+    "release_validation": "PASS"
+  },
+  "semantic_human_brain": {
+    "version": "24.0",
+    "source_bytes": 29611,
+    "dialects": ["egyptian", "emirati", "gulf", "levantine", "msa", "english", "arabizi", "code_switch"],
+    "capabilities": [
+      "multi_intent_decomposition",
+      "crop_category_location_quantity_budget_time_entities",
+      "pronoun_and_ordinal_product_resolution",
+      "correction_topic_supersession",
+      "current_turn_context_isolation",
+      "evidence_task_planning",
+      "unified_tool_budget",
+      "one_question_clarification",
+      "dialect_mirroring_response_contract"
+    ]
+  },
+  "preserved_safety_layers": [
+    "server_authoritative_product_context",
+    "live_odoo_price_and_stock",
+    "dosage_evidence_guard",
+    "suitability_evidence_guard",
+    "recognition_before_identity",
+    "visual_label_claim_guard",
+    "stale_context_quarantine",
+    "no_pressure_browse_mode"
+  ],
+  "regressions_fixed_during_build": [
+    "arabizi_bkam_no_longer_partially_matches_okra",
+    "arabic_heshtary_no_longer_partially_matches_irrigation",
+    "fresh_cucumber_search_does_not_reuse_old_tomato_product",
+    "suitability_target_crop_does_not_clear_active_product",
+    "correction_keeps_only_replacement_crop",
+    "social_turns_cannot_leak_stale_agronomy",
+    "visual_tool_policy_survives_semantic_merge"
+  ],
+  "sha256": {
+    "lib/semantic_human_brain.js": "beaa87f994b964e06e2e8cc09dafc0268dab304f82dfc3c234d202477628537d",
+    "api/chat.js": "86f56d0c34dca28fe4a1bb5c77aa476e49440fef59ed5460d773ac16e08ba044",
+    "api/health.js": "6cb6ea4e37e335d49bc6863ac5b993aeb9618274ca00d7ef8c70f2e5ff2b0d7e",
+    "ODOO_CHAT_UI_V24_SEMANTIC_HUMAN_BRAIN.txt": "03dc729ac0cfb908785156405b80268dcb94189d41f336f96300d12ef407b2a9"
+  }
+}

@@ -1,0 +1,51 @@
+MIG FARM AI V24 — خطوات الرفع الآمنة
+
+1) خذ نسخة احتياطية من مشروع GitHub الحالي.
+2) ارفع محتويات هذا المجلد إلى GitHub Root مع استبدال الملفات المتطابقة.
+3) انتظر اكتمال Vercel Deployment.
+4) افتح /api/health وتأكد من:
+   version = 24.0.0
+   mode = semantic_human_conversation_orchestrator_os_v24
+   semantic_human_brain.version = 24.0
+   semantic_human_brain.mode = semantic_human_conversation_orchestrator_os_v24
+5) تأكد أن features تحتوي على:
+   semantic_human_brain
+   arabizi_normalization
+   multi_intent_decomposition
+   pronoun_product_resolution
+   correction_topic_supersession
+   evidence_task_planner
+   natural_dialect_response_contract
+6) بعد نجاح Backend استبدل كود شات Odoo بمحتوى:
+   ODOO_CHAT_UI_V24_SEMANTIC_HUMAN_BRAIN.txt
+7) اعمل Hard Refresh. واجهة V24 تستخدم مفاتيح جلسة جديدة.
+
+اختبارات القبول:
+
+A) اللهجات وArabizi
+- «عايز بذور خيار بكام»
+- «أبغي هالمنتج، متوفر؟»
+- «بدي أعرف قديش سعر هاد»
+- «3ayz bzor 5yar bkam»
+يجب أن تظهر النية والكيانات الصحيحة في semantic_human_brain.frame.
+
+B) الطلب المركب
+- «عندكم بذور خيار تتحمل الحر وكم سعرها وتوصل العين بكرة؟»
+يجب أن يظهر أكثر من intent وخطة مهام مرتبة، وألا يسقط أي جزء من الرد.
+
+C) الضمائر والترتيب
+- اختر منتجًا ثم اسأل «استخدامه؟».
+- اعرض منتجين ثم اسأل «قارن الأول والتاني».
+يجب أن تظهر reference.status = resolved والمنتجات الصحيحة.
+
+D) التصحيح وعزل الذاكرة
+- بعد حديث عن طماطم قل «لا مش الطماطم، قصدي الخيار».
+يجب أن تكون entities.crops = cucumber فقط وcontext.scope = current_turn_only.
+
+E) الدليل
+- السعر والتوفر من Odoo Live فقط.
+- الجرعة من ملصق أو ملف موثق فقط.
+- موعد التوصيل لا يُخترع إذا لم يكن مثبتًا.
+
+الفحص المحلي النهائي:
+npm run release:check
