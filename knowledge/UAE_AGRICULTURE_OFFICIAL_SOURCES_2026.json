@@ -1,0 +1,174 @@
+{
+  "verified_at": "2026-08-17",
+  "policy": "Official UAE federal/local sources only for regulatory facts. Re-check before relying on fees, permits or legal status.",
+  "sources": [
+    {
+      "id": "uae_leg_quarantine_2025",
+      "authority": "UAE Legislation",
+      "title_ar": "القانون الاتحادي رقم 7 لسنة 2025 بشأن الحجر الزراعي",
+      "url": "https://uaelegislation.gov.ae/en/legislations/3995",
+      "verified_at": "2026-08-17",
+      "type": "federal_law"
+    },
+    {
+      "id": "uae_leg_pesticides_2020",
+      "authority": "UAE Legislation",
+      "title_ar": "القانون الاتحادي رقم 10 لسنة 2020 بشأن المبيدات",
+      "url": "https://uaelegislation.gov.ae/en/legislations/1463",
+      "verified_at": "2026-08-17",
+      "type": "federal_law"
+    },
+    {
+      "id": "uae_leg_fertilizers_1992",
+      "authority": "UAE Legislation",
+      "title_ar": "القانون الاتحادي رقم 39 لسنة 1992 بشأن الأسمدة والمصلحات الزراعية",
+      "url": "https://uaelegislation.gov.ae/ar/legislations/1142",
+      "verified_at": "2026-08-17",
+      "type": "federal_law"
+    },
+    {
+      "id": "uae_leg_organic_reg",
+      "authority": "UAE Legislation",
+      "title_ar": "اللائحة التنفيذية للمدخلات والمنتجات العضوية",
+      "url": "https://uaelegislation.gov.ae/en/legislations/1140",
+      "verified_at": "2026-08-17",
+      "type": "regulation"
+    },
+    {
+      "id": "uae_leg_mrl_2024",
+      "authority": "UAE Legislation",
+      "title_ar": "قرار مجلس الوزراء رقم 116 لسنة 2024 بشأن الحدود القصوى لمتبقيات المبيدات",
+      "url": "https://uaelegislation.gov.ae/ar/legislations/2688",
+      "verified_at": "2026-08-17",
+      "type": "cabinet_resolution"
+    },
+    {
+      "id": "uae_leg_environment",
+      "authority": "UAE Legislation",
+      "title_ar": "القانون الاتحادي بشأن حماية البيئة وتنميتها",
+      "url": "https://uaelegislation.gov.ae/en/legislations/1146",
+      "verified_at": "2026-08-17",
+      "type": "federal_law"
+    },
+    {
+      "id": "moccae_import_agri",
+      "authority": "MOCCAE",
+      "title_ar": "خدمة استيراد إرسالية زراعية",
+      "url": "https://www.moccae.gov.ae/ar/services/import-an-agricultural-consignment",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_agri_license",
+      "authority": "MOCCAE",
+      "title_ar": "ترخيص مزاولة نشاط زراعي",
+      "url": "https://moccae.gov.ae/ar/services/permit-for-agricultural-activity-practice-new",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_pesticide_import",
+      "authority": "MOCCAE",
+      "title_ar": "استيراد إرسالية مبيدات",
+      "url": "https://www.moccae.gov.ae/ar/services/import-a-pesticide-consignment",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_fert_restricted",
+      "authority": "MOCCAE",
+      "title_ar": "استيراد أسمدة ومصلحات زراعية مقيدة",
+      "url": "https://www.moccae.gov.ae/ar/services/import-of-restricted-fertilizers-and-agricultural-conditioners",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_fert_unrestricted",
+      "authority": "MOCCAE",
+      "title_ar": "استيراد أسمدة ومصلحات زراعية غير مقيدة",
+      "url": "https://www.moccae.gov.ae/ar/services/import-unrestricted-fertilizers-and-agricultural-conditioners",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_extension",
+      "authority": "MOCCAE",
+      "title_ar": "طلب إرشاد زراعي",
+      "url": "https://moccae.gov.ae/ar/services/agricultural-extension",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_support",
+      "authority": "MOCCAE",
+      "title_ar": "طلب مواد دعم للمزارعين",
+      "url": "https://www.moccae.gov.ae/ar/services/support-farmers",
+      "verified_at": "2026-08-17",
+      "type": "service"
+    },
+    {
+      "id": "moccae_agri_dev",
+      "authority": "MOCCAE",
+      "title_ar": "التنمية والصحة الزراعية",
+      "url": "https://moccae.gov.ae/ar/knowledge/agriculture-development-and-health",
+      "verified_at": "2026-08-17",
+      "type": "knowledge"
+    },
+    {
+      "id": "uae_agriculture",
+      "authority": "UAE Government Portal",
+      "title_ar": "الزراعة في دولة الإمارات",
+      "url": "https://u.ae/information-and-services/environment-and-energy/agriculture",
+      "verified_at": "2026-08-17",
+      "type": "government_knowledge"
+    },
+    {
+      "id": "adafsa",
+      "authority": "ADAFSA",
+      "title_ar": "هيئة أبوظبي للزراعة والسلامة الغذائية",
+      "url": "https://ghars.adafsa.gov.ae/ADAFSA/AboutUs",
+      "verified_at": "2026-08-17",
+      "type": "local_authority"
+    },
+    {
+      "id": "adafsa_ghars",
+      "authority": "ADAFSA Ghars",
+      "title_ar": "منصة غرس للمعرفة الزراعية",
+      "url": "https://ghars.adafsa.gov.ae/",
+      "verified_at": "2026-08-17",
+      "type": "knowledge"
+    },
+    {
+      "id": "sharjah_dal",
+      "authority": "Sharjah Department of Agriculture and Livestock",
+      "title_ar": "دائرة الزراعة والثروة الحيوانية بالشارقة",
+      "url": "https://dal.shj.ae/ar",
+      "verified_at": "2026-08-17",
+      "type": "local_authority"
+    },
+    {
+      "id": "dubai_dm_leg",
+      "authority": "Dubai Municipality",
+      "title_ar": "التشريعات العامة ببلدية دبي",
+      "url": "https://www.dm.gov.ae/municipality-business/general-legislations/",
+      "verified_at": "2026-08-17",
+      "type": "local_authority"
+    },
+    {
+      "id": "rak_agri_permit",
+      "authority": "Ras Al Khaimah Government",
+      "title_ar": "تصريح نشاط زراعي في رأس الخيمة",
+      "url": "https://www.rak.ae/wps/portal/rak/home/citizens/housing/buildingandconstruction/agriculturalactivity",
+      "verified_at": "2026-08-17",
+      "type": "local_service"
+    },
+    {
+      "id": "fujairah_pwad",
+      "authority": "Fujairah Public Works & Agriculture Department",
+      "title_ar": "دائرة الأشغال العامة والزراعة بالفجيرة",
+      "url": "https://pwad.fujairah.ae/en/about",
+      "verified_at": "2026-08-17",
+      "type": "local_authority"
+    }
+  ]
+}
