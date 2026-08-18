@@ -1,0 +1,25 @@
+MIG FARM AI V19 — Conversion Decision Human Sales Employee MAX
+
+الهدف:
+تحويل V18 من مساعد بشري طبيعي إلى موظف مبيعات يقرر متى يبيع ومتى لا يبيع، ويختار الخطوة التالية بناءً على الإشارات الصريحة في المحادثة بدل تشغيل سكربت مبيعات ثابت.
+
+أهم التطويرات:
+- Conversion Decision Brain مستقل عن صياغة الرد.
+- قراءة جاهزية الشراء من إشارات المحادثة الصريحة والمتعددة الأدوار.
+- Explicit no-buying override: "أنا بس بسأل" يلغي الضغط البيعي فوراً.
+- Objection Root Cause: السعر / الثقة / التوفر / الملاءمة / التوقيت / التعقيد / المخاطر.
+- Next Best Action لكل دور بدلاً من CTA ثابت.
+- Close Timing Guard: ممنوع الإغلاق قبل وجود التزام واضح.
+- Question Budget: يمنع الاستجواب والأسئلة الزائدة.
+- Evidence Requirements: السعر والمخزون من Live Catalog، السياسات من Business Facts، الفني من Engineer، القانون من UAE Regulations.
+- Technical Before Commerce: مشكلة النبات تُفهم وتُشخّص قبل اقتراح شراء منتج.
+- Ethical Persuasion Policy: ممنوع خصم أو ندرة أو Social Proof أو ضمان غير موثق، وممنوع الضغط أو الذنب.
+- Topic Repair Awareness: التصحيح وتغيير الموضوع يلغيان سياق البيع القديم.
+- Conversion Reply Guard يفحص الرد بعد التوليد.
+- Naturalizer يعاد تشغيله إذا الرد طبيعيته أو قراره البيعي ضعيف، مع إعادة تحقق التجارة.
+- أداة Neural جديدة: get_sales_strategy.
+- كل V18 محفوظ: Current-Turn Brain + 4.46MB Agricultural Master + V15 Engineer + UAE laws + Commerce.
+
+الاختبارات:
+Full Regression V6 → V19 PASS.
+اختبارات V19 تشمل: browse-only، شراء صريح مع كمية، اعتراض سعر، اعتراض ثقة، مشكلة فنية قبل المنتج، السعر/التوفر المباشر، وتصحيح الموضوع.

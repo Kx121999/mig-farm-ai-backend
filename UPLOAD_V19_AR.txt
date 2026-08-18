@@ -1,0 +1,18 @@
+MIG FARM AI V19 — Conversion Decision Human Sales Employee
+
+طريقة الرفع:
+1) هذه النسخة مبنية فوق V18 الموجود بالفعل في GitHub.
+2) فك ضغط الملف.
+3) ارفع محتويات المجلد مباشرة إلى Root المشروع على GitHub مع الحفاظ على نفس المسارات.
+4) وافق على Replace للملفات الموجودة.
+5) لا تحذف knowledge/ الخاصة بـ V18؛ قاعدة Agricultural Master 4.46MB تظل كما هي وتستخدمها V19.
+6) لا يوجد تعديل مطلوب في Odoo أو GTM أو OpenAI API Key.
+7) انتظر Vercel Deployment ثم افتح /api/health.
+
+المتوقع:
+version = 19.0.0
+mode = conversion_decision_human_sales_employee_v19
+conversion_decision_brain.version = 19.0
+sales_employee.version = 19.0
+neural_brain.version = 19.0
+neural_brain.tools يتضمن get_sales_strategy
