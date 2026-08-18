@@ -4,8 +4,8 @@ import { GET } from '../api/health.js';
 import { POST } from '../api/chat.js';
 
 const h=await (await GET()).json();
-assert.equal(h.version,'24.0.0');
-assert.equal(h.mode,'semantic_human_conversation_orchestrator_os_v24');
+assert.equal(h.version,'25.0.0');
+assert.equal(h.mode,'autonomous_sales_learning_agent_os_v25');
 for(const f of ['product_context_lock','product_card_bound_actions','generic_product_detail_agronomy_guard','selected_product_context_transport','per_product_details_button']) assert.ok(h.features.includes(f),f);
 
 const oldKey=process.env.OPENAI_API_KEY; delete process.env.OPENAI_API_KEY;
@@ -22,7 +22,7 @@ try{
   assert.equal(bound.product_context_lock,true);
   assert.equal(bound.bound_product?.sku,'287F1');
   assert.match(String(bound.reply||''),/خيار جبارة/);
-  assert.match(String(bound.reply||''),/الوصف المسجل|المواصفات المؤكدة/);
+  assert.match(String(bound.reply||''),/الاستخدام والوصف|المهم بسرعة|الوصف المسجل|المواصفات المؤكدة/);
   assert.doesNotMatch(String(bound.reply||''),/المن يتجمع|ندوة عسلية|جلود انسلاخ/);
 } finally { if(oldKey!==undefined) process.env.OPENAI_API_KEY=oldKey; }
 
