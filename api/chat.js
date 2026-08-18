@@ -78,9 +78,13 @@ import {
   searchProductDossiers, getProductDossier, compareProductDossiers,
   enrichLiveProductsWithDossiers, productIntelligenceHealth
 } from "../lib/product_intelligence.js";
+import {
+  getStructuredProductFacts, buildProductTruth, getProductRelations, rankLiveAlternatives,
+  buildVerifiedQuoteDraft, productTruthHealth
+} from "../lib/product_truth_os.js";
 
-const VERSION="20.0.0";
-const MODE="product_intelligence_human_sales_employee_v20";
+const VERSION="21.0.0";
+const MODE="live_product_truth_sales_action_os_v21";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -294,6 +298,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       persistent_cognitive_store:persistentStoreHealth(),
       product_index:productIndexStatus(),
       product_intelligence:productIntelligenceHealth(),
+      product_truth_os:productTruthHealth(),
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
@@ -349,7 +354,7 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV19NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId=""}){
+async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId=""}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
   if(!shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
@@ -390,6 +395,56 @@ async function tryV19NeuralAgent({analysis,state,message,history,locale,profile,
       const identifiers=Array.isArray(args?.identifiers)?args.identifiers.slice(0,6):[];
       const criteria=Array.isArray(args?.criteria)?args.criteria.slice(0,8):[];
       return compareProductDossiers(identifiers,criteria);
+    },
+    verify_live_product_truth:async args=>{
+      const identifier=cleanText(args?.identifier||message,900);
+      const query=cleanText(args?.query||identifier,900);
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      const live=enrichLiveProductsWithDossiers(clientProducts(found.products).slice(0,12),{descriptionChars:900});
+      return {identifier,query,truth:buildProductTruth(identifier,live),live_candidates:live.slice(0,6),product_truth_os:productTruthHealth()};
+    },
+    get_product_relations:async args=>{
+      const identifier=cleanText(args?.identifier||message,900);
+      const relation=cleanText(args?.relation||"all",60);
+      const limit=Math.max(1,Math.min(20,Number(args?.limit)||10));
+      return getProductRelations(identifier,{relation,limit});
+    },
+    find_verified_alternatives:async args=>{
+      const identifier=cleanText(args?.identifier||message,900);
+      const limit=Math.max(1,Math.min(8,Number(args?.limit)||5));
+      const target=getStructuredProductFacts(identifier);
+      if(!target)return {identifier,error:"product_not_found_in_dossier"};
+      const query=cleanText(`${target.category||""} ${Array.isArray(target.type)?target.type.join(" "):""}`,900)||target.name;
+      let live=[];
+      try{live=clientProducts(await searchProducts(query,history,36));}catch{}
+      if(live.length<4){
+        const toolAnalysis=analyzeTurn(query,state,history,locale);
+        const found=await searchCatalog(toolAnalysis,state,query,history);
+        live=clientProducts(mergeProducts(live,found.products||[]));
+      }
+      return {identifier,query,...rankLiveAlternatives(identifier,live,{limit}),live_checked:live.length};
+    },
+    build_verified_bundle:async args=>{
+      const query=cleanText(args?.query||message,1000);
+      const budget=Math.max(0,Number(args?.budget_aed)||0);
+      const maxItems=Math.max(1,Math.min(6,Number(args?.max_items)||3));
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      const live=enrichLiveProductsWithDossiers(clientProducts(found.products),{descriptionChars:900});
+      const bundleMission={...mission,kind:"bundle",budget_aed:budget||mission?.budget_aed||null,require_available:Boolean(args?.require_available),requested_count:maxItems};
+      const portfolio=optimizeLivePortfolio({products:live,mission:bundleMission,maxItems});
+      const verified=portfolio.products.map(p=>({product:p,truth:buildProductTruth(p.sku||p.name,[p])}));
+      return {query,budget_aed:bundleMission.budget_aed,portfolio:{...portfolio,verified_products:verified},policy:"Bundle selection uses live Odoo price/availability. Product graph relationships do not prove compatibility."};
+    },
+    prepare_quote_draft:async args=>{
+      const items=Array.isArray(args?.items)?args.items.slice(0,8):[];
+      const allLive=[];
+      for(const item of items){
+        const identifier=cleanText(item?.identifier||"",500);if(!identifier)continue;
+        try{const rows=clientProducts(await searchProducts(identifier,history,10));allLive.push(...rows);}catch{}
+      }
+      return buildVerifiedQuoteDraft(items,mergeProducts([],allLive));
     },
     search_knowledge:async args=>{
       const query=cleanText(args?.query||message,700);
@@ -566,10 +621,10 @@ async function tryV19NeuralAgent({analysis,state,message,history,locale,profile,
         conversion_decision:conversionDecision?{version:conversionDecision.version,stage:conversionDecision.stage,next_best_action:conversionDecision.next_best_action,friction:conversionDecision.friction,question_budget:conversionDecision.question_policy?.budget,close_allowed:conversionDecision.close_policy?.allowed}:undefined,
         human_conversation:humanTurn||null
       },
-      source:"neural_conversion_decision_brain_v19",results,retrieval,plan
+      source:"neural_live_product_truth_sales_action_v21",results,retrieval,plan
     };
   }catch(error){
-    console.error("V19 conversion conversation neural fallback:",error?.message);
+    console.error("V21 product-truth neural fallback:",error?.message);
     return null;
   }
 }
@@ -691,17 +746,17 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V19: current-turn brain + conversion decision engine control how the neural sales employee should act before legacy deterministic fallbacks.
+  // V21: current-turn + conversion + live product-truth control the neural sales employee before legacy deterministic fallbacks.
   // All deterministic FAQ/agronomy/commerce layers below remain safety fallbacks if the neural employee is unavailable.
   if(!isClearlyOffDomain(message)){
     try{
       const currentProductEarly=await resolveCurrentProduct(pageUrl,productContext);
-      const adaptive=await tryV19NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId});
+      const adaptive=await tryV21NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId});
       if(adaptive) return await makeResponse({
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
       });
-    }catch(error){ console.error("V19 early conversion sales employee failed",error?.message); }
+    }catch(error){ console.error("V21 live product-truth sales employee failed",error?.message); }
   }
 
   // V18 hard guard: isolated casual/browse-only turns never fall through into stale FAQ/agronomy/product routing.
@@ -816,7 +871,7 @@ export async function POST(request){
   }
 
   // V18 fallback retry: retained for resilience after deterministic context routing.
-  const neural=await tryV19NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId});
+  const neural=await tryV21NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
