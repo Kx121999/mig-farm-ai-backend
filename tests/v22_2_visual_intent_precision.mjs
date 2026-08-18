@@ -9,7 +9,7 @@ import { sanitizeState } from "../lib/dialogue.js";
 
 const img=[{type:"input_image",image_url:"data:image/jpeg;base64,AAAA",detail:"high"}];
 const vh=visionHealth();
-assert.equal(vh.version,"22.3");
+assert.equal(vh.version,"22.4");
 assert.equal(vh.visual_intent_contract,true);
 assert.equal(vh.intent_aware_retake,true);
 assert.equal(vh.availability_price_identity_gate,true);
@@ -54,7 +54,7 @@ assert.equal(answerLive.next_action,"answer_availability_from_live_truth");
 const active=updateActiveVisualContext({},availability,{visual_matches:[{identity_confidence:"medium",candidates:[{external_id:"x",name:"TEST",sku:"SKU1",score:130}]}]},2);
 assert.equal(active.last_visual_intent,"availability");
 assert.equal(active.last_retake_target,"product_name_or_sku_barcode");
-const persisted=sanitizeState({v:22.3,turn:2,active_visual_context:active});
+const persisted=sanitizeState({v:22.4,turn:2,active_visual_context:active});
 assert.equal(persisted.active_visual_context.last_visual_intent,"availability");
 assert.equal(persisted.active_visual_context.last_retake_target,"product_name_or_sku_barcode");
 
@@ -78,8 +78,8 @@ assert.equal(unsafe.reason,"product_recognition_not_attempted");
 assert.match(unsafe.reply,/أطابق المنتج|الصورة نفسها/);
 
 const ui=readFileSync(new URL("../ODOO_CHAT_UI_V22_3_VISUAL_RECOGNITION_PIPELINE.txt",import.meta.url),"utf8");
-assert.match(ui,/UI_VERSION='22\.3\.0'/);
-assert.match(ui,/mig_ai_history_v22_3/);
+assert.match(ui,/UI_VERSION='22\.4\.0'/);
+assert.match(ui,/mig_ai_history_v22_4/);
 assert.match(ui,/addVisualGuidance/);
 assert.match(ui,/mig-ai-visual-action/);
 assert.match(ui,/fileInput\.click\(\)/);

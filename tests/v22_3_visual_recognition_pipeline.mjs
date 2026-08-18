@@ -7,7 +7,7 @@ import {
 import { sanitizeState } from "../lib/dialogue.js";
 
 const vh=visionHealth();
-assert.equal(vh.version,"22.3");
+assert.equal(vh.version,"22.4");
 assert.equal(vh.recognition_before_identity_guard,true);
 assert.equal(vh.forced_product_recognition_preflight,true);
 assert.equal(vh.medium_candidate_confirmation,true);
@@ -55,7 +55,7 @@ assert.equal(active.image_ids[0],"img-one");
 assert.equal(active.visual_revision,1);
 assert.equal(active.identity_confidence,"high");
 
-const persisted=sanitizeState({v:22.3,turn:1,active_visual_context:active});
+const persisted=sanitizeState({v:22.4,turn:1,active_visual_context:active});
 assert.equal(persisted.active_visual_context.recognition_attempts,1);
 assert.equal(persisted.active_visual_context.image_ids[0],"img-one");
 assert.equal(persisted.active_visual_context.visual_revision,1);
@@ -78,12 +78,12 @@ assert.match(mediumGuidance.confirmation,/أقرب تطابق/);
 assert.equal(mediumGuidance.actions.some(x=>x.type==="message"&&x.message==="أيوه هو"),true);
 
 const ui=readFileSync(new URL("../ODOO_CHAT_UI_V22_3_VISUAL_RECOGNITION_PIPELINE.txt",import.meta.url),"utf8");
-assert.match(ui,/UI_VERSION='22\.3\.0'/);
-assert.match(ui,/mig_ai_history_v22_3/);
+assert.match(ui,/UI_VERSION='22\.4\.0'/);
+assert.match(ui,/mig_ai_history_v22_4/);
 assert.match(ui,/client_image_id:'img-'/);
 assert.match(ui,/simpleImageHash/);
 assert.match(ui,/pendingCaptureTarget/);
 assert.match(ui,/isNewTopicAwayFromImage\(message\).*activeImages=\[\]/s);
 assert.doesNotMatch(ui,/يفهم الصورة بدقة/);
 
-console.log("V22.3 visual recognition pipeline PASS");
+console.log("V22.4 visual recognition pipeline PASS");
