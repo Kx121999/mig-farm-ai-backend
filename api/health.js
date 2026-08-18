@@ -14,15 +14,18 @@ import { uaeAgricultureHealth } from "../lib/uae_agriculture_intelligence.js";
 import { agriculturalEngineerHealth } from "../lib/agricultural_engineer.js";
 import { salesEmployeeHealth } from "../lib/sales_employee.js";
 import { salesConversationOSHealth } from "../lib/sales_conversation_os.js";
+import { humanConversationHealth } from "../lib/human_conversation_brain.js";
+import { agriculturalMasterHealth } from "../lib/agricultural_master_knowledge.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM Human Sales Conversation OS & Senior Agricultural Engineer",
-    version:"17.0.0",
-    mode:"adaptive_human_sales_conversation_os_v17",
+    service:"MIG FARM V18 Current-Turn Human Sales Brain & Agricultural Master Engineer",
+    version:"18.0.0",
+    mode:"current_turn_semantic_human_sales_employee_v18",
     features:[
+      "current_turn_semantic_priority","stale_context_quarantine","zero_tool_casual_mode","browse_only_no_sales_pressure","semantic_reply_alignment_guard","repair_topic_supersession","followup_dependency_detection","old_agronomy_leak_guard","adaptive_human_acknowledgement","4mb_agricultural_master_knowledge","large_free_form_agricultural_retrieval","agricultural_master_tool",
       "human_sales_conversation_os","turn_level_goal_selection","buyer_readiness_inference","objection_root_cause_detection","next_best_action_engine","adaptive_reply_shape_selection","history_aware_followups","response_repetition_guard","bounded_naturalizer_retry","question_budgeting","soft_close_engine","trust_friction_resolution","anti_fake_urgency","anti_fake_discount","no_product_push_when_not_needed",
       "adaptive_human_sales_employee","free_form_sales_conversation","non_template_response_generation","dialect_and_style_mirroring","adaptive_response_length","consultative_sales_reasoning","objection_handling","natural_sales_closing","business_fact_tool","sales_playbook_tool","no_forced_cta","answer_first_policy","single_question_qualification","technical_problem_before_product_policy",
       "senior_agricultural_engineer_reasoning","free_form_agricultural_language_understanding","dialect_and_slang_normalization","agricultural_curriculum_knowledge_base","differential_crop_diagnosis","symptom_to_hypothesis_reasoning","crop_stage_system_context_extraction","agricultural_engineering_calculators","soil_water_nutrition_engineering","greenhouse_hydroponics_expert_knowledge","plant_pathology_entomology_ipm","seed_nursery_postharvest_engineering","measurement_first_diagnostics","single_symptom_diagnosis_guard","label_only_pesticide_dosage_policy",
@@ -40,7 +43,7 @@ export async function GET(){
       "mig_farm_seeds_only","page_product_context","safe_pesticide_and_fertilizer_guidance","github_managed_knowledge",
       "privacy_safe_learning_telemetry"
     ],
-    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth()},
+    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth()},
     cognition:cognitionHealth(),
     hybrid_brain:hybridBrainHealth(),
     autonomous_commerce:autonomousCommerceHealth(),
@@ -48,10 +51,12 @@ export async function GET(){
     agricultural_engineer:agriculturalEngineerHealth(),
     sales_employee:salesEmployeeHealth(),
     sales_conversation_os:salesConversationOSHealth(),
+    human_conversation_brain:humanConversationHealth(),
+    agricultural_master:agriculturalMasterHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v17:false},
+    persistent_store:{...persistence,required_for_v18:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });

@@ -69,9 +69,13 @@ import {
 import {
   analyzeSalesConversation, shouldUseAdaptiveSalesAgent, searchSalesPlaybook, salesReplyQuality
 } from "../lib/sales_employee.js";
+import {
+  analyzeHumanConversationTurn, isolateStateForCurrentTurn, safeCurrentTurnFallback, humanConversationHealth
+} from "../lib/human_conversation_brain.js";
+import { searchAgriculturalMasterKnowledge, agriculturalMasterHealth } from "../lib/agricultural_master_knowledge.js";
 
-const VERSION="17.0.0";
-const MODE="adaptive_human_sales_conversation_os_v17";
+const VERSION="18.0.0";
+const MODE="current_turn_semantic_human_sales_employee_v18";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -339,16 +343,18 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV17NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,currentProduct=null,sessionId=""}){
+async function tryV18NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,currentProduct=null,sessionId=""}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
   if(!shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
 
-  const recalled=await semanticMemoryCandidatesAdaptive(message,state?.v11_memory||{},6);
-  const persistentHits=persistentMemoryCandidates(message,persistentSnapshot,6);
-  const temporalHits=temporalMemoryCandidates(message,persistentSnapshot,6);
-  const seedGraph=buildKnowledgeGraph({message,analysis,state,profile,results:state?.visible_products||[],memory:[...(recalled.items||[]),...persistentHits]});
-  const graphContext=[...knowledgeGraphContext(persistentSnapshot?.graph||{}),...knowledgeGraphContext(seedGraph)].slice(0,20);
+  const isolated=humanTurn?.context_policy?.scope==="current_turn_isolated";
+  const zeroTools=humanTurn?.tool_policy?.mode==="zero_tools";
+  const recalled=(isolated||zeroTools)?{items:[],engine:"v18_current_turn_isolated"}:await semanticMemoryCandidatesAdaptive(message,state?.v11_memory||{},6);
+  const persistentHits=(isolated||zeroTools)?[]:persistentMemoryCandidates(message,persistentSnapshot,6);
+  const temporalHits=(isolated||zeroTools)?[]:temporalMemoryCandidates(message,persistentSnapshot,6);
+  const seedGraph=(isolated||zeroTools)?{nodes:[],edges:[]}:buildKnowledgeGraph({message,analysis,state,profile,results:state?.visible_products||[],memory:[...(recalled.items||[]),...persistentHits]});
+  const graphContext=(isolated||zeroTools)?[]:[...knowledgeGraphContext(persistentSnapshot?.graph||{}),...knowledgeGraphContext(seedGraph)].slice(0,20);
 
   const toolHandlers={
     search_catalog:async args=>{
@@ -414,6 +420,15 @@ async function tryV17NeuralAgent({analysis,state,message,history,locale,profile,
       const items=searchAgriculturalEngineering(query,{limit,discipline,crop});
       return {query,crop,discipline,items:items.map(x=>({id:x.id,title:x.topic,answer:x.body_ar,discipline:x.discipline,crop:x.crop||undefined,score:x.score,source:"agricultural_engineering_curriculum_v15"}))};
     },
+    search_agricultural_master:async args=>{
+      const query=cleanText(args?.query||message,1400);
+      const limit=Math.max(1,Math.min(16,Number(args?.limit)||10));
+      const domain=cleanText(args?.domain||"",100);
+      const crop=cleanText(args?.crop||agriculturalContext?.crop||analysis?.crop?.key||"",100);
+      const stage=cleanText(args?.stage||"",100);
+      const items=searchAgriculturalMasterKnowledge(query,{limit,domain,crop,stage});
+      return {query,crop,domain,stage,knowledge_pack:agriculturalMasterHealth(),items};
+    },
     diagnose_crop_problem:async args=>{
       const description=cleanText(args?.description||message,1800);
       const result=diagnoseAgriculturalProblem(description,{analysis,state,profile});
@@ -473,7 +488,7 @@ async function tryV17NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:persistentSnapshot?.journey||null,autonomous_mission:mission,agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,recent_dialogue:history.slice(-8),current_product:currentProduct},
+      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:mission,agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,human_conversation:humanTurn,recent_dialogue:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
       toolHandlers
     });
     if(!result?.handled||!result.reply) return null;
@@ -497,6 +512,14 @@ async function tryV17NeuralAgent({analysis,state,message,history,locale,profile,
         }
       }
     }
+    // V18 semantic alignment guard: if an isolated/social/browse-only turn still leaks old agronomy or sales context, discard it.
+    if(conversationQuality?.semantic_alignment?.aligned===false){
+      if(["social","browse_only_social"].includes(humanTurn?.mode)){
+        safeReply=safeCurrentTurnFallback(message,humanTurn);
+        conversationQuality=salesReplyQuality(safeReply,{...(salesTurn||{}),raw:message,history});
+        naturalizerMeta={...naturalizerMeta,semantic_repair:"deterministic_current_turn_fallback"};
+      }
+    }
     const evidenceItems=(result.evidence||[]).map((x,i)=>({
       id:String(x?.id||`neural-${i}`),title:String(x?.title||""),answer:String(x?.answer||""),url:String(x?.url||""),
       source:String(x?.source||"neural_tool"),verified:Boolean(x?.verified),score:Number(x?.score||0)
@@ -509,12 +532,13 @@ async function tryV17NeuralAgent({analysis,state,message,history,locale,profile,
         autonomous_portfolio:portfolio.handled?{total_aed:portfolio.total_aed,within_budget:portfolio.within_budget,decision_basis:portfolio.decision_basis,confidence:portfolio.confidence}:undefined,
         quick_replies:products.length?salesQuickReplies({category:analysis?.category?.key||state?.category,stage:"consider",results:products,profile}):[],
         neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||"",
-        sales_conversation:{...conversationQuality,plan:salesTurn?.conversation_plan||null,naturalizer:naturalizerMeta}
+        sales_conversation:{...conversationQuality,plan:salesTurn?.conversation_plan||null,human_turn:humanTurn||null,naturalizer:naturalizerMeta},
+        human_conversation:humanTurn||null
       },
-      source:"neural_sales_conversation_os_v17",results,retrieval,plan
+      source:"neural_human_conversation_brain_v18",results,retrieval,plan
     };
   }catch(error){
-    console.error("V17 sales conversation neural fallback:",error?.message);
+    console.error("V18 human conversation neural fallback:",error?.message);
     return null;
   }
 }
@@ -621,8 +645,10 @@ export async function POST(request){
   const cognition=buildCognitiveFrame({message,analysis,state,profile,history});
   const retrievalRoute=buildRetrievalRoute({message,analysis,cognition,persistent:persistentRead.snapshot});
   const agriculturalContext=analyzeAgriculturalRequest(message,{analysis,state,profile});
-  const salesTurn=analyzeSalesConversation(message,{analysis,state,profile,history,agriculturalContext});
-  salesTurn.history=history.slice(-8);
+  const humanTurn=analyzeHumanConversationTurn(message,{analysis,state,profile,history,agriculturalContext});
+  const turnState=isolateStateForCurrentTurn(state,humanTurn);
+  const salesTurn=analyzeSalesConversation(message,{analysis,state:turnState,profile,history,agriculturalContext,humanTurn});
+  salesTurn.history=history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8)));
   state.__v12_route=retrievalRoute;
 
   if(!message) return await makeResponse({payload:{reply:locale==="en"?"Write a message first.":"اكتب سؤالك أول."},status:400,cors,sessionId,state,analysis,signals,profile,message,source:"empty",locale});
@@ -630,17 +656,23 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V17: Human Sales Conversation OS gets first chance to control the turn, preserve recent dialogue, and phrase the answer naturally.
+  // V18: Current-turn semantic brain gets first chance; stale context is quarantined before the neural sales employee runs.
   // All deterministic FAQ/agronomy/commerce layers below remain safety fallbacks if the neural employee is unavailable.
   if(!isClearlyOffDomain(message)){
     try{
       const currentProductEarly=await resolveCurrentProduct(pageUrl,productContext);
-      const adaptive=await tryV17NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,currentProduct:currentProductEarly,sessionId});
+      const adaptive=await tryV18NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,currentProduct:currentProductEarly,sessionId});
       if(adaptive) return await makeResponse({
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
       });
-    }catch(error){ console.error("V17 early sales conversation employee failed",error?.message); }
+    }catch(error){ console.error("V18 early human conversation employee failed",error?.message); }
+  }
+
+  // V18 hard guard: isolated casual/browse-only turns never fall through into stale FAQ/agronomy/product routing.
+  if(["social","browse_only_social"].includes(humanTurn?.mode)){
+    const humanReply=safeCurrentTurnFallback(message,humanTurn);
+    return await makeResponse({payload:{reply:humanReply,display_reply:humanReply,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state,analysis,signals,profile,message,source:"v18_current_turn_safe_fallback",locale,cognition});
   }
 
   // V8 Phase 3 GitHub Edition: repository-managed verified knowledge can override generic rules.
@@ -748,8 +780,8 @@ export async function POST(request){
     return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
   }
 
-  // V17 fallback retry: normally handled by the conversational employee earlier; retained for resilience after deterministic context routing.
-  const neural=await tryV17NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId});
+  // V18 fallback retry: retained for resilience after deterministic context routing.
+  const neural=await tryV18NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
