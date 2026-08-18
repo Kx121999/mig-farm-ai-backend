@@ -1,0 +1,44 @@
+{
+  "release": "22.2.0",
+  "mode": "multimodal_visual_intent_product_precision_os_v22_2",
+  "built_at_utc": "2026-08-18T09:16:00Z",
+  "purpose": "Intent-aware visual product identification and precise live availability/price workflow with targeted retake guidance and V22.1 stability preserved.",
+  "core_changes": [
+    "visual_intent_contract",
+    "availability_price_identity_gate",
+    "intent_aware_retake_guidance",
+    "deterministic_visual_next_action",
+    "visual_guidance_actions",
+    "deterministic_visual_live_fallback",
+    "active_visual_context_persistence",
+    "implicit_topic_switch_guard",
+    "runtime_visual_tool_whitelist",
+    "visual_grounding_retry"
+  ],
+  "verified_regression": "V6 through V22.2 PASS via npm test",
+  "checks": {
+    "all_javascript_syntax": "PASS",
+    "all_runtime_json_parse": "PASS",
+    "odoo_xml_fragment": "PASS",
+    "odoo_embedded_javascript_syntax": "PASS",
+    "v22_1_visual_context_regression": "PASS",
+    "v22_1_neural_visual_grounding_and_tool_whitelist": "PASS",
+    "v22_2_visual_intent_precision": "PASS",
+    "v22_2_api_regression": "PASS"
+  },
+  "knowledge_bytes": 18077373,
+  "knowledge_mib": 17.24,
+  "catalog": {
+    "product_dossiers": 704,
+    "visual_product_signatures": 704,
+    "visual_agronomy_cards": 540,
+    "explicit_verified_product_facts": 727,
+    "product_graph_edges": 11776,
+    "agricultural_master_cards": 2802
+  },
+  "live_truth_policy": "Current Odoo price and availability are authoritative; archived price/stock are not used as current truth.",
+  "visual_identity_policy": "Live commerce claims require sufficient product identity; otherwise request exact product-name/SKU/barcode evidence.",
+  "pesticide_dosage_policy": "Clear readable label text or verified product data only; unclear visual dosage claims are blocked.",
+  "shopify_runtime_dependency": false,
+  "persistent_memory_required": false
+}

@@ -1,0 +1,20 @@
+MIG FARM V22.2 — خطوات الرفع
+
+1) فك ضغط ملف الـBackend.
+2) ارفع كل محتويات المجلد إلى GitHub Root واعمل Replace للملفات بنفس المسارات.
+3) انتظر Vercel Deployment.
+4) افتح /api/health وتأكد من:
+   version = 22.2.0
+   mode = multimodal_visual_intent_product_precision_os_v22_2
+   vision_intelligence.version = 22.2
+   neural_brain.version = 22.2
+5) في Odoo استبدل كود الشات الحالي بملف MIG_FARM_ODOO_CHAT_UI_V22_2_VISUAL_INTENT_PRECISION.txt.
+6) اعمل Hard Refresh / امسح Cache للصفحة إذا استمر شكل الواجهة القديم.
+
+اختبار القبول الأساسي:
+- ارفع صورة منتج واكتب: هل متوفر؟
+- لو الهوية غير مؤكدة: لازم يطلب اسم المنتج أو SKU/الباركود تحديدًا ويشرح إن ده مطلوب لتأكيد التوفر من Odoo.
+- بعد صورة اكتب: بكام؟ -> يظل على نفس الصورة ويتحول لمسار السعر.
+- بعد ذلك اكتب: سيبك منه عندكم بذور طماطم؟ -> لازم يترك الصورة القديمة ويتعامل مع موضوع الطماطم.
+
+لا تحتاج API Key جديد، ولا تعديل GTM، ولا Shopify.

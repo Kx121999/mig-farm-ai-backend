@@ -1,0 +1,30 @@
+MIG FARM AI V22.2 — Visual Intent Precision & Live Product Vision OS
+
+الإصدار ده بيحل مشكلة الرد العام بعد سؤال العميل عن صورة منتج، خصوصًا أسئلة: هل متوفر؟ بكام؟ إيه ده؟ اقرأ الملصق؟ المواصفات؟ الجرعة؟
+
+أهم التطويرات:
+- Visual Intent Contract مستقل يحدد هدف السؤال البصري قبل صياغة الرد.
+- سؤال التوفر/السعر لا يتحول لرد عام: لازم تثبيت هوية المنتج ثم Odoo Live.
+- توجيه تصوير مخصص حسب الهدف: اسم المنتج/الباركود للتوفر والسعر، جزء الجرعة للجرعات، الجزء المصاب للتشخيص الزراعي.
+- Deterministic Visual Next Action خارج GPT لتقليل أخطاء routing.
+- Visual Guidance Actions تظهر في الواجهة وتفتح الكاميرا/اختيار الصورة مباشرة.
+- استمرار Active Visual Context حتى 4 أدوار مع منع الصورة القديمة من خطف موضوع جديد.
+- Runtime Vision Tool Whitelist + Visual Grounding Retry محفوظين من V22.1.
+- السعر والتوفر الحاليان من Odoo Live فقط.
+- لا يوجد اعتماد Runtime على Shopify.
+
+التغطية الحالية:
+704 Product Dossiers
+704 Visual Product Signatures
+540 Visual Agronomy Cards
+727 Explicit Verified Product Facts
+11,776 Product Graph Relations
+2,802 Agricultural Master Cards
+
+الاختبارات:
+Full Regression V6 -> V22.2 PASS
+All JS syntax PASS
+All runtime JSON PASS
+Odoo XML + embedded JS PASS
+V22.1 regressions PASS
+V22.2 visual-intent/API regressions PASS
