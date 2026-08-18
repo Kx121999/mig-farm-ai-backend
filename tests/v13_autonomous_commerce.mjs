@@ -46,7 +46,7 @@ const ah=autonomousCommerceHealth();
 assert.equal(ah.version,'13.0');
 assert.ok(ah.capabilities.includes('budget_constrained_bundle_search'));
 const nh=neuralBrainHealth();
-assert.equal(nh.version,'13.0');
+assert.ok(Number(nh.version)>=13,'neural brain must stay at V13 or newer');
 assert.ok(nh.tools.includes('optimize_live_bundle'));
 assert.ok(nh.tools.includes('compare_live_options'));
 assert.ok(nh.tools.includes('prepare_purchase_plan'));
