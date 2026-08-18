@@ -1,0 +1,17 @@
+MIG FARM AI V22.5 Product Context Lock Final
+
+1) ارفع محتويات هذا الـ ZIP إلى GitHub Root مع Replace.
+2) انتظر Vercel Deployment.
+3) افتح /api/health وتأكد من:
+   version = 22.5.0
+   mode = multimodal_product_context_lock_os_v22_5
+   features تشمل product_context_lock و product_card_bound_actions.
+4) بعد نجاح الـ Backend استبدل كود شات Odoo بملف:
+   ODOO_CHAT_UI_V22_5_PRODUCT_CONTEXT_LOCK_FINAL.txt
+5) افتح محادثة جديدة أو اعمل Hard Refresh لأن مفاتيح localStorage تغيرت إلى V22.5.
+6) اختبار القبول:
+   - اطلب خيار أو أي منتج بحيث يظهر أكثر من كارت.
+   - كل كارت لازم يظهر زر «التفاصيل والاستخدام» الخاص به.
+   - اضغط زر كارت واحد.
+   - الرد يجب أن يذكر نفس المنتج وSKU/الوصف، ولا يجوز أن يدخل في تشخيص حشرة/مرض.
+   - بعدها اضغط «بكام؟» أو «هل متوفر؟» ويظل مربوطًا بنفس المنتج ويستخدم Odoo Live.

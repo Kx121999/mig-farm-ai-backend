@@ -1,0 +1,32 @@
+{
+  "release": "MIG FARM AI V22.5 Product Context Lock Final",
+  "version": "22.5.0",
+  "mode": "multimodal_product_context_lock_os_v22_5",
+  "problem_fixed": "Generic product detail/use actions lost product identity and could fall into agricultural disease/pest retrieval.",
+  "fixes": [
+    "structured selected_product_context transport from Odoo UI to backend",
+    "per-product Details & Use button on each visible product card",
+    "ambiguous generic product-details quick reply suppressed when multiple products are visible",
+    "deterministic bound-product dossier route runs before agricultural knowledge",
+    "generic unbound product-details guard blocks agricultural hallucination",
+    "bound price and availability use live Odoo verification",
+    "active product context persists for direct follow-ups such as price and availability",
+    "active product context clears on explicit different-product searches",
+    "Odoo UI history/session/state storage keys aligned to V22.5"
+  ],
+  "acceptance_tests": {
+    "full_regression_suites": 41,
+    "full_regression": "PASS",
+    "bound_cucumber_details": "PASS",
+    "unbound_generic_details_no_aphid_answer": "PASS",
+    "javascript_syntax": "PASS",
+    "runtime_json_parse": "PASS",
+    "odoo_xml_parse": "PASS"
+  },
+  "safety": {
+    "product_detail_never_routes_to_agronomy_when_bound": true,
+    "missing_product_identity_requires_selection_or_name": true,
+    "live_price_stock_precedence": true,
+    "generated_completion_copy_not_technical_spec": true
+  }
+}
