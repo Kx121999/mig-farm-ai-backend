@@ -88,8 +88,8 @@ import {
   updateActiveVisualContext, visualContextFallback, buildVisualGuidance, planVisualProductAction
 } from "../lib/vision_intelligence.js";
 
-const VERSION="22.3.0";
-const MODE="multimodal_visual_recognition_pipeline_os_v22_3";
+const VERSION="22.4.0";
+const MODE="multimodal_visual_recognition_pipeline_os_v22_4";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -211,7 +211,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=22.3;
+  next.v=22.4;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
@@ -684,7 +684,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       source:"neural_multimodal_visual_recognition_sales_v22_3",results,retrieval,plan
     };
   }catch(error){
-    console.error("V22.3 multimodal neural fallback:",error?.message);
+    console.error("V22.4 multimodal neural fallback:",error?.message);
     return null;
   }
 }
@@ -702,14 +702,14 @@ async function tryDeterministicVisualCommerce({frame={},activeContext={},history
     if(frame?.visual_intent==="availability"){
       const av=cleanText(truth?.current?.availability||"",160);const cls=truth?.current?.availability_class||"unknown";
       const reply=locale==="en"?(av?`I verified ${truth.identity.name} live in Odoo. Current availability: ${av}.`:`I verified the product identity, but Odoo is not exposing a clear stock status right now.`):(av?`أيوه، ثبتّ المنتج كـ ${truth.identity.name} وراجعت Odoo Live. حالة التوفر الحالية: ${av}.`:`ثبتّ المنتج كـ ${truth.identity.name}، لكن Odoo مش مظهر حالة مخزون واضحة حاليًا، فمش هخمن.`);
-      return {reply,truth,results:live.slice(0,4),source:"v22_3_deterministic_visual_availability"};
+      return {reply,truth,results:live.slice(0,4),source:"v22_4_deterministic_visual_availability"};
     }
     if(frame?.visual_intent==="price"){
       const price=truth?.current?.price_aed;
       const reply=price!==null&&price!==undefined?(locale==="en"?`I verified ${truth.identity.name} live in Odoo. Current price: ${price} ${truth.current.currency||"AED"}.`:`ثبتّ المنتج كـ ${truth.identity.name} وراجعت Odoo Live. السعر الحالي ${price} ${truth.current.currency||"AED"}.`):(locale==="en"?`I verified the product identity, but a current price is not visible in Odoo right now.`:`ثبتّ المنتج، لكن السعر الحالي مش ظاهر في Odoo دلوقتي، فمش هستخدم سعر قديم.`);
-      return {reply,truth,results:live.slice(0,4),source:"v22_3_deterministic_visual_price"};
+      return {reply,truth,results:live.slice(0,4),source:"v22_4_deterministic_visual_price"};
     }
-  }catch(error){console.error("V22.3 deterministic visual commerce failed",error?.message);}
+  }catch(error){console.error("V22.4 deterministic visual commerce failed",error?.message);}
   return null;
 }
 
@@ -834,7 +834,7 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V22.3: recognition-first multimodal vision + current-turn + conversion + live product truth control the neural sales employee before legacy deterministic fallbacks.
+  // V22.4: recognition-first multimodal vision + current-turn + conversion + live product truth control the neural sales employee before legacy deterministic fallbacks.
   // All deterministic FAQ/agronomy/commerce layers below remain safety fallbacks if the neural employee is unavailable.
   if(visionFrame?.has_visual_context || !isClearlyOffDomain(message)){
     try{
@@ -844,7 +844,7 @@ export async function POST(request){
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
       });
-    }catch(error){ console.error("V22.3 multimodal vision sales employee failed",error?.message); }
+    }catch(error){ console.error("V22.4 multimodal vision sales employee failed",error?.message); }
   }
 
   // V22.1 hard visual fallback: never drop an attached/active image into generic social/category clarification.
@@ -855,13 +855,13 @@ export async function POST(request){
     }
     const guidance=buildVisualGuidance({frame:visionFrame,activeContext:state?.active_visual_context||{},audit:{}});
     const visualReply=guidance?.retake?.ask_one||visualContextFallback({frame:visionFrame,activeContext:state?.active_visual_context||{}});
-    return await makeResponse({payload:{reply:visualReply,display_reply:visualReply,vision:{...visionFrame,engine:visionHealth(),fallback:true},visual_evidence:{visual_matches:[],live_visual_verifications:[],label_guard_results:[]},visual_guidance:guidance,human_conversation:humanTurn},cors,sessionId,state,analysis,signals,profile,message,source:"v22_3_visual_recognition_safe_fallback",locale,cognition});
+    return await makeResponse({payload:{reply:visualReply,display_reply:visualReply,vision:{...visionFrame,engine:visionHealth(),fallback:true},visual_evidence:{visual_matches:[],live_visual_verifications:[],label_guard_results:[]},visual_guidance:guidance,human_conversation:humanTurn},cors,sessionId,state,analysis,signals,profile,message,source:"v22_4_visual_recognition_safe_fallback",locale,cognition});
   }
 
   // V18 hard guard: isolated casual/browse-only turns never fall through into stale FAQ/agronomy/product routing.
   if(["social","browse_only_social"].includes(humanTurn?.mode)){
     const humanReply=safeCurrentTurnFallback(message,humanTurn);
-    return await makeResponse({payload:{reply:humanReply,display_reply:humanReply,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state,analysis,signals,profile,message,source:"v22_3_current_turn_safe_fallback",locale,cognition});
+    return await makeResponse({payload:{reply:humanReply,display_reply:humanReply,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state,analysis,signals,profile,message,source:"v22_4_current_turn_safe_fallback",locale,cognition});
   }
 
   // V8 Phase 3 GitHub Edition: repository-managed verified knowledge can override generic rules.

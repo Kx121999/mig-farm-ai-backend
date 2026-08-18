@@ -25,9 +25,9 @@ export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V22.3 Recognition-First Visual Product & Live Odoo OS",
-    version:"22.3.0",
-    mode:"multimodal_visual_recognition_pipeline_os_v22_3",
+    service:"MIG FARM V22.4 Recognition-First Visual Product & Live Odoo OS",
+    version:"22.4.0",
+    mode:"multimodal_visual_recognition_pipeline_os_v22_4",
     features:[
       "multimodal_image_input","recognition_before_identity_guard","forced_product_recognition_preflight","medium_candidate_confirmation","retake_loop_guard","different_image_detector","image_revision_tracking","fuzzy_visual_text_ranking","visual_intent_contract","intent_aware_retake_guidance","deterministic_visual_next_action","visual_availability_precision","visual_price_precision","visual_identity_before_live_commerce","visual_guidance_actions","deterministic_visual_live_fallback","active_visual_context_persistence","visual_followup_image_reuse","vision_first_routing","vision_tool_whitelist_enforcement","visual_grounding_retry","generic_visual_fallback_block","product_visual_recognition","readable_label_text_to_catalog_match","sku_barcode_visual_matching","visual_product_identity_guard","multi_image_evidence_fusion","plant_visual_triage","crop_visual_diagnostic_atlas","observation_before_inference","one_best_next_photo","image_quality_retake_protocol","pesticide_label_visual_claim_guard","visual_dosage_hallucination_guard","unknown_product_visual_mode","image_prompt_injection_guard","visual_to_live_odoo_verification",
       "live_product_truth_engine","field_level_provenance","variant_identity_guard","stale_snapshot_conflict_detection","product_relationship_graph","verified_alternative_ladder","shopping_adjacency_without_compatibility_claims","explicit_product_fact_index","generated_description_fact_exclusion","labelled_fact_colon_guard","product_fact_reliability_provenance","need_to_product_fact_matching","verified_bundle_builder","verified_quote_draft","live_price_stock_total_guard","order_not_placed_guard",
