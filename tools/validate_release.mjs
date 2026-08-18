@@ -28,7 +28,7 @@ for(const path of jsonFiles)JSON.parse(readFileSync(path,"utf8"));
 const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
-if(health.mode!=="server_authoritative_product_context_intelligence_os_v23")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.mode!=="semantic_human_conversation_orchestrator_os_v24")throw new Error(`Unexpected mode: ${health.mode}`);
 
 const ui=readFileSync(join(root,"ODOO_CHAT_UI_V23_CONTEXT_INTELLIGENCE_OS.txt"),"utf8");
 for(const marker of ["UI_VERSION='23.0.0'","mig_ai_session_id_v23","selected_product_contexts:selectedComparisonProducts","active_product_context","comparisonSelection"]){
