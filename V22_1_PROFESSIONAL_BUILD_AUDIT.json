@@ -1,0 +1,55 @@
+{
+  "release": "MIG FARM AI V22.1 Professional Stability Hotfix MAX",
+  "version": "22.1.0",
+  "mode": "multimodal_agricultural_product_vision_stability_os_v22_1",
+  "build_date": "2026-08-18",
+  "scope": "full backend stability + visual context + product truth reliability",
+  "knowledge_bytes": 18077373,
+  "knowledge_mib": 17.24,
+  "catalog": {
+    "product_dossiers": 704,
+    "product_visual_signatures": 704,
+    "visual_agronomy_cards": 540,
+    "explicit_product_facts": 727,
+    "need_terms": 16352,
+    "generated_descriptions_preserved": 202,
+    "generated_descriptions_excluded_from_technical_fact_extraction": 202
+  },
+  "fixed_defects": [
+    "active_visual_context_was_dropped_by_state_sanitizer",
+    "visual_followup_words_could_be_routed_as_generic_casual_clarification",
+    "old_context_could_truncate_vision_context_before_neural_reasoning",
+    "image_followups_did_not_re_send_last_image_from_odoo_ui",
+    "visual_turn_could_finalize_without_visual_grounding_tool",
+    "tool_whitelist_was_prompt_guidance_only_not_runtime_enforcement",
+    "generic_generated_catalog_descriptions_could_create_false_labelled_technical_facts",
+    "stale_state_schema_marker_was_16_in_current_backend",
+    "stale_telemetry_source_label_from_v19"
+  ],
+  "safety_and_reliability": [
+    "vision_first_routing",
+    "active_visual_context_ttl",
+    "visual_followup_image_reuse",
+    "visual_grounding_retry",
+    "runtime_tool_whitelist_enforcement",
+    "generic_visual_fallback_block",
+    "product_fact_provenance",
+    "generated_description_not_technical_spec",
+    "live_odoo_price_stock_precedence",
+    "pesticide_visual_dosage_guard",
+    "image_prompt_injection_guard"
+  ],
+  "regression": {
+    "npm_full_suite_v6_to_v22_1": "PASS",
+    "targeted_v22_1_visual_context_regression": "PASS",
+    "javascript_syntax_all_api_lib_tests": "PASS",
+    "json_parse_all_runtime_json": "PASS",
+    "odoo_ui_xml_fragment_parse": "PASS",
+    "odoo_ui_javascript_syntax": "PASS",
+    "secret_pattern_scan": "PASS_no_real_secrets_detected",
+    "eval_dynamic_function_scan": "PASS",
+    "fresh_zip_critical_release_verification": "PASS",
+    "source_full_suite_v6_to_v22_1_after_final_ui_change": "PASS"
+  },
+  "test_boundary": "OpenAI network call is not executed in local regression because OPENAI_API_KEY is intentionally absent; live model path must be confirmed after Vercel deployment. Deterministic routing, payload construction, tool policies, safety gates and API fallback paths are covered."
+}

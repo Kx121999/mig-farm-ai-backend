@@ -1,0 +1,26 @@
+MIG FARM AI V22.1 — خطوات الرفع
+
+BACKEND
+1) فك ZIP الإصدار.
+2) ارفع محتويات المجلد إلى GitHub Root مع Replace للملفات الموجودة.
+3) لا تغيّر OPENAI_API_KEY أو إعدادات Odoo الموجودة.
+4) انتظر Vercel Deployment.
+5) افتح /api/health وتأكد من:
+   version = 22.1.0
+   mode = multimodal_agricultural_product_vision_stability_os_v22_1
+   vision_intelligence.version = 22.1
+   human_conversation_brain.version = 22.1
+   conversion_decision_brain.version = 22.1
+   product_intelligence.version = 22.1
+   product_truth_os.version = 22.1
+   neural_brain.version = 22.1
+
+ODOO UI
+استبدل كود واجهة الشات V22 القديمة بمحتوى ODOO_CHAT_UI_V22_1_VISION_CONTEXT.txt في نفس Global View.
+
+اختبار حرج بعد النشر:
+- ارفع صورة منتج.
+- بعد الرد اكتب فقط: ركز
+- ثم: اقرأ اللي عليها
+- ثم: ده بكام؟
+يجب أن تظل كل الرسائل مرتبطة بنفس الصورة. السعر/التوفر لا يذكران كحقيقة حالية إلا بعد تحقق Odoo Live.

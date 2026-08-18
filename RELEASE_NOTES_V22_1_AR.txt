@@ -1,0 +1,41 @@
+MIG FARM AI V22.1 — Professional Stability Hotfix MAX
+الإصدار: 22.1.0
+
+هذه النسخة ليست إضافة شكلية. هي مراجعة استقرار للـBackend بعد اختبار V22 على الموقع.
+
+أهم الإصلاحات:
+1) إصلاح فقدان active_visual_context داخل sanitizeState.
+2) كلمات مثل: ركز / بص / شوف / اقرأ اللي عليها / ده بكام / متوفر أصبحت Follow-up على الصورة النشطة بدل تحويلها لمسار عام.
+3) واجهة Odoo تعيد إرسال آخر صورة تلقائيًا في الـvisual follow-up لمدة محدودة حتى يستطيع GPT رؤية البكسلات مرة أخرى، بدون إظهار الصورة كرسالة مكررة.
+4) Vision-first routing يسبق casual/zero-tool routing عندما توجد صورة أو سياق بصري نشط.
+5) Runtime tool whitelist: تقييد الأدوات أصبح فعليًا في الكود وليس مجرد تعليمات Prompt.
+6) Visual grounding retry: لو حاول النموذج إنهاء Turn بصري بدون أداة رؤية، يحصل على محاولة واحدة مضبوطة لإعادة فحص الصورة واستخدام أداة الرؤية المناسبة.
+7) منع الـgeneric fallback في الـvisual turns. لو الدليل ضعيف يطلب صورة مستهدفة أو يكمل من مرشح المنتج النشط بدل سؤال منتج/شحن/فرع/خدمة.
+8) ترتيب سياق الـNeural Agent أصبح Current Turn + Vision أولًا، لمنع الذاكرة القديمة من قطع بيانات الصورة عند حد طول الـcontext.
+9) إصلاح schema version للحالة من marker قديم إلى 22.1 مع حفظ compact visual state فقط، بدون تخزين image bytes.
+10) تنظيف Product Fact Index: الأوصاف الـ202 التي تم توليدها لاستكمال وصف المتجر تظل محفوظة كـcatalog copy، لكنها لم تعد تُستخدم كمصدر مواصفات تقنية.
+11) labelled facts تحتاج الآن صياغة صريحة موثقة، وتم حذف facts زائفة مثل Pressure/Size التي كانت تستخرج من جملة عامة.
+12) الحفاظ على Live Odoo كمرجع السعر والتوفر الحالي.
+
+البيانات بعد التنظيف:
+- Product Dossiers: 704
+- Product descriptions: 704/704
+- Visual Product Signatures: 704
+- Visual Agronomy Cards: 540
+- Explicit technical/product facts الموثقة: 727
+- Need terms: 16,352
+- Generated completion descriptions preserved: 202، ولكن ليست technical-spec evidence
+- Product relationship graph: 11,776 edges
+- Agricultural Master: 2,802 cards
+
+ملاحظة مهمة: انخفاض explicit facts من 1,063 إلى 727 مقصود وهو تحسين جودة، وليس فقدان أوصاف. تم حذف الاستنتاجات العامة التي لا تصلح كمواصفات تقنية.
+
+الاختبارات:
+- Full npm regression V6 → V22.1: PASS
+- V22.1 visual context regression: PASS
+- API/JS syntax: PASS
+- JSON parse: PASS
+- Odoo UI XML + JS syntax: PASS
+
+حد الاختبار المحلي:
+لا يتم إجراء اتصال OpenAI حقيقي أثناء الـregression المحلي لأن مفتاح الإنتاج غير موجود في بيئة البناء. تم اختبار routing/payload/tool policies/safety/fallbacks. بعد النشر يجب إجراء اختبار صورة فعلي على Vercel للتأكد من مسار الموديل الحي.
