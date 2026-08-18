@@ -1,0 +1,45 @@
+{
+  "version": "21.0.0",
+  "mode": "live_product_truth_sales_action_os_v21",
+  "generated_at": "2026-08-18",
+  "catalog": {
+    "products": 704,
+    "descriptions": 704,
+    "original_descriptions": 502,
+    "completed_descriptions": 202
+  },
+  "fact_index": {
+    "products": 704,
+    "explicit_facts": 1063,
+    "need_terms": 20283
+  },
+  "relationship_graph": {
+    "nodes": 704,
+    "edges": 11776,
+    "alternative_edges": 9292,
+    "shopping_adjacent_edges": 2484
+  },
+  "knowledge": {
+    "files": 12,
+    "bytes": 16795329,
+    "megabytes": 16.02
+  },
+  "policies": {
+    "current_price": "live_odoo_only",
+    "current_availability": "live_odoo_only",
+    "stored_descriptions": "exact_dossier_text",
+    "missing_specs": "do_not_infer",
+    "variant_identity": "strict_before_live_fusion",
+    "relationships": "discovery_only_not_compatibility",
+    "quote": "draft_only_live_verified_prices",
+    "order_status": "never_claim_placed_without_order_tool"
+  },
+  "new_tools": [
+    "verify_live_product_truth",
+    "get_product_relations",
+    "find_verified_alternatives",
+    "build_verified_bundle",
+    "prepare_quote_draft"
+  ],
+  "regression": "V6 through V21 PASS"
+}

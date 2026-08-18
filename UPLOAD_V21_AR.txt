@@ -1,0 +1,17 @@
+طريقة الرفع:
+1) فك ضغط ملف V21.
+2) ارفع محتويات المجلد مباشرة إلى Root مستودع GitHub الخاص بالباك إند، مع Replace للملفات الموجودة بنفس المسارات.
+3) لا تحذف مجلد knowledge؛ النسخة الكاملة تحتوي ملفات المعرفة المطلوبة.
+4) لا تحتاج تعديل Odoo Frontend أو GTM أو إضافة API Key جديد.
+5) انتظر Vercel Deployment ثم افتح /api/health.
+
+المتوقع:
+version = 21.0.0
+mode = live_product_truth_sales_action_os_v21
+product_truth_os.version = 21.0
+product_truth_os.products = 704
+product_truth_os.graph_nodes = 704
+product_truth_os.graph_edges > 10000
+neural_brain.version = 21.0
+
+مهم: السعر والتوفر الحاليان لا يتم أخذهما من Snapshot داخل ملفات المعرفة؛ يجب أن يأتيَا من Odoo Live.

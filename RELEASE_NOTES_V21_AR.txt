@@ -1,0 +1,16 @@
+MIG FARM AI V21 — Live Product Truth & Sales Action OS
+
+أهم ما تم تنفيذه:
+- محرك Product Truth بمرجعية حقول: الوصف والتصنيف من Product Dossiers، والسعر والتوفر الحاليان من Odoo Live فقط.
+- Variant Identity Guard لمنع تركيب سعر Variant على وصف Variant آخر عند عدم ثبوت الهوية.
+- Stale Snapshot Conflict Detector: إذا اختلف Snapshot قديم عن Odoo Live فـ Odoo Live هو المرجع الحالي.
+- Product Fact Index للـ704 منتج: 1,063 حقيقة/مواصفة صريحة مستخرجة من النصوص و20,283 مصطلح احتياج للبحث، بدون استنتاج مواصفات غير مكتوبة.
+- Product Relationship Graph: 704 عقدة و11,776 علاقة، منها بدائل محتملة وعلاقات تسوق مرتبطة، مع منع اعتبار العلاقة دليل توافق.
+- Verified Alternative Ladder: البدائل لا تظهر كتوصية نهائية إلا بعد تقاطعها مع المنتجات الحية والتحقق من المواصفة الحاسمة.
+- Verified Bundle Builder: يبني باقة من المنتجات الحية، مع Evidence لكل عنصر، وبدون اختراع توافق بين المنتجات.
+- Verified Quote Draft: يحول المنتجات والكميات إلى مسودة عرض؛ أي سطر غير متحقق Live يمنع حساب إجمالي نهائي.
+- لا يدعي النظام أن الطلب تم إنشاؤه لأن V21 لا يملك Order Write Tool.
+- تحديث Sales Employee / Conversation OS / Conversion Brain / Neural Agent إلى V21.
+- 5 أدوات عصبية جديدة: verify_live_product_truth, get_product_relations, find_verified_alternatives, build_verified_bundle, prepare_quote_draft.
+- قاعدة المعرفة الإجمالية داخل النسخة حوالي 16.02 MB.
+- Full Regression: V6 → V21 PASS.
