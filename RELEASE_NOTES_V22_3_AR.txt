@@ -1,0 +1,68 @@
+MIG FARM AI V22.3 — Visual Recognition Pipeline MAX
+الإصدار: 22.3.0
+الوضع: multimodal_visual_recognition_pipeline_os_v22_3
+
+الهدف الرئيسي
+إصلاح ترتيب مسار الرؤية بحيث يحاول النظام التعرف فعليًا على المنتج من الصورة قبل طلب اسم المنتج أو SKU أو الباركود.
+
+أهم التغييرات
+1) Recognition Before Identity Guard
+- أول جولة لصورة منتج جديدة تُجبر على أداة match_visual_product.
+- لا يسمح للوكيل بالقفز مباشرة إلى طلب صورة أوضح قبل محاولة التعرف.
+
+2) Forced Neural Recognition Preflight
+- عند وجود صورة منتج جديدة، أول استدعاء أدوات في GPT-5.6 يكون match_visual_product فقط مع tool_choice=required.
+- بعد نتيجة المطابقة فقط يمكن فتح أدوات التحقق من Odoo أو طلب إعادة تصوير موجه.
+
+3) أقوى مطابقة للكتالوج
+- مطابقة اسم المنتج وSKU والباركود والنص المرئي.
+- fuzzy token similarity + character trigrams + numeric overlap + exact identifier scoring.
+- ترتيب Top Candidates وحساب Top Margin داخليًا.
+
+4) مستويات قرار واضحة
+- High confidence: الانتقال للتحقق الحي من Odoo عند سؤال السعر/التوفر.
+- Medium confidence: سؤال تأكيد طبيعي عن أقرب منتج بدل طلب الباركود فورًا.
+- Low confidence بعد محاولة حقيقية: توجيه تصوير محدد.
+
+5) Retake Loop Guard
+- إذا أرسل العميل صورة جديدة بعد طلب إعادة التصوير، يعاد تحليلها كدليل جديد.
+- لا يكرر النظام نفس تعليمات التصوير مرة ثانية بلا نهاية.
+- يمكن التحول إلى دليل بديل: باركود فقط أو كتابة الاسم.
+
+6) Different Image / Revision Tracking
+- واجهة Odoo تولد client_image_id لكل صورة.
+- الـBackend يتتبع image_ids وvisual_revision لمعرفة هل الصورة جديدة أم مجرد إعادة استخدام لسياق الصورة السابقة.
+
+7) Visual Context Safety
+- Follow-ups مثل: هل متوفر؟ بكام؟ ركز؟ تبقى مرتبطة بآخر صورة.
+- لو العميل غيّر الموضوع بوضوح، الواجهة والـBackend لا يسمحان للصورة القديمة بخطف الموضوع الجديد.
+
+8) Product Truth
+- السعر والتوفر الحاليان من Odoo Live فقط بعد تثبيت هوية المنتج.
+- Product Dossiers/وصف المنتج لا يستعملان كسعر أو مخزون حالي.
+- لا يوجد Shopify Runtime dependency.
+
+طبقات المعرفة المحفوظة
+- 704 Product Dossiers
+- 704 Product Visual Signatures
+- 540 Visual Agronomy Cards
+- 727 reliable explicit product facts
+- 16,352 need terms
+- 11,776 product relations
+- 2,802 Agricultural Master cards
+
+الاختبارات
+- Full regression: V6 إلى V22.3 PASS
+- 39 test files PASS
+- Forced neural recognition preflight PASS
+- Exact known SKU recognition test PASS
+- Medium candidate confirmation PASS
+- Retake loop guard PASS
+- Different-image/revision test PASS
+- JS/MJS syntax PASS
+- Runtime JSON parse PASS
+- Odoo XML parse PASS
+- Odoo embedded JavaScript syntax PASS
+
+ملاحظة اختبار الإنتاج
+اختبارات البناء المحلية لا تستعمل OpenAI production key. بعد نشر النسخة يجب تنفيذ اختبار Live بصورة منتج حقيقية للتأكد من مسار GPT-5.6 + Odoo الفعلي في بيئة الإنتاج.
