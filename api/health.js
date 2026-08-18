@@ -19,15 +19,17 @@ import { agriculturalMasterHealth } from "../lib/agricultural_master_knowledge.j
 import { conversionDecisionHealth } from "../lib/conversion_decision_brain.js";
 import { productIntelligenceHealth } from "../lib/product_intelligence.js";
 import { productTruthHealth } from "../lib/product_truth_os.js";
+import { visionHealth } from "../lib/vision_intelligence.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V21 Live Product Truth & Sales Action OS",
-    version:"21.0.0",
-    mode:"live_product_truth_sales_action_os_v21",
+    service:"MIG FARM V22 Multimodal Agricultural & Product Vision Sales OS",
+    version:"22.0.0",
+    mode:"multimodal_agricultural_product_vision_sales_os_v22",
     features:[
+      "multimodal_image_input","product_visual_recognition","readable_label_text_to_catalog_match","sku_barcode_visual_matching","visual_product_identity_guard","multi_image_evidence_fusion","plant_visual_triage","crop_visual_diagnostic_atlas","observation_before_inference","one_best_next_photo","image_quality_retake_protocol","pesticide_label_visual_claim_guard","visual_dosage_hallucination_guard","unknown_product_visual_mode","image_prompt_injection_guard","visual_to_live_odoo_verification",
       "live_product_truth_engine","field_level_provenance","variant_identity_guard","stale_snapshot_conflict_detection","product_relationship_graph","verified_alternative_ladder","shopping_adjacency_without_compatibility_claims","explicit_product_fact_index","need_to_product_fact_matching","verified_bundle_builder","verified_quote_draft","live_price_stock_total_guard","order_not_placed_guard",
       "full_product_dossier_intelligence","704_product_dossiers","exact_sales_and_ecommerce_descriptions","product_description_semantic_retrieval","product_dossier_tool","product_comparison_grounding","live_odoo_dossier_fusion","archived_vs_live_precedence_guard","missing_specification_guard",
       "conversion_decision_brain","explicit_purchase_readiness","objection_root_cause_resolution","ethical_persuasion_policy","close_timing_guard","evidence_to_sales_decision","question_budget_enforcement","technical_before_commerce_guard","no_buying_override","conversion_reply_quality_guard",
@@ -49,7 +51,7 @@ export async function GET(){
       "mig_farm_seeds_only","page_product_context","safe_pesticide_and_fertilizer_guidance","github_managed_knowledge",
       "privacy_safe_learning_telemetry"
     ],
-    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth(),product_intelligence:productIntelligenceHealth(),product_truth_os:productTruthHealth()},
+    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth(),product_intelligence:productIntelligenceHealth(),product_truth_os:productTruthHealth(),vision_intelligence:visionHealth()},
     cognition:cognitionHealth(),
     hybrid_brain:hybridBrainHealth(),
     autonomous_commerce:autonomousCommerceHealth(),
@@ -62,10 +64,11 @@ export async function GET(){
     agricultural_master:agriculturalMasterHealth(),
     product_intelligence:productIntelligenceHealth(),
     product_truth_os:productTruthHealth(),
+    vision_intelligence:visionHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v21:false},
+    persistent_store:{...persistence,required_for_v22:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });

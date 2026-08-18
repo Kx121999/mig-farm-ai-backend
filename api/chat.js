@@ -82,9 +82,13 @@ import {
   getStructuredProductFacts, buildProductTruth, getProductRelations, rankLiveAlternatives,
   buildVerifiedQuoteDraft, productTruthHealth
 } from "../lib/product_truth_os.js";
+import {
+  normalizeVisionImages, buildVisionFrame, matchVisualProduct, guardVisualLabelClaim,
+  searchVisualAgronomy, buildRetakeAdvice, enforceVisualReplySafety, visionHealth
+} from "../lib/vision_intelligence.js";
 
-const VERSION="21.0.0";
-const MODE="live_product_truth_sales_action_os_v21";
+const VERSION="22.0.0";
+const MODE="multimodal_agricultural_product_vision_sales_os_v22";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -299,6 +303,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       product_index:productIndexStatus(),
       product_intelligence:productIntelligenceHealth(),
       product_truth_os:productTruthHealth(),
+      vision_intelligence:visionHealth(),
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
@@ -354,10 +359,10 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId=""}){
+async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
-  if(!shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
+  if(!shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn,image_count:images.length}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
 
   const isolated=humanTurn?.context_policy?.scope==="current_turn_isolated";
   const zeroTools=humanTurn?.tool_policy?.mode==="zero_tools";
@@ -366,6 +371,7 @@ async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,
   const temporalHits=(isolated||zeroTools)?[]:temporalMemoryCandidates(message,persistentSnapshot,6);
   const seedGraph=(isolated||zeroTools)?{nodes:[],edges:[]}:buildKnowledgeGraph({message,analysis,state,profile,results:state?.visible_products||[],memory:[...(recalled.items||[]),...persistentHits]});
   const graphContext=(isolated||zeroTools)?[]:[...knowledgeGraphContext(persistentSnapshot?.graph||{}),...knowledgeGraphContext(seedGraph)].slice(0,20);
+  const visionAudit={label_guard_results:[],visual_matches:[],live_visual_verifications:[]};
 
   const toolHandlers={
     search_catalog:async args=>{
@@ -446,6 +452,32 @@ async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,
       }
       return buildVerifiedQuoteDraft(items,mergeProducts([],allLive));
     },
+    match_visual_product:async args=>{
+      const out=matchVisualProduct({...args,limit:Math.max(1,Math.min(10,Number(args?.limit)||6))});
+      visionAudit.visual_matches.push(out);
+      return out;
+    },
+    verify_visual_product_live:async args=>{
+      const identifier=cleanText(args?.identifier||"",900);
+      const query=cleanText(args?.query||identifier||message,900);
+      if(!identifier)return {error:"visual_product_identifier_required"};
+      const toolAnalysis=analyzeTurn(query,state,history,locale);
+      const found=await searchCatalog(toolAnalysis,state,query,history);
+      const live=enrichLiveProductsWithDossiers(clientProducts(found.products).slice(0,12),{descriptionChars:900});
+      const out={identifier,query,truth:buildProductTruth(identifier,live),live_candidates:live.slice(0,6),policy:"Visual identity and live commerce are separate checks. Current price/availability require a verified live Odoo identity."};
+      visionAudit.live_visual_verifications.push(out);
+      return out;
+    },
+    guard_visual_label_claim:async args=>{
+      const out=guardVisualLabelClaim(args||{});
+      visionAudit.label_guard_results.push(out);
+      return out;
+    },
+    search_visual_agronomy:async args=>{
+      const query=cleanText(args?.query||message,1200);const crop=cleanText(args?.crop||analysis?.crop?.key||state?.crop||"",120);const limit=Math.max(1,Math.min(10,Number(args?.limit)||6));
+      return {query,crop,items:searchVisualAgronomy(query,{crop,limit}),policy:"Visual triage only; combine with engineering differential diagnosis. Never infer pesticide dose from symptoms."};
+    },
+    get_retake_advice:async args=>buildRetakeAdvice({...(visionFrame||{}),mode:cleanText(args?.mode||visionFrame?.mode||"",80)},{quality_issues:Array.isArray(args?.quality_issues)?args.quality_issues:[]}),
     search_knowledge:async args=>{
       const query=cleanText(args?.query||message,700);
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
@@ -570,8 +602,8 @@ async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:mission,agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:conversionDecision,recent_dialogue:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
-      toolHandlers
+      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:mission,agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:conversionDecision,vision_context:visionFrame,recent_dialogue:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      toolHandlers,images
     });
     if(!result?.handled||!result.reply) return null;
     const products=enrichLiveProductsWithDossiers(clientProducts(result.products||[]).slice(0,8),{descriptionChars:900});
@@ -605,6 +637,15 @@ async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,
         naturalizerMeta={...naturalizerMeta,semantic_repair:"deterministic_current_turn_fallback"};
       }
     }
+    // V22 deterministic visual safety gate runs after neural generation and naturalization.
+    // It can veto unverified dosage or live-commerce claims even if the model attempted to answer them.
+    const visualSafety=enforceVisualReplySafety({reply:safeReply,frame:visionFrame,trace:result.trace||[],audit:visionAudit});
+    if(!visualSafety.ok){
+      safeReply=visualSafety.reply;
+      conversationQuality=salesReplyQuality(safeReply,{...(salesTurn||{}),raw:message,history});
+      conversionQuality=evaluateConversionReply(safeReply,conversionDecision||{},message);
+      naturalizerMeta={...naturalizerMeta,visual_safety_repair:visualSafety.reason};
+    }
     const evidenceItems=(result.evidence||[]).map((x,i)=>({
       id:String(x?.id||`neural-${i}`),title:String(x?.title||""),answer:String(x?.answer||""),url:String(x?.url||""),
       source:String(x?.source||"neural_tool"),verified:Boolean(x?.verified),score:Number(x?.score||0)
@@ -619,12 +660,13 @@ async function tryV21NeuralAgent({analysis,state,message,history,locale,profile,
         neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||"",
         sales_conversation:{...conversationQuality,plan:salesTurn?.conversation_plan||null,human_turn:humanTurn||null,naturalizer:naturalizerMeta,conversion_quality:conversionQuality},
         conversion_decision:conversionDecision?{version:conversionDecision.version,stage:conversionDecision.stage,next_best_action:conversionDecision.next_best_action,friction:conversionDecision.friction,question_budget:conversionDecision.question_policy?.budget,close_allowed:conversionDecision.close_policy?.allowed}:undefined,
-        human_conversation:humanTurn||null
+        human_conversation:humanTurn||null,
+        vision:visionFrame?.has_images?{...visionFrame,engine:visionHealth(),safety_gate:visualSafety}:undefined
       },
-      source:"neural_live_product_truth_sales_action_v21",results,retrieval,plan
+      source:"neural_multimodal_product_vision_sales_v22",results,retrieval,plan
     };
   }catch(error){
-    console.error("V21 product-truth neural fallback:",error?.message);
+    console.error("V22 multimodal neural fallback:",error?.message);
     return null;
   }
 }
@@ -708,7 +750,10 @@ export async function POST(request){
   if(!isAllowedOrigin(origin)) return jsonResponse({error:"origin_not_allowed"},403,cors);
   let body; try{body=await request.json();}catch{return jsonResponse({error:"invalid_json"},400,cors);}
 
-  const message=cleanText(body?.message,2500);
+  const images=normalizeVisionImages(body?.images||body?.attachments||body?.image_inputs||[]);
+  const rawMessage=cleanText(body?.message,2500);
+  const message=rawMessage || (images.length?"حلل الصور المرفقة وساعدني حسب اللي ظاهر فيها.":"");
+  const visionFrame=buildVisionFrame(message,images);
   const sessionId=cleanText(body?.session_id,160)||crypto.randomUUID();
   const locale=safeLocale(body?.locale);
   const pageUrl=safePageUrl(body?.page_url);
@@ -746,17 +791,17 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V21: current-turn + conversion + live product-truth control the neural sales employee before legacy deterministic fallbacks.
+  // V22: multimodal vision + current-turn + conversion + live product truth control the neural sales employee before legacy deterministic fallbacks.
   // All deterministic FAQ/agronomy/commerce layers below remain safety fallbacks if the neural employee is unavailable.
   if(!isClearlyOffDomain(message)){
     try{
       const currentProductEarly=await resolveCurrentProduct(pageUrl,productContext);
-      const adaptive=await tryV21NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId});
+      const adaptive=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId,images,visionFrame});
       if(adaptive) return await makeResponse({
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
       });
-    }catch(error){ console.error("V21 live product-truth sales employee failed",error?.message); }
+    }catch(error){ console.error("V22 multimodal vision sales employee failed",error?.message); }
   }
 
   // V18 hard guard: isolated casual/browse-only turns never fall through into stale FAQ/agronomy/product routing.
@@ -871,7 +916,7 @@ export async function POST(request){
   }
 
   // V18 fallback retry: retained for resilience after deterministic context routing.
-  const neural=await tryV21NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId});
+  const neural=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId,images,visionFrame});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
