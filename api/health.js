@@ -16,15 +16,17 @@ import { salesEmployeeHealth } from "../lib/sales_employee.js";
 import { salesConversationOSHealth } from "../lib/sales_conversation_os.js";
 import { humanConversationHealth } from "../lib/human_conversation_brain.js";
 import { agriculturalMasterHealth } from "../lib/agricultural_master_knowledge.js";
+import { conversionDecisionHealth } from "../lib/conversion_decision_brain.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V18 Current-Turn Human Sales Brain & Agricultural Master Engineer",
-    version:"18.0.0",
-    mode:"current_turn_semantic_human_sales_employee_v18",
+    service:"MIG FARM V19 Conversion Decision Sales Brain & Agricultural Master Engineer",
+    version:"19.0.0",
+    mode:"conversion_decision_human_sales_employee_v19",
     features:[
+      "conversion_decision_brain","explicit_purchase_readiness","objection_root_cause_resolution","ethical_persuasion_policy","close_timing_guard","evidence_to_sales_decision","question_budget_enforcement","technical_before_commerce_guard","no_buying_override","conversion_reply_quality_guard",
       "current_turn_semantic_priority","stale_context_quarantine","zero_tool_casual_mode","browse_only_no_sales_pressure","semantic_reply_alignment_guard","repair_topic_supersession","followup_dependency_detection","old_agronomy_leak_guard","adaptive_human_acknowledgement","4mb_agricultural_master_knowledge","large_free_form_agricultural_retrieval","agricultural_master_tool",
       "human_sales_conversation_os","turn_level_goal_selection","buyer_readiness_inference","objection_root_cause_detection","next_best_action_engine","adaptive_reply_shape_selection","history_aware_followups","response_repetition_guard","bounded_naturalizer_retry","question_budgeting","soft_close_engine","trust_friction_resolution","anti_fake_urgency","anti_fake_discount","no_product_push_when_not_needed",
       "adaptive_human_sales_employee","free_form_sales_conversation","non_template_response_generation","dialect_and_style_mirroring","adaptive_response_length","consultative_sales_reasoning","objection_handling","natural_sales_closing","business_fact_tool","sales_playbook_tool","no_forced_cta","answer_first_policy","single_question_qualification","technical_problem_before_product_policy",
@@ -52,11 +54,12 @@ export async function GET(){
     sales_employee:salesEmployeeHealth(),
     sales_conversation_os:salesConversationOSHealth(),
     human_conversation_brain:humanConversationHealth(),
+    conversion_decision_brain:conversionDecisionHealth(),
     agricultural_master:agriculturalMasterHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v18:false},
+    persistent_store:{...persistence,required_for_v19:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
