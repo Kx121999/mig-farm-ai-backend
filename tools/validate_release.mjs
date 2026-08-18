@@ -28,10 +28,12 @@ for(const path of jsonFiles)JSON.parse(readFileSync(path,"utf8"));
 const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
-if(health.mode!=="semantic_human_conversation_orchestrator_os_v24")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.mode!=="autonomous_sales_learning_agent_os_v25")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.autonomous_actions?.version!=="25.0")throw new Error("V25 autonomous action health missing");
+if(health.self_learning?.version!=="25.0")throw new Error("V25 self-learning health missing");
 
-const ui=readFileSync(join(root,"ODOO_CHAT_UI_V23_CONTEXT_INTELLIGENCE_OS.txt"),"utf8");
-for(const marker of ["UI_VERSION='23.0.0'","mig_ai_session_id_v23","selected_product_contexts:selectedComparisonProducts","active_product_context","comparisonSelection"]){
+const ui=readFileSync(join(root,"ODOO_CHAT_UI_V25_AUTONOMOUS_SALES_LEARNING_OS.txt"),"utf8");
+for(const marker of ["UI_VERSION='25.0.0'","mig_ai_session_id_v25","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply"]){
   if(!ui.includes(marker))throw new Error(`UI contract missing: ${marker}`);
 }
 if((ui.match(/<!\[CDATA\[/g)||[]).length!==(ui.match(/\]\]>/g)||[]).length)throw new Error("Odoo UI CDATA is unbalanced");
