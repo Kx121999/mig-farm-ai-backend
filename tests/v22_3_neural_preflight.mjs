@@ -38,7 +38,7 @@ try{
   assert.deepEqual((bodies[0].tools||[]).map(x=>x.name),["match_visual_product"]);
   assert.ok((bodies[1].tools||[]).some(x=>x.name==="verify_visual_product_live"));
   assert.match(JSON.stringify(bodies[0].input),/PRODUCT RECOGNITION PREFLIGHT/);
-  console.log("V22.4 forced neural recognition preflight PASS");
+  console.log("V22.5 forced neural recognition preflight PASS");
 } finally {
   globalThis.fetch=oldFetch;
   if(oldKey===undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY=oldKey;

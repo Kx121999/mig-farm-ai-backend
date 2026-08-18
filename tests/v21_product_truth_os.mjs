@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { productTruthHealth, getStructuredProductFacts, buildProductTruth, getProductRelations, rankLiveAlternatives, buildVerifiedQuoteDraft } from "../lib/product_truth_os.js";
 
 const h=productTruthHealth();
-assert.ok(["21.0","22.1","22.2","22.4"].includes(h.version));
+assert.ok(["21.0","22.1","22.2","22.5"].includes(h.version));
 assert.equal(h.products,704);
 assert.equal(h.graph_nodes,704);
 assert.ok(h.graph_edges>10000);
