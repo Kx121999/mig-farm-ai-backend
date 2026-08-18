@@ -13,8 +13,8 @@ async function ask(message,state={},history=[]){
 }
 
 let r=await ask('هلا');
-assert.ok(['15.0.0','16.0.0','17.0.0','18.0.0','19.0.0','20.0.0','21.0.0','22.0.0','22.1.0','22.2.0'].includes(r.version));
-assert.ok(['agricultural_engineer_uae_intelligence_autonomous_commerce_v15','adaptive_human_agricultural_sales_employee_v16','adaptive_human_sales_conversation_os_v17','current_turn_semantic_human_sales_employee_v18','conversion_decision_human_sales_employee_v19','product_intelligence_human_sales_employee_v20','live_product_truth_sales_action_os_v21','multimodal_agricultural_product_vision_sales_os_v22','multimodal_agricultural_product_vision_stability_os_v22_1','multimodal_visual_intent_product_precision_os_v22_2'].includes(r.mode));
+assert.ok(['15.0.0','16.0.0','17.0.0','18.0.0','19.0.0','20.0.0','21.0.0','22.0.0','22.1.0','22.2.0','22.3.0'].includes(r.version));
+assert.ok(['agricultural_engineer_uae_intelligence_autonomous_commerce_v15','adaptive_human_agricultural_sales_employee_v16','adaptive_human_sales_conversation_os_v17','current_turn_semantic_human_sales_employee_v18','conversion_decision_human_sales_employee_v19','product_intelligence_human_sales_employee_v20','live_product_truth_sales_action_os_v21','multimodal_agricultural_product_vision_sales_os_v22','multimodal_agricultural_product_vision_stability_os_v22_1','multimodal_visual_intent_product_precision_os_v22_2','multimodal_visual_recognition_pipeline_os_v22_3'].includes(r.mode));
 assert.equal(r.hybrid_brain?.engine,'hybrid_brain_v10');
 assert.match(r.reply,/حياك|هلا|مرحبا/);
 

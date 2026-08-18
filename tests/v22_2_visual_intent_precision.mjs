@@ -9,7 +9,7 @@ import { sanitizeState } from "../lib/dialogue.js";
 
 const img=[{type:"input_image",image_url:"data:image/jpeg;base64,AAAA",detail:"high"}];
 const vh=visionHealth();
-assert.equal(vh.version,"22.2");
+assert.equal(vh.version,"22.3");
 assert.equal(vh.visual_intent_contract,true);
 assert.equal(vh.intent_aware_retake,true);
 assert.equal(vh.availability_price_identity_gate,true);
@@ -43,18 +43,18 @@ assert.equal(dosage.visual_intent,"dosage");
 assert.equal(dosage.mode,"regulated_label_high_risk");
 assert.match(buildRetakeAdvice(dosage,{}).ask_one,/الأرقام والوحدات/);
 
-const low=planVisualProductAction({intent:"availability",identity_confidence:"low",candidate_name:"TEST",candidate_sku:"",live_verified:false,mode:"product_or_label"});
+const low=planVisualProductAction({intent:"availability",identity_confidence:"low",candidate_name:"TEST",candidate_sku:"",live_verified:false,mode:"product_or_label",recognition_attempted:true});
 assert.equal(low.next_action,"request_product_identity_evidence");
-const readyToVerify=planVisualProductAction({intent:"availability",identity_confidence:"high",candidate_name:"TEST",candidate_sku:"SKU1",live_verified:false,mode:"product_or_label"});
+const readyToVerify=planVisualProductAction({intent:"availability",identity_confidence:"high",candidate_name:"TEST",candidate_sku:"SKU1",live_verified:false,mode:"product_or_label",recognition_attempted:true});
 assert.equal(readyToVerify.next_action,"verify_exact_product_live");
 assert.equal(readyToVerify.identifier,"SKU1");
-const answerLive=planVisualProductAction({intent:"availability",identity_confidence:"high",candidate_name:"TEST",candidate_sku:"SKU1",live_verified:true,mode:"product_or_label"});
+const answerLive=planVisualProductAction({intent:"availability",identity_confidence:"high",candidate_name:"TEST",candidate_sku:"SKU1",live_verified:true,mode:"product_or_label",recognition_attempted:true});
 assert.equal(answerLive.next_action,"answer_availability_from_live_truth");
 
 const active=updateActiveVisualContext({},availability,{visual_matches:[{identity_confidence:"medium",candidates:[{external_id:"x",name:"TEST",sku:"SKU1",score:130}]}]},2);
 assert.equal(active.last_visual_intent,"availability");
 assert.equal(active.last_retake_target,"product_name_or_sku_barcode");
-const persisted=sanitizeState({v:22.2,turn:2,active_visual_context:active});
+const persisted=sanitizeState({v:22.3,turn:2,active_visual_context:active});
 assert.equal(persisted.active_visual_context.last_visual_intent,"availability");
 assert.equal(persisted.active_visual_context.last_retake_target,"product_name_or_sku_barcode");
 
@@ -67,19 +67,19 @@ assert.ok(human.tool_policy.allowed.includes("plan_visual_product_action"));
 
 const guidance=buildVisualGuidance({frame:availability,activeContext:{},audit:{}});
 assert.equal(guidance.intent,"availability");
-assert.equal(guidance.next_action,"request_product_identity_evidence");
-assert.ok(guidance.actions.length>=2);
-assert.match(guidance.retake.ask_one,/التوفر/);
+assert.equal(guidance.next_action,"recognize_product_before_identity_guard");
+assert.equal(guidance.recognition_attempted,false);
+assert.equal(guidance.actions.length,0);
+assert.equal(guidance.retake,null);
 
 const unsafe=enforceVisualReplySafety({reply:"أيوه متوفر",frame:availability,trace:[],audit:{}});
 assert.equal(unsafe.ok,false);
-assert.equal(unsafe.reason,"visual_commerce_without_live_verification");
-assert.match(unsafe.reply,/التوفر/);
-assert.match(unsafe.reply,/اسم المنتج|الباركود/);
+assert.equal(unsafe.reason,"product_recognition_not_attempted");
+assert.match(unsafe.reply,/أطابق المنتج|الصورة نفسها/);
 
-const ui=readFileSync(new URL("../ODOO_CHAT_UI_V22_2_VISUAL_INTENT_PRECISION.txt",import.meta.url),"utf8");
-assert.match(ui,/UI_VERSION='22\.2\.0'/);
-assert.match(ui,/mig_ai_history_v22_2/);
+const ui=readFileSync(new URL("../ODOO_CHAT_UI_V22_3_VISUAL_RECOGNITION_PIPELINE.txt",import.meta.url),"utf8");
+assert.match(ui,/UI_VERSION='22\.3\.0'/);
+assert.match(ui,/mig_ai_history_v22_3/);
 assert.match(ui,/addVisualGuidance/);
 assert.match(ui,/mig-ai-visual-action/);
 assert.match(ui,/fileInput\.click\(\)/);

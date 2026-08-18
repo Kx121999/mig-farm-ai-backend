@@ -31,9 +31,9 @@ let q=evaluateNaturalSalesReply("أهلا بك في MIG FARM يسعدني مسا
 assert.ok(q.flags.includes("canned_opening")); assert.ok(q.score<100);
 
 const sp=analyzeSalesConversation("مش مقتنع بصراحة",{analysis:{intent:"unknown"},profile:{lead_score:45},state:{},history:[]});
-assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2"].includes(sp.version)); assert.equal(sp.conversation_plan.friction,"trust");
+assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2","22.3"].includes(sp.version)); assert.equal(sp.conversation_plan.friction,"trust");
 
-const sh=salesConversationOSHealth(); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2"].includes(sh.version)); assert.ok(sh.capabilities.includes("next_best_action"));
-const eh=salesEmployeeHealth(); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2"].includes(eh.version)); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2"].includes(eh.conversation_os.version));
-process.env.OPENAI_API_KEY="test"; const nh=neuralBrainHealth(); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.0","22.1","22.2"].includes(nh.version)); assert.ok(["human_sales_conversation_os","current_turn_semantic_human_sales_agent","conversion_decision_human_sales_agent","product_intelligence_conversion_human_sales_agent","live_product_truth_sales_action_agent","multimodal_agricultural_product_vision_sales_agent","multimodal_agricultural_product_vision_sales_agent","multimodal_visual_intent_product_precision_sales_agent"].includes(nh.mode));
+const sh=salesConversationOSHealth(); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2","22.3"].includes(sh.version)); assert.ok(sh.capabilities.includes("next_best_action"));
+const eh=salesEmployeeHealth(); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2","22.3"].includes(eh.version)); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.2","22.3"].includes(eh.conversation_os.version));
+process.env.OPENAI_API_KEY="test"; const nh=neuralBrainHealth(); assert.ok(["17.0","18.0","19.0","20.0","21.0","22.0","22.1","22.2","22.3"].includes(nh.version)); assert.ok(["human_sales_conversation_os","current_turn_semantic_human_sales_agent","conversion_decision_human_sales_agent","product_intelligence_conversion_human_sales_agent","live_product_truth_sales_action_agent","multimodal_agricultural_product_vision_sales_agent","multimodal_agricultural_product_vision_sales_agent","multimodal_visual_intent_product_precision_sales_agent","multimodal_visual_recognition_pipeline_sales_agent"].includes(nh.mode));
 console.log("V17 sales conversation OS PASS");

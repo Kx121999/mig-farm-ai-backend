@@ -5,7 +5,7 @@ import { sanitizeState } from "../lib/dialogue.js";
 import { POST } from "../api/chat.js";
 import { readFileSync } from "node:fs";
 
-assert.equal(visionHealth().version,"22.2");
+assert.equal(visionHealth().version,"22.3");
 
 const img=[{type:"input_image",image_url:"data:image/jpeg;base64,AAAA",detail:"high"}];
 const fresh=buildVisionFrame("إيه ده؟",img,{});
@@ -16,8 +16,8 @@ const active=updateActiveVisualContext({},fresh,{visual_matches:[{identity_confi
 assert.equal(active.active,true);
 assert.equal(active.product_candidates[0].name,"TEST PRODUCT");
 
-const persisted=sanitizeState({v:22.2,turn:3,active_visual_context:active});
-assert.equal(persisted.v,22.2);
+const persisted=sanitizeState({v:22.3,turn:3,active_visual_context:active});
+assert.equal(persisted.v,22.3);
 assert.equal(persisted.active_visual_context?.active,true);
 assert.equal(persisted.active_visual_context?.product_candidates?.[0]?.sku,"SKU1");
 
@@ -58,14 +58,14 @@ const origin="https://edu-mig-for-agriculture.odoo.com";
 const req1=new Request("https://mig-farm-ai-backend.vercel.app/api/chat",{method:"POST",headers:{"content-type":"application/json","origin":origin},body:JSON.stringify({message:"",images:[{image_url:"data:image/jpeg;base64,AAAA",detail:"high"}],session_id:"v22-1-visual-context",locale:"ar",history:[],conversation_state:{},page_url:"https://edu-mig-for-agriculture.odoo.com/",page_title:"Home"})});
 const res1=await POST(req1);const r1=await res1.json();
 assert.equal(res1.status,200);
-assert.equal(r1.version,"22.2.0");
-assert.equal(r1.source,"v22_2_visual_intent_safe_fallback");
+assert.equal(r1.version,"22.3.0");
+assert.equal(r1.source,"v22_3_visual_recognition_safe_fallback");
 assert.equal(r1.conversation_state?.active_visual_context?.active,true);
 
 const req2=new Request("https://mig-farm-ai-backend.vercel.app/api/chat",{method:"POST",headers:{"content-type":"application/json","origin":origin},body:JSON.stringify({message:"ركز",images:[],session_id:"v22-1-visual-context",locale:"ar",history:[{role:"user",content:"[صورة مرفقة]"},{role:"assistant",content:r1.reply}],conversation_state:r1.conversation_state,page_url:"https://edu-mig-for-agriculture.odoo.com/",page_title:"Home"})});
 const res2=await POST(req2);const r2=await res2.json();
 assert.equal(res2.status,200);
-assert.equal(r2.source,"v22_2_visual_intent_safe_fallback");
+assert.equal(r2.source,"v22_3_visual_recognition_safe_fallback");
 assert.equal(r2.human_conversation?.mode,"visual_followup");
 assert.doesNotMatch(String(r2.reply),/منتج\s*[،,]?\s*شحن\s*[،,]?\s*فرع\s*[،,]?\s*خدمة/);
 
@@ -76,8 +76,8 @@ const generated=facts.products.find(x=>x.external_id==="__export__.product_templ
 assert.equal(generated.description_reliability,"generated_catalog_copy_not_technical_spec");
 assert.equal(generated.explicit_facts.some(x=>x.kind==="labelled_fact"&&/Pressure|Size|المقاس/.test(String(x.label||""))),false);
 
-const ui=readFileSync(new URL("../ODOO_CHAT_UI_V22_2_VISUAL_INTENT_PRECISION.txt",import.meta.url),"utf8");
-assert.match(ui,/UI_VERSION='22\.2\.0'/);
+const ui=readFileSync(new URL("../ODOO_CHAT_UI_V22_3_VISUAL_RECOGNITION_PIPELINE.txt",import.meta.url),"utf8");
+assert.match(ui,/UI_VERSION='22\.3\.0'/);
 assert.match(ui,/activeImages/);
 assert.match(ui,/visual_context_reused/);
 assert.match(ui,/isVisualFollowupMessage/);

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { normalizeVisionImages, buildVisionFrame, matchVisualProduct, guardVisualLabelClaim, searchVisualAgronomy, enforceVisualReplySafety, visionHealth } from "../lib/vision_intelligence.js";
 
 const h=visionHealth();
-assert.equal(h.version,"22.2");
+assert.equal(h.version,"22.3");
 assert.equal(h.product_visual_signatures,704);
 assert.equal(h.visual_agronomy_cards,540);
 assert.equal(h.max_images_per_turn,4);
@@ -39,12 +39,12 @@ const doseFrame=buildVisionFrame("اديني الجرعة من الصورة",img
 const unsafeDose=enforceVisualReplySafety({reply:"استخدم 50 ml لكل 100 L",frame:doseFrame,trace:[],audit:{label_guard_results:[]}});
 assert.equal(unsafeDose.ok,false);
 assert.equal(unsafeDose.reason,"unverified_visual_dosage_claim");
-const safeDose=enforceVisualReplySafety({reply:"استخدم 50 ml لكل 100 L",frame:doseFrame,trace:[{tool:"guard_visual_label_claim"}],audit:{label_guard_results:[{accepted:true}]}});
+const safeDose=enforceVisualReplySafety({reply:"استخدم 50 ml لكل 100 L",frame:doseFrame,trace:[{tool:"match_visual_product"},{tool:"guard_visual_label_claim"}],audit:{label_guard_results:[{accepted:true}]}});
 assert.equal(safeDose.ok,true);
 
 const priceFrame=buildVisionFrame("ده بكام ومتوفر؟",imgs.slice(0,1));
 assert.equal(priceFrame.requires_live_product_truth,true);
-const unsafePrice=enforceVisualReplySafety({reply:"سعره 40 AED ومتوفر",frame:priceFrame,trace:[],audit:{}});
+const unsafePrice=enforceVisualReplySafety({reply:"سعره 40 AED ومتوفر",frame:priceFrame,trace:[{tool:"match_visual_product"}],audit:{visual_matches:[{recognition_attempted:true,identity_confidence:"high",candidates:[{name:"TEST",sku:"SKU"}]}]}});
 assert.equal(unsafePrice.ok,false);
 assert.equal(unsafePrice.reason,"visual_commerce_without_live_verification");
 

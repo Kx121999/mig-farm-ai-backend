@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { productIntelligenceHealth, searchProductDossiers, getProductDossier, compareProductDossiers } from "../lib/product_intelligence.js";
 
 const h=productIntelligenceHealth();
-assert.ok(["20.0","22.1","22.2"].includes(h.version));
+assert.ok(["20.0","22.1","22.2","22.3"].includes(h.version));
 assert.equal(h.products,704);
 assert.equal(h.descriptions,704);
 assert.equal(h.original_descriptions,502);
