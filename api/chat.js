@@ -91,9 +91,13 @@ import {
   normalizeProductReference, resolveProductContext, evolveProductContext,
   productContextHealth
 } from "../lib/product_context_intelligence.js";
+import {
+  buildSemanticFrame, enrichAnalysisWithSemanticFrame, mergeHumanTurnWithSemanticFrame,
+  semanticFrameForClient, semanticHumanBrainHealth
+} from "../lib/semantic_human_brain.js";
 
-const VERSION="23.0.0";
-const MODE="server_authoritative_product_context_intelligence_os_v23";
+const VERSION="24.0.0";
+const MODE="semantic_human_conversation_orchestrator_os_v24";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -229,6 +233,7 @@ function sourceNeedsLearning(source=""){
 }
 
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
+  const semanticFrame=state?.__semantic_frame||null;
   payload=enforceResponseQuality(payload);
   const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
   const executionPlan=plan||buildHybridPlan({message,analysis,cognition:frame,state,profile});
@@ -243,7 +248,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=23;
+  next.v=24;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
   const productContextUpdate=evolveProductContext({previous:state,next,message,analysis,source,results,payload});
@@ -342,12 +347,14 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       product_intelligence:productIntelligenceHealth(),
       product_truth_os:productTruthHealth(),
       product_context_intelligence:productContextHealth(),
+      semantic_human_brain:semanticHumanBrainHealth(),
       vision_intelligence:visionHealth(),
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
     conversation_quality:quality,
     product_context_intelligence:{...productContextHealth(),event:productContextUpdate.event,active:Boolean(productContextUpdate.active),comparison_active:Boolean(productContextUpdate.comparison)},
+    semantic_human_brain:{...semanticHumanBrainHealth(),frame:semanticFrameForClient(semanticFrame)},
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -399,10 +406,10 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null}){
+async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null,semanticFrame=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
-  if(!shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn,image_count:images.length}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
+  if(!semanticFrame?.compound?.is_multi_intent && !shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn,image_count:images.length,semanticFrame}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
 
   const isolated=humanTurn?.context_policy?.scope==="current_turn_isolated";
   const zeroTools=humanTurn?.tool_policy?.mode==="zero_tools";
@@ -655,7 +662,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:mission,agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:conversionDecision,vision_context:visionFrame,recent_dialogue:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      context:{semantic_frame:semanticFrame,analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:{...mission,tool_budget:semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile}),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:conversionDecision,vision_context:visionFrame,recent_dialogue:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
       toolHandlers,images,allowedTools:humanTurn?.tool_policy?.allowed
     });
     if(!result?.handled||!result.reply) return null;
@@ -670,7 +677,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
     // V17: one bounded rewrite pass only when the reply is structurally robotic/repetitive.
     // The rewriter is explicitly forbidden from adding or changing facts; commerce verification runs again afterwards.
     if((conversationQuality.score<86 || conversionQuality.score<86) && result?.reply){
-      const rewritten=await rewriteNaturalSalesReply({reply:safeReply,message,locale,salesTurn,history});
+      const rewritten=await rewriteNaturalSalesReply({reply:safeReply,message,locale,salesTurn,history,semanticFrame});
       if(rewritten?.handled&&rewritten.reply){
         const reverify=verifyCommerceResponse({reply:rewritten.reply,products,mission,portfolio});
         if(reverify.ok||!commerceCritical){
@@ -921,9 +928,13 @@ function productNeedInTurn(analysis={}){
   return Boolean(analysis.category||analysis.crop||analysis.knownProduct||analysis.seedVarieties?.length);
 }
 
-async function multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors}){
-  if(!["shipping","delivery_time"].includes(analysis.intent) || !productNeedInTurn(analysis)) return null;
-  const shipping=directReply(analysis,state,message,sessionId);
+async function multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors,semanticFrame=null}){
+  const semanticIntents=semanticFrame?.intents?.map(x=>x.name)||[];
+  const shippingIntent=["delivery_time","shipping"].find(x=>semanticIntents.includes(x))||analysis.intent;
+  const semanticProductNeed=semanticIntents.includes("product_search")&&Boolean(semanticFrame?.entities?.crops?.length||semanticFrame?.entities?.categories?.length);
+  if(!["shipping","delivery_time"].includes(shippingIntent) || (!productNeedInTurn(analysis)&&!semanticProductNeed)) return null;
+  const shippingAnalysis={...analysis,intent:shippingIntent};
+  const shipping=directReply(shippingAnalysis,state,message,sessionId);
   const {products,categoryKey}=await searchCatalog(analysis,state,message,history);
   if(!shipping) return null;
   if(!products.length){
@@ -983,12 +994,16 @@ export async function POST(request){
   const persistentProfile=hydrateProfileFromPersistent(mergedIncomingProfile,persistentRead.snapshot);
   const existingProfile=sanitizeCustomerProfile(persistentProfile);
   const analysis=analyzeTurn(message,state,history,locale);
+  const semanticFrame=buildSemanticFrame({message,analysis,state,history,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts});
+  enrichAnalysisWithSemanticFrame(analysis,semanticFrame);
+  state.__semantic_frame=semanticFrame;
   const signals=extractCustomerSignals(message,analysis,state);
   const profile=mergeCustomerProfile(existingProfile,signals,analysis,state);
   const cognition=buildCognitiveFrame({message,analysis,state,profile,history});
   const retrievalRoute=buildRetrievalRoute({message,analysis,cognition,persistent:persistentRead.snapshot});
   const agriculturalContext=analyzeAgriculturalRequest(message,{analysis,state,profile});
-  const humanTurn=analyzeHumanConversationTurn(message,{analysis,state,profile,history,agriculturalContext,visionContext:visionFrame});
+  const legacyHumanTurn=analyzeHumanConversationTurn(message,{analysis,state,profile,history,agriculturalContext,visionContext:visionFrame});
+  const humanTurn=mergeHumanTurnWithSemanticFrame(legacyHumanTurn,semanticFrame);
   const turnState=isolateStateForCurrentTurn(state,humanTurn);
   const salesTurn=analyzeSalesConversation(message,{analysis,state:turnState,profile,history,agriculturalContext,humanTurn});
   const conversionDecision=buildConversionDecision({message,analysis,profile,state:turnState,history,humanTurn,salesTurn,agriculturalContext});
@@ -1005,7 +1020,7 @@ export async function POST(request){
 
   // V23 Product Context Intelligence: the server resolves card selection, persisted focus,
   // explicit product mentions, visible ordinals and multi-product comparisons before any agronomy/RAG route.
-  const productFocus=resolveProductContext({message,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,state,analysis});
+  const productFocus=resolveProductContext({message,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,state,analysis,semanticFrame});
   if(productFocus.action==="clear"){
     delete state.active_product_context;
     delete state.comparison_context;
@@ -1034,7 +1049,7 @@ export async function POST(request){
   if(visionFrame?.has_visual_context || !isClearlyOffDomain(message)){
     try{
       const currentProductEarly=await resolveCurrentProduct(pageUrl,productContext);
-      const adaptive=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId,images,visionFrame});
+      const adaptive=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId,images,visionFrame,semanticFrame});
       if(adaptive) return await makeResponse({
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
@@ -1107,7 +1122,7 @@ export async function POST(request){
   if(purchase) return await makeResponse({payload:{reply:purchase.reply,quick_replies:purchase.quick_replies||[],suggested_actions:purchase.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:purchase.source,locale});
 
   // Natural multi-intent: "عندكم بذور طماطم وتوصلون العين؟"
-  const multi=await multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors});
+  const multi=await multiIntentShippingProducts({analysis,state,message,history,locale,sessionId,profile,signals,cors,semanticFrame});
   if(multi) return multi;
 
   const direct=directReply(analysis,state,message,sessionId);
@@ -1165,7 +1180,7 @@ export async function POST(request){
   }
 
   // V18 fallback retry: retained for resilience after deterministic context routing.
-  const neural=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId,images,visionFrame});
+  const neural=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId,images,visionFrame,semanticFrame});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
