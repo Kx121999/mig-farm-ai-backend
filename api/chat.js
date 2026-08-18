@@ -61,9 +61,14 @@ import {
 import {
   searchUaeAgriculture, answerUaeAgricultureKnowledge, uaeAgricultureHealth
 } from "../lib/uae_agriculture_intelligence.js";
+import {
+  analyzeAgriculturalRequest, isAgriculturalExpertQuery, searchAgriculturalEngineering,
+  diagnoseAgriculturalProblem, agricultureCalculator, answerAgriculturalEngineerKnowledge,
+  agriculturalEngineerHealth
+} from "../lib/agricultural_engineer.js";
 
-const VERSION="14.0.0";
-const MODE="uae_agricultural_intelligence_autonomous_commerce_v14";
+const VERSION="15.0.0";
+const MODE="agricultural_engineer_uae_intelligence_autonomous_commerce_v15";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -185,7 +190,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=14;
+  next.v=15;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
@@ -286,6 +291,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     cognitive_os:cognitiveOS,
     autonomous_commerce:autonomousMeta,
     uae_agriculture:uaeAgricultureHealth(),
+    agricultural_engineer:agriculturalEngineerHealth(),
     neural_brain:{
       ...neuralBrainHealth(),
       used:source==="neural_agent_v14",
@@ -330,7 +336,7 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV14NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null}){
+async function tryV15NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
   if(mission?.next_question && ["recommend","bundle","budget_optimize","solution_plan"].includes(mission.kind)){
@@ -403,6 +409,23 @@ async function tryV14NeuralAgent({analysis,state,message,history,locale,profile,
       const items=temporalMemoryCandidates(query,persistentSnapshot,limit);
       return {query,warning:"historical_observations_not_current_truth",items};
     },
+    search_agricultural_engineering:async args=>{
+      const query=cleanText(args?.query||message,1000);
+      const limit=Math.max(1,Math.min(12,Number(args?.limit)||8));
+      const discipline=cleanText(args?.discipline||"",80);
+      const crop=cleanText(args?.crop||agriculturalContext?.crop||"",80);
+      const items=searchAgriculturalEngineering(query,{limit,discipline,crop});
+      return {query,crop,discipline,items:items.map(x=>({id:x.id,title:x.topic,answer:x.body_ar,discipline:x.discipline,crop:x.crop||undefined,score:x.score,source:"agricultural_engineering_curriculum_v15"}))};
+    },
+    diagnose_crop_problem:async args=>{
+      const description=cleanText(args?.description||message,1800);
+      const result=diagnoseAgriculturalProblem(description,{analysis,state,profile});
+      return {...result,source:"agricultural_differential_diagnosis_v15"};
+    },
+    agriculture_calculator:async args=>{
+      const operation=cleanText(args?.operation||"",80);
+      return agricultureCalculator(operation,args||{});
+    },
     optimize_live_bundle:async args=>{
       const query=cleanText(args?.query||message,700);
       const toolAnalysis=analyzeTurn(query,state,history,locale);
@@ -440,7 +463,7 @@ async function tryV14NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:persistentSnapshot?.journey||null,autonomous_mission:mission},
+      context:{analysis,state,profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:persistentSnapshot?.journey||null,autonomous_mission:mission,agricultural_context:agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})},
       toolHandlers
     });
     if(!result?.handled||!result.reply) return null;
@@ -461,10 +484,10 @@ async function tryV14NeuralAgent({analysis,state,message,history,locale,profile,
         quick_replies:products.length?salesQuickReplies({category:analysis?.category?.key||state?.category,stage:"consider",results:products,profile}):[],
         neural_trace:result.trace||[],neural_model:result.model||"",neural_response_id:result.response_id||""
       },
-      source:"neural_agent_v14",results,retrieval,plan
+      source:"neural_agent_v15",results,retrieval,plan
     };
   }catch(error){
-    console.error("V13 autonomous neural fallback:",error?.message);
+    console.error("V15 agricultural neural fallback:",error?.message);
     return null;
   }
 }
@@ -631,8 +654,23 @@ export async function POST(request){
   const direct=directReply(analysis,state,message,sessionId);
   if(direct) return await makeResponse({payload:{reply:direct.reply,quick_replies:direct.quick_replies||[],suggested_actions:direct.actions||[],escalation:direct.escalation},cors,sessionId,state,analysis,signals,profile,message,source:direct.source,locale});
 
-  const humanKnowledge=extendedKnowledgeReply(message,locale,{sessionId,profile,state,analysis});
-  if(humanKnowledge) return await makeResponse({payload:{reply:humanKnowledge.reply,quick_replies:humanKnowledge.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:humanKnowledge.source,locale});
+  const agriculturalContext=analyzeAgriculturalRequest(message,{analysis,state,profile});
+  // V15 simple engineering facts can answer deterministically; complex/free-form cases continue to the neural agricultural engineer.
+  try{
+    const expertSimple=answerAgriculturalEngineerKnowledge(message,locale,{analysis,state,profile});
+    if(expertSimple){
+      return await makeResponse({
+        payload:{reply:expertSimple.reply,display_reply:expertSimple.reply,agricultural_knowledge_matches:expertSimple.entries||[],agricultural_context:expertSimple.frame},
+        cors,sessionId,state,analysis,signals,profile,message,source:expertSimple.source,locale,cognition
+      });
+    }
+  }catch(error){ console.error("V15 agricultural engineer simple answer failed",error?.message); }
+
+  // Keep legacy FAQ knowledge for non-engineering turns; agricultural free-form language goes to the V15 expert engine instead of phrase matching.
+  if(!agriculturalContext.is_agricultural){
+    const humanKnowledge=extendedKnowledgeReply(message,locale,{sessionId,profile,state,analysis});
+    if(humanKnowledge) return await makeResponse({payload:{reply:humanKnowledge.reply,quick_replies:humanKnowledge.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:humanKnowledge.source,locale});
+  }
 
   const cognitiveMemoryDecision=cognitiveVisibleSetDecision({state,frame:cognition,locale});
   if(cognitiveMemoryDecision.handled){
@@ -668,13 +706,36 @@ export async function POST(request){
     return await makeResponse({payload:{reply:gh.reply,quick_replies:gh.quick_replies||[],suggested_actions:gh.actions||[]},cors,sessionId,state,analysis,signals,profile,message,source:gh.source,locale});
   }
 
-  // V14: UAE agricultural intelligence + autonomous commerce. Official UAE regulatory knowledge is date-stamped; persistence remains optional.
-  const neural=await tryV14NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute});
+  // V15: senior agricultural-engineer reasoning + UAE intelligence + autonomous commerce. Persistence remains optional.
+  const neural=await tryV15NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
       source:neural.source,results:neural.results,locale,cognition,retrieval:neural.retrieval,plan:neural.plan
     });
+  }
+
+  // V15 deterministic expert fallback: if the neural provider is unavailable/timeout, never route a crop symptom into a product dump.
+  if(agriculturalContext?.is_agricultural && agriculturalContext.intent==="diagnosis"){
+    try{
+      const diag=diagnoseAgriculturalProblem(message,{analysis,state,profile});
+      if(diag?.handled){
+        const hypotheses=(diag.hypotheses||[]).slice(0,4).map((x,i)=>`${i+1}. ${x.hypothesis}`).join("\n");
+        const checks=(diag.first_steps||[]).slice(0,3).map(x=>`• ${x}`).join("\n");
+        const question=(diag.clarification_questions||[])[0];
+        const reply=`من الوصف وحده ما ينفعش أقفل التشخيص على سبب واحد. أقرب الاحتمالات:
+${hypotheses||"محتاج تفاصيل أكثر قبل ترتيب الاحتمالات."}${checks?`
+
+أول فحوص آمنة:
+${checks}`:""}${question?`
+
+أهم سؤال يفرق بين الاحتمالات: ${question}`:""}`;
+        return await makeResponse({
+          payload:{reply,display_reply:reply,agricultural_diagnosis:{status:diag.diagnosis_status,hypotheses:diag.hypotheses||[],urgency:diag.urgency,safety:diag.safety}},
+          cors,sessionId,state,analysis,signals,profile,message,source:"agricultural_differential_fallback_v15",locale,cognition
+        });
+      }
+    }catch(error){ console.error("V15 deterministic diagnosis fallback failed",error?.message); }
   }
 
   const autonomous=await tryDeterministicAutonomousCommerce({analysis,state,message,history,locale,profile,cognition});
