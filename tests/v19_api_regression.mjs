@@ -4,11 +4,11 @@ import { POST } from "../api/chat.js";
 
 delete process.env.OPENAI_API_KEY;
 const h=await (await GET()).json();
-assert.ok(["19.0.0","20.0.0"].includes(h.version));
-assert.ok(["conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20"].includes(h.mode));
-assert.ok(["19.0","20.0"].includes(h.conversion_decision_brain?.version));
-assert.ok(["19.0","20.0"].includes(h.sales_employee?.version));
-assert.ok(["19.0","20.0"].includes(h.neural_brain?.version));
+assert.ok(["19.0.0","20.0.0","21.0.0"].includes(h.version));
+assert.ok(["conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20","live_product_truth_sales_action_os_v21"].includes(h.mode));
+assert.ok(["19.0","20.0","21.0"].includes(h.conversion_decision_brain?.version));
+assert.ok(["19.0","20.0","21.0"].includes(h.sales_employee?.version));
+assert.ok(["19.0","20.0","21.0"].includes(h.neural_brain?.version));
 assert.ok(h.features.includes("close_timing_guard"));
 
 async function ask(message,state={},history=[]){
@@ -18,6 +18,6 @@ async function ask(message,state={},history=[]){
 const stale={category:"fertilizer",crop:"tomato",topic:"product",visible_products:[{name:"سماد بوتاسيوم",price:"50",currency:"AED"}],last_products:[{name:"سماد بوتاسيوم",price:"50",currency:"AED"}],turn:4};
 const history=[{role:"user",content:"عايز بذور"},{role:"assistant",content:"تمام"},{role:"user",content:"طب البوتاسيوم بيعمل إيه"},{role:"assistant",content:"البوتاسيوم مهم للنبات"}];
 let r=await ask("لا يا عم أنا بس بسأل مش هشتري دلوقتي",stale,history);
-assert.ok(["19.0.0","20.0.0"].includes(r.version));assert.ok(["conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20"].includes(r.mode));
+assert.ok(["19.0.0","20.0.0","21.0.0"].includes(r.version));assert.ok(["conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20","live_product_truth_sales_action_os_v21"].includes(r.mode));
 assert.match(r.reply,/اسأل|براحتك|مش لازم/);assert.doesNotMatch(r.reply,/بوتاسيوم|كالسيوم|اطلب|اشتري|واتساب/);
 console.log("V19 API regression PASS");

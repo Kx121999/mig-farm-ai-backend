@@ -53,6 +53,6 @@ assert.equal(x.topic_context_risk,"high");
 assert.equal(x.next_best_action,"acknowledge_switch_and_answer_new_topic");
 
 const health=conversionDecisionHealth();
-assert.ok(["19.0","20.0"].includes(health.version));
+assert.ok(["19.0","20.0","21.0"].includes(health.version));
 assert.ok(health.capabilities.includes("close_timing_guard"));
 console.log("V19 conversion decision brain PASS");
