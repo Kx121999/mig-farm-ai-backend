@@ -88,8 +88,8 @@ import {
   updateActiveVisualContext, visualContextFallback, buildVisualGuidance, planVisualProductAction
 } from "../lib/vision_intelligence.js";
 
-const VERSION="22.4.0";
-const MODE="multimodal_visual_recognition_pipeline_os_v22_4";
+const VERSION="22.5.0";
+const MODE="multimodal_product_context_lock_os_v22_5";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -120,7 +120,32 @@ function normalizeHistory(value){
 }
 function normalizeProductContext(value){
   if(!value||typeof value!=="object"||Array.isArray(value)) return null;
-  return {name:cleanText(value.name||value.title||"",500),price:cleanText(String(value.price??""),100),currency:cleanText(value.currency||"AED",20),availability:cleanText(value.availability||value.stock||"",100),description:cleanText(value.description||"",1800),url:safePageUrl(value.url||"")};
+  return {
+    name:cleanText(value.name||value.title||"",500),
+    sku:cleanText(value.sku||value.default_code||"",160),
+    external_id:cleanText(value.external_id||"",180),
+    product_id:Number.isFinite(Number(value.product_id))?Number(value.product_id):null,
+    product_template_id:Number.isFinite(Number(value.product_template_id))?Number(value.product_template_id):null,
+    price:cleanText(String(value.price??""),100),currency:cleanText(value.currency||"AED",20),
+    availability:cleanText(value.availability||value.stock||"",100),description:cleanText(value.description||"",1800),
+    url:safePageUrl(value.url||"")
+  };
+}
+function normalizeSelectedProductContext(value){
+  const v=normalizeProductContext(value);
+  if(!v||(!v.name&&!v.sku&&!v.external_id)) return null;
+  return v;
+}
+const BOUND_PRODUCT_DETAIL_RX=/(تفاصيل المنتج|تفاصيله|تفاصيلها|استخدامه|استخدامها|بيستخدم|يستخدم في ايه|يستخدم في إيه|فايدته|فائدته|مواصفاته|مواصفاتها|مواصفات المنتج|product details|details|what is it for|use for)/i;
+const BOUND_PRODUCT_PRICE_RX=/(بكام|بكم|السعر|سعره|سعرها|price|how much|cost)/i;
+const BOUND_PRODUCT_AVAIL_RX=/(متوفر|متاح|موجود|المخزون|مخزون|available|availability|in stock|stock)/i;
+function isGenericProductDetailRequest(message=""){
+  const t=cleanText(message,800);
+  return BOUND_PRODUCT_DETAIL_RX.test(t);
+}
+function conciseText(value="",max=900){
+  const x=cleanText(value,max+200);
+  return x.length>max?`${x.slice(0,max).trim()}…`:x;
 }
 function absoluteActions(actions=[]){
   const origin=siteOrigin();
@@ -211,7 +236,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=22.4;
+  next.v=22.5;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
@@ -681,14 +706,67 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
         visual_evidence:visionFrame?.has_visual_context?{visual_matches:visionAudit.visual_matches.slice(-3),live_visual_verifications:visionAudit.live_visual_verifications.slice(-3),label_guard_results:visionAudit.label_guard_results.slice(-3),retake_advice:visionAudit.retake_advice.slice(-2),visual_action_plans:visionAudit.visual_action_plans.slice(-2)}:undefined,
         visual_guidance:visionFrame?.has_visual_context?buildVisualGuidance({frame:visionFrame,activeContext:state?.active_visual_context||{},audit:visionAudit}):undefined
       },
-      source:"neural_multimodal_visual_recognition_sales_v22_3",results,retrieval,plan
+      source:"neural_multimodal_visual_recognition_sales_v22_5",results,retrieval,plan
     };
   }catch(error){
-    console.error("V22.4 multimodal neural fallback:",error?.message);
+    console.error("V22.5 multimodal neural fallback:",error?.message);
     return null;
   }
 }
 
+
+async function tryBoundProductContextReply({message="",selectedProduct=null,state={},history=[],locale="ar"}={}){
+  const ctx=selectedProduct||null;
+  if(!ctx) return null;
+  const identifier=cleanText(ctx.sku||ctx.external_id||ctx.name||"",500);
+  if(!identifier) return null;
+  const wantsPrice=BOUND_PRODUCT_PRICE_RX.test(message);
+  const wantsAvail=BOUND_PRODUCT_AVAIL_RX.test(message);
+  const wantsDetails=BOUND_PRODUCT_DETAIL_RX.test(message);
+  if(!wantsPrice&&!wantsAvail&&!wantsDetails) return null;
+
+  if(wantsPrice||wantsAvail){
+    try{
+      const live=clientProducts(await searchProducts(identifier,history,12));
+      const truth=buildProductTruth(identifier,live);
+      if(truth?.identity?.live_verified){
+        const name=truth.identity.name||ctx.name||identifier;
+        const parts=[];
+        if(wantsPrice){
+          const price=truth?.current?.price_aed;
+          parts.push(price!==null&&price!==undefined?`السعر الحالي لـ ${name}: ${price} ${truth.current.currency||"AED"}.`:`السعر الحالي لـ ${name} مش ظاهر في Odoo دلوقتي، ومش هستخدم سعر قديم.`);
+        }
+        if(wantsAvail){
+          const av=cleanText(truth?.current?.availability||"",160);
+          parts.push(av?`حالة التوفر الحالية: ${av}.`:`Odoo مش مظهر حالة مخزون واضحة للمنتج دلوقتي، فمش هخمن.`);
+        }
+        return {reply:parts.join(" "),results:live.slice(0,4),source:"v22_5_bound_product_live_truth",bound_product:{name:truth.identity.name,sku:truth.identity.sku,external_id:truth.identity.external_id}};
+      }
+    }catch(error){console.error("V22.5 bound product live lookup failed",error?.message);}
+  }
+
+  if(wantsDetails){
+    const facts=getStructuredProductFacts(identifier);
+    const dossier=facts||getProductDossier(identifier,{includeFull:true});
+    if(!dossier) return {reply:`أنا فاهم إنك تقصد ${ctx.name||"المنتج المحدد"}، لكن ملف المنتج نفسه مش متاح عندي بشكل مؤكد. اكتب اسم المنتج أو الكود وأنا أراجعه بدون تخمين.`,source:"v22_5_bound_product_missing_dossier",bound_product:ctx};
+    const name=dossier.name||ctx.name||identifier;
+    const sku=dossier.sku||ctx.sku||"";
+    const category=dossier.category||"";
+    const provenance=dossier.description_provenance||"";
+    const explicit=Array.isArray(dossier.explicit_facts)?dossier.explicit_facts.slice(0,6):[];
+    const description=conciseText(dossier.sales_description||dossier.ecommerce_description||"",1000);
+    let reply=`${name}${sku?` (${sku})`:""}`;
+    if(category) reply+=` — ${category}.`;
+    if(explicit.length){
+      const rows=explicit.map(x=>cleanText(x?.label?`${x.label}: ${x.value}`:(x?.text||x?.value||""),220)).filter(Boolean);
+      if(rows.length) reply+=`\n\nالمواصفات المؤكدة من بيانات المنتج:\n• ${rows.join("\n• ")}`;
+    }
+    if(description) reply+=`\n\nالوصف المسجل: ${description}`;
+    if(provenance==="generated_202") reply+=`\n\nملاحظة: الوصف المتاح لهذا المنتج استكمال كتالوجي عام، لذلك مش هاعتبره مواصفة تقنية خاصة إلا لو كانت مكتوبة صراحة في بيانات المنتج.`;
+    return {reply,source:"v22_5_bound_product_dossier",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},quick_replies:["بكام؟","هل متوفر؟"]};
+  }
+  return null;
+}
 
 async function tryDeterministicVisualCommerce({frame={},activeContext={},history=[],locale="ar"}={}){
   if(!frame?.requires_live_product_truth)return null;
@@ -702,14 +780,14 @@ async function tryDeterministicVisualCommerce({frame={},activeContext={},history
     if(frame?.visual_intent==="availability"){
       const av=cleanText(truth?.current?.availability||"",160);const cls=truth?.current?.availability_class||"unknown";
       const reply=locale==="en"?(av?`I verified ${truth.identity.name} live in Odoo. Current availability: ${av}.`:`I verified the product identity, but Odoo is not exposing a clear stock status right now.`):(av?`أيوه، ثبتّ المنتج كـ ${truth.identity.name} وراجعت Odoo Live. حالة التوفر الحالية: ${av}.`:`ثبتّ المنتج كـ ${truth.identity.name}، لكن Odoo مش مظهر حالة مخزون واضحة حاليًا، فمش هخمن.`);
-      return {reply,truth,results:live.slice(0,4),source:"v22_4_deterministic_visual_availability"};
+      return {reply,truth,results:live.slice(0,4),source:"v22_5_deterministic_visual_availability"};
     }
     if(frame?.visual_intent==="price"){
       const price=truth?.current?.price_aed;
       const reply=price!==null&&price!==undefined?(locale==="en"?`I verified ${truth.identity.name} live in Odoo. Current price: ${price} ${truth.current.currency||"AED"}.`:`ثبتّ المنتج كـ ${truth.identity.name} وراجعت Odoo Live. السعر الحالي ${price} ${truth.current.currency||"AED"}.`):(locale==="en"?`I verified the product identity, but a current price is not visible in Odoo right now.`:`ثبتّ المنتج، لكن السعر الحالي مش ظاهر في Odoo دلوقتي، فمش هستخدم سعر قديم.`);
-      return {reply,truth,results:live.slice(0,4),source:"v22_4_deterministic_visual_price"};
+      return {reply,truth,results:live.slice(0,4),source:"v22_5_deterministic_visual_price"};
     }
-  }catch(error){console.error("V22.4 deterministic visual commerce failed",error?.message);}
+  }catch(error){console.error("V22.5 deterministic visual commerce failed",error?.message);}
   return null;
 }
 
@@ -800,6 +878,7 @@ export async function POST(request){
   const pageTitle=cleanText(body?.page_title,500);
   const history=normalizeHistory(body?.history);
   const productContext=normalizeProductContext(body?.product_context);
+  const selectedProductContext=normalizeSelectedProductContext(body?.selected_product_context||body?.chat_product_context);
   const serverSession=await readServerSession(sessionId);
   const persistentRead=await readPersistentSnapshot(sessionId);
   const mergedIncomingState=mergeSessionState(serverSession,body?.conversation_state);
@@ -834,7 +913,20 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V22.4: recognition-first multimodal vision + current-turn + conversion + live product truth control the neural sales employee before legacy deterministic fallbacks.
+  // V22.5 Product Context Lock: a product-card action must stay attached to that exact product.
+  // This runs before agricultural knowledge so a generic phrase such as "تفاصيل المنتج واستخدامه" can never fall into pest/disease retrieval.
+  if(selectedProductContext){
+    const bound=await tryBoundProductContextReply({message,selectedProduct:selectedProductContext,state,history,locale});
+    if(bound){
+      return await makeResponse({payload:{reply:bound.reply,display_reply:bound.reply,results:bound.results||[],quick_replies:bound.quick_replies||[],bound_product:bound.bound_product||selectedProductContext,product_context_lock:true},cors,sessionId,state,analysis,signals,profile,message,source:bound.source,results:bound.results||[],locale,cognition});
+    }
+  }else if(isGenericProductDetailRequest(message)){
+    const candidates=(Array.isArray(state?.last_products)?state.last_products:[]).filter(x=>x?.name).slice(0,4);
+    const reply=candidates.length>1?`حدد أي منتج تقصد من النتائج اللي فوق؛ زر التفاصيل لازم يكون مربوط بمنتج محدد عشان ما أخلطش المعلومات.`:`اكتب اسم المنتج أو اضغط زر «التفاصيل» الموجود داخل كارت المنتج، وأنا أجيب وصفه واستخدامه من ملفه نفسه.`;
+    return await makeResponse({payload:{reply,display_reply:reply,quick_replies:candidates.map(x=>`تفاصيل ${x.name}`).slice(0,4),product_context_lock:true},cors,sessionId,state,analysis,signals,profile,message,source:"v22_5_unbound_product_detail_guard",locale,cognition});
+  }
+
+  // V22.5: recognition-first multimodal vision + current-turn + conversion + live product truth control the neural sales employee before legacy deterministic fallbacks.
   // All deterministic FAQ/agronomy/commerce layers below remain safety fallbacks if the neural employee is unavailable.
   if(visionFrame?.has_visual_context || !isClearlyOffDomain(message)){
     try{
@@ -844,7 +936,7 @@ export async function POST(request){
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
       });
-    }catch(error){ console.error("V22.4 multimodal vision sales employee failed",error?.message); }
+    }catch(error){ console.error("V22.5 multimodal vision sales employee failed",error?.message); }
   }
 
   // V22.1 hard visual fallback: never drop an attached/active image into generic social/category clarification.
@@ -855,13 +947,13 @@ export async function POST(request){
     }
     const guidance=buildVisualGuidance({frame:visionFrame,activeContext:state?.active_visual_context||{},audit:{}});
     const visualReply=guidance?.retake?.ask_one||visualContextFallback({frame:visionFrame,activeContext:state?.active_visual_context||{}});
-    return await makeResponse({payload:{reply:visualReply,display_reply:visualReply,vision:{...visionFrame,engine:visionHealth(),fallback:true},visual_evidence:{visual_matches:[],live_visual_verifications:[],label_guard_results:[]},visual_guidance:guidance,human_conversation:humanTurn},cors,sessionId,state,analysis,signals,profile,message,source:"v22_4_visual_recognition_safe_fallback",locale,cognition});
+    return await makeResponse({payload:{reply:visualReply,display_reply:visualReply,vision:{...visionFrame,engine:visionHealth(),fallback:true},visual_evidence:{visual_matches:[],live_visual_verifications:[],label_guard_results:[]},visual_guidance:guidance,human_conversation:humanTurn},cors,sessionId,state,analysis,signals,profile,message,source:"v22_5_visual_recognition_safe_fallback",locale,cognition});
   }
 
   // V18 hard guard: isolated casual/browse-only turns never fall through into stale FAQ/agronomy/product routing.
   if(["social","browse_only_social"].includes(humanTurn?.mode)){
     const humanReply=safeCurrentTurnFallback(message,humanTurn);
-    return await makeResponse({payload:{reply:humanReply,display_reply:humanReply,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state,analysis,signals,profile,message,source:"v22_4_current_turn_safe_fallback",locale,cognition});
+    return await makeResponse({payload:{reply:humanReply,display_reply:humanReply,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state,analysis,signals,profile,message,source:"v22_5_current_turn_safe_fallback",locale,cognition});
   }
 
   // V8 Phase 3 GitHub Edition: repository-managed verified knowledge can override generic rules.
