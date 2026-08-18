@@ -1,0 +1,51 @@
+{
+  "release": "MIG FARM AI V25 Autonomous Sales & Learning OS",
+  "version": "25.0.0",
+  "mode": "autonomous_sales_learning_agent_os_v25",
+  "date": "2026-08-18",
+  "status": "release_candidate_verified",
+  "major_layers": {
+    "secure_odoo_gateway": "lib/odoo_action_gateway.js",
+    "autonomous_action_os": "lib/autonomous_action_os.js",
+    "self_learning_os": "lib/self_learning_os.js",
+    "semantic_brain": "lib/semantic_human_brain.js",
+    "api": "api/chat.js",
+    "learning_api": "api/learning.js",
+    "odoo_ui": "ODOO_CHAT_UI_V25_AUTONOMOUS_SALES_LEARNING_OS.txt"
+  },
+  "action_guarantees": [
+    "explicit_confirmation",
+    "server_authoritative_action_id",
+    "bounded_fields_and_quantities",
+    "draft_quote_only",
+    "no_payment_capture",
+    "no_sale_order_action_confirm",
+    "phone_verified_private_order_status",
+    "inflight_and_odoo_record_idempotency",
+    "safe_failure"
+  ],
+  "conversation_fixes": [
+    "identity_and_social_current_turn_isolation",
+    "stale_agronomy_context_quarantine",
+    "comparison_answer_preservation",
+    "deduplicated_product_facts",
+    "structured_safe_dom_renderer",
+    "mixed_arabic_english_direction_control"
+  ],
+  "privacy": {
+    "raw_messages_in_learning_store": false,
+    "contact_data_in_learning_store": false,
+    "credentials_in_health_output": false,
+    "aggregate_scores_and_hashed_gaps_only": true
+  },
+  "verification": {
+    "test_suites": 51,
+    "javascript_syntax": "pass",
+    "json_parse": "pass",
+    "ui_cdata_balance": "pass",
+    "ui_javascript_syntax": "pass",
+    "odoo_gateway_mock": "pass",
+    "server_authority_adversarial": "pass",
+    "identity_stale_context_regression": "pass"
+  }
+}

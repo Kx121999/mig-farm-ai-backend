@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "24.0.0",
+  "version": "25.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM V24 semantic human conversation orchestrator: dialect and Arabizi understanding, multi-intent decomposition, pronoun resolution, correction isolation, evidence-planned tool use, natural replies, recognition-first vision, live Odoo truth and 704 product dossiers",
+  "description": "MIG FARM V25 autonomous sales and learning agent: natural dialect understanding, current-turn isolation, secure confirmed Odoo actions, verified order tracking, privacy-safe continuous evaluation, structured chat UI, recognition-first vision and live product truth",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
