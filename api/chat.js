@@ -87,9 +87,13 @@ import {
   searchVisualAgronomy, buildRetakeAdvice, enforceVisualReplySafety, visionHealth,
   updateActiveVisualContext, visualContextFallback, buildVisualGuidance, planVisualProductAction
 } from "../lib/vision_intelligence.js";
+import {
+  normalizeProductReference, resolveProductContext, evolveProductContext,
+  productContextHealth
+} from "../lib/product_context_intelligence.js";
 
-const VERSION="22.5.0";
-const MODE="multimodal_product_context_lock_os_v22_5";
+const VERSION="23.0.0";
+const MODE="server_authoritative_product_context_intelligence_os_v23";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -135,6 +139,9 @@ function normalizeSelectedProductContext(value){
   const v=normalizeProductContext(value);
   if(!v||(!v.name&&!v.sku&&!v.external_id)) return null;
   return v;
+}
+function normalizeSelectedProductContexts(value){
+  return Array.isArray(value)?value.map(normalizeSelectedProductContext).filter(Boolean).slice(0,4):[];
 }
 const BOUND_PRODUCT_DETAIL_RX=/(تفاصيل المنتج|تفاصيله|تفاصيلها|استخدامه|استخدامها|بيستخدم|يستخدم في ايه|يستخدم في إيه|فايدته|فائدته|مواصفاته|مواصفاتها|مواصفات المنتج|product details|details|what is it for|use for)/i;
 const BOUND_PRODUCT_PRICE_RX=/(بكام|بكم|السعر|سعره|سعرها|price|how much|cost)/i;
@@ -236,9 +243,12 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=22.5;
+  next.v=23;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
+  const productContextUpdate=evolveProductContext({previous:state,next,message,analysis,source,results,payload});
+  if(productContextUpdate.active) next.active_product_context=productContextUpdate.active; else delete next.active_product_context;
+  if(productContextUpdate.comparison) next.comparison_context=productContextUpdate.comparison; else delete next.comparison_context;
   let cognitiveMemory=mergeCognitiveMemory(state?.cognitive_memory||{},frame,next.turn);
   cognitiveMemory=updateCognitiveDecisionMemory(cognitiveMemory,decision);
   next.cognitive_memory=cognitiveMemory;
@@ -331,11 +341,13 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       product_index:productIndexStatus(),
       product_intelligence:productIntelligenceHealth(),
       product_truth_os:productTruthHealth(),
+      product_context_intelligence:productContextHealth(),
       vision_intelligence:visionHealth(),
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
     conversation_quality:quality,
+    product_context_intelligence:{...productContextHealth(),event:productContextUpdate.event,active:Boolean(productContextUpdate.active),comparison_active:Boolean(productContextUpdate.comparison)},
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -715,20 +727,48 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
 }
 
 
-async function tryBoundProductContextReply({message="",selectedProduct=null,state={},history=[],locale="ar"}={}){
+function productFactText(fact={}){
+  return cleanText(fact?.label?`${fact.label}: ${fact.value}`:(fact?.text||fact?.value||""),260);
+}
+function verifiedFactsForBoundProduct(ctx={}){
+  const identifier=cleanText(ctx.sku||ctx.external_id||ctx.name||"",500);if(!identifier)return null;
+  const facts=getStructuredProductFacts(identifier);if(!facts)return null;
+  const externalMatch=Boolean(ctx.external_id&&facts.external_id&&String(ctx.external_id)===String(facts.external_id));
+  const skuMatch=Boolean(ctx.sku&&facts.sku&&normalizeAr(ctx.sku)===normalizeAr(facts.sku));
+  const requestedName=normalizeAr(ctx.name||""),factName=normalizeAr(facts.name||"");
+  const exactName=Boolean(requestedName&&factName&&requestedName===factName);
+  const strongName=Boolean(requestedName.length>=10&&factName.length>=10&&(requestedName.includes(factName)||factName.includes(requestedName)));
+  return externalMatch||skuMatch||exactName||strongName?facts:null;
+}
+function verifiedUseEvidence(dossier={},message=""){
+  const targetMatch=normalizeAr(message).match(/(طماطم|بندور(?:ه|ة)?|خيار|فلفل|باذنجان|كوس(?:ه|ة)?|بطيخ|شمام|باميه|بامية|بصل|خس|سبانخ|ملفوف|ذره|ذرة|نخيل|بيت محمي|زراعه مكشوفه|زراعة مكشوفة|تربه|تربة|هيدروبونيك|زراعه مائيه|زراعة مائية|tomato|cucumber|pepper|eggplant|zucchini|watermelon|melon|okra|onion|lettuce|greenhouse|hydroponic)/i);
+  if(!targetMatch)return {target:"",matches:[]};
+  const target=normalizeAr(targetMatch[0]);
+  const facts=(Array.isArray(dossier?.explicit_facts)?dossier.explicit_facts:[]).map(productFactText).filter(Boolean);
+  const reliableDescription=dossier?.description_provenance==="generated_202"?"":cleanText(dossier?.sales_description||dossier?.ecommerce_description||"",5000);
+  const sentences=[...facts,...reliableDescription.split(/(?<=[.!؟])\s+|\n+/)].map(x=>cleanText(x,420)).filter(x=>x&&normalizeAr(x).includes(target));
+  return {target:targetMatch[0],matches:[...new Set(sentences)].slice(0,3)};
+}
+
+async function tryBoundProductContextReply({message="",selectedProduct=null,state={},history=[],locale="ar",intent=""}={}){
   const ctx=selectedProduct||null;
   if(!ctx) return null;
   const identifier=cleanText(ctx.sku||ctx.external_id||ctx.name||"",500);
   if(!identifier) return null;
-  const wantsPrice=BOUND_PRODUCT_PRICE_RX.test(message);
-  const wantsAvail=BOUND_PRODUCT_AVAIL_RX.test(message);
-  const wantsDetails=BOUND_PRODUCT_DETAIL_RX.test(message);
-  if(!wantsPrice&&!wantsAvail&&!wantsDetails) return null;
+  const verifiedFacts=verifiedFactsForBoundProduct(ctx);
+  const wantsPrice=["price","price_and_availability"].includes(intent)||BOUND_PRODUCT_PRICE_RX.test(message);
+  const wantsAvail=["availability","price_and_availability"].includes(intent)||BOUND_PRODUCT_AVAIL_RX.test(message);
+  const wantsDetails=intent==="details"||BOUND_PRODUCT_DETAIL_RX.test(message);
+  const wantsDose=intent==="dosage";
+  const wantsSuitability=intent==="suitability";
+  if(!wantsPrice&&!wantsAvail&&!wantsDetails&&!wantsDose&&!wantsSuitability) return null;
 
   if(wantsPrice||wantsAvail){
+    if(!verifiedFacts)return {reply:`مش قادر أثبت هوية المنتج المحدد من كود أو ملف منتج مطابق، لذلك مش هربطه بسعر أو مخزون منتج تاني. اختاره من الكارت مرة ثانية أو اكتب SKU الصحيح.`,source:"v23_bound_product_identity_guard",bound_product:{sku:cleanText(ctx.sku||"",160)},intent:wantsPrice&&wantsAvail?"price_and_availability":wantsPrice?"price":"availability"};
     try{
-      const live=clientProducts(await searchProducts(identifier,history,12));
-      const truth=buildProductTruth(identifier,live);
+      const verifiedIdentifier=verifiedFacts.sku||verifiedFacts.external_id||verifiedFacts.name;
+      const live=clientProducts(await searchProducts(verifiedIdentifier,history,12));
+      const truth=buildProductTruth(verifiedIdentifier,live);
       if(truth?.identity?.live_verified){
         const name=truth.identity.name||ctx.name||identifier;
         const parts=[];
@@ -740,21 +780,37 @@ async function tryBoundProductContextReply({message="",selectedProduct=null,stat
           const av=cleanText(truth?.current?.availability||"",160);
           parts.push(av?`حالة التوفر الحالية: ${av}.`:`Odoo مش مظهر حالة مخزون واضحة للمنتج دلوقتي، فمش هخمن.`);
         }
-        return {reply:parts.join(" "),results:live.slice(0,4),source:"v22_5_bound_product_live_truth",bound_product:{name:truth.identity.name,sku:truth.identity.sku,external_id:truth.identity.external_id}};
+        return {reply:parts.join(" "),results:live.slice(0,4),source:"v23_bound_product_live_truth",bound_product:{name:truth.identity.name,sku:truth.identity.sku,external_id:truth.identity.external_id},intent:wantsPrice&&wantsAvail?"price_and_availability":wantsPrice?"price":"availability"};
       }
-    }catch(error){console.error("V22.5 bound product live lookup failed",error?.message);}
+    }catch(error){console.error("V23 bound product live lookup failed",error?.message);}
+    const requested=wantsPrice&&wantsAvail?"السعر والتوفر":wantsPrice?"السعر الحالي":"التوفر الحالي";
+    return {reply:`أنا ما زلت مربوط بـ ${verifiedFacts.name||identifier}، لكن تعذر التحقق من ${requested} من Odoo Live الآن، لذلك مش هستخدم بيانات قديمة أو أخمن. جرّب بعد لحظات أو افتح صفحة المنتج.`,source:"v23_bound_product_live_unavailable",bound_product:{name:verifiedFacts.name,sku:verifiedFacts.sku,external_id:verifiedFacts.external_id},intent:wantsPrice&&wantsAvail?"price_and_availability":wantsPrice?"price":"availability"};
   }
 
-  if(wantsDetails){
-    const facts=getStructuredProductFacts(identifier);
-    const dossier=facts||getProductDossier(identifier,{includeFull:true});
-    if(!dossier) return {reply:`أنا فاهم إنك تقصد ${ctx.name||"المنتج المحدد"}، لكن ملف المنتج نفسه مش متاح عندي بشكل مؤكد. اكتب اسم المنتج أو الكود وأنا أراجعه بدون تخمين.`,source:"v22_5_bound_product_missing_dossier",bound_product:ctx};
+  if(wantsDetails||wantsDose||wantsSuitability){
+    const facts=verifiedFacts;
+    const dossier=facts||null;
+    if(!dossier) return {reply:`ملف المنتج المحدد مش متاح عندي بهوية مؤكدة. اختاره من كارت المنتج أو اكتب الاسم وSKU الصحيحين وأنا أراجعه بدون تخمين.`,source:"v23_bound_product_missing_dossier",bound_product:{sku:cleanText(ctx.sku||"",160)},intent:intent||"details"};
     const name=dossier.name||ctx.name||identifier;
     const sku=dossier.sku||ctx.sku||"";
     const category=dossier.category||"";
     const provenance=dossier.description_provenance||"";
     const explicit=Array.isArray(dossier.explicit_facts)?dossier.explicit_facts.slice(0,6):[];
     const description=conciseText(dossier.sales_description||dossier.ecommerce_description||"",1000);
+
+    if(wantsDose){
+      const doseFacts=explicit.map(productFactText).filter(x=>/(جرعه|جرعة|معدل|خلط|ملي|مل|لتر|هكتار|فدان|dose|dosage|rate|mix)/i.test(x));
+      if(doseFacts.length)return {reply:`${name}${sku?` (${sku})`:""}\n\nبيانات الجرعة المكتوبة صراحة في ملف المنتج:\n• ${doseFacts.join("\n• ")}\n\nاتبع ملصق العبوة المسجلة؛ الجرعة قد تختلف حسب المحصول وطريقة التطبيق.`,source:"v23_bound_product_verified_dosage",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"dosage",quick_replies:["هل متوفر؟","بكام؟"]};
+      return {reply:`أنا مثبت المنتج على ${name}${sku?` (${sku})`:""}، لكن ما عنديش جرعة موثقة مكتوبة صراحة في ملفه. مش هطلع رقم من وصف عام؛ ابعت صورة واضحة لملصق الجرعة أو راجع مهندس MIG FARM.`,source:"v23_bound_product_dosage_guard",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"dosage",quick_replies:["أرسل صورة الملصق","كلم المهندس"]};
+    }
+
+    if(wantsSuitability){
+      const evidence=verifiedUseEvidence(dossier,message);
+      if(evidence.target&&evidence.matches.length)return {reply:`بالنسبة لـ ${name}${sku?` (${sku})`:""}، لقيت في البيانات الموثقة ما يتعلق بـ ${evidence.target}:\n• ${evidence.matches.join("\n• ")}\n\nده مبني على النص المسجل للمنتج، وأي جرعة أو طريقة تطبيق تظل حسب الملصق.`,source:"v23_bound_product_verified_suitability",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"suitability",quick_replies:["التفاصيل والاستخدام","هل متوفر؟"]};
+      const target=evidence.target?` لـ ${evidence.target}`:" لهذا الاستخدام";
+      return {reply:`أنا مثبت المنتج على ${name}${sku?` (${sku})`:""}، لكن ملاءمته${target} مش مذكورة بشكل مؤكد في بياناته عندي. عشان ما أديكش ترشيح غلط، ابعت صورة الملصق أو اذكر المحصول والمرحلة والمشكلة للفريق الهندسي.`,source:"v23_bound_product_suitability_guard",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"suitability",quick_replies:["أرسل صورة الملصق","كلم المهندس"]};
+    }
+
     let reply=`${name}${sku?` (${sku})`:""}`;
     if(category) reply+=` — ${category}.`;
     if(explicit.length){
@@ -763,9 +819,42 @@ async function tryBoundProductContextReply({message="",selectedProduct=null,stat
     }
     if(description) reply+=`\n\nالوصف المسجل: ${description}`;
     if(provenance==="generated_202") reply+=`\n\nملاحظة: الوصف المتاح لهذا المنتج استكمال كتالوجي عام، لذلك مش هاعتبره مواصفة تقنية خاصة إلا لو كانت مكتوبة صراحة في بيانات المنتج.`;
-    return {reply,source:"v22_5_bound_product_dossier",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},quick_replies:["بكام؟","هل متوفر؟"]};
+    return {reply,source:"v23_bound_product_dossier",bound_product:{name,sku,external_id:dossier.external_id||ctx.external_id||""},intent:"details",quick_replies:["بكام؟","هل متوفر؟","ينفع لاستخدامي؟"]};
   }
   return null;
+}
+
+async function tryBoundProductComparisonReply({products=[],message="",history=[],locale="ar"}={}){
+  const refs=products.map(normalizeProductReference).filter(Boolean).slice(0,4);if(refs.length<2)return null;
+  const rows=[];const rendered=[];
+  const needsLive=BOUND_PRODUCT_PRICE_RX.test(message)||BOUND_PRODUCT_AVAIL_RX.test(message);
+  for(const ref of refs){
+    const identifier=cleanText(ref.sku||ref.external_id||ref.name||"",500);
+    const facts=verifiedFactsForBoundProduct(ref);
+    if(!facts)continue;
+    let liveTruth=null;
+    if(needsLive){
+      try{const live=clientProducts(await searchProducts(identifier,history,10));liveTruth=buildProductTruth(identifier,live);if(liveTruth?.identity?.live_verified)rendered.push(...live.slice(0,2));}catch{}
+    }
+    rows.push({ref,facts,liveTruth});
+  }
+  if(rows.length<2)return {reply:"ما قدرتش أثبت هوية المنتجين من ملفات MIG FARM، فمش هعمل مقارنة تخمينية. اختر المنتجين من الكروت مرة ثانية.",source:"v23_comparison_identity_guard",bound_products:refs,intent:"comparison"};
+  const blocks=rows.map(({ref,facts,liveTruth})=>{
+    const name=facts.name||ref.name;const sku=facts.sku||ref.sku||"";
+    const explicit=(Array.isArray(facts.explicit_facts)?facts.explicit_facts:[]).slice(0,4).map(productFactText).filter(Boolean);
+    const lines=[`• ${name}${sku?` (${sku})`:""}`];
+    if(facts.category)lines.push(`  الفئة: ${facts.category}`);
+    if(explicit.length)lines.push(...explicit.map(x=>`  ${x}`));else lines.push("  المواصفات الفارقة غير موثقة بشكل كافٍ في الملف.");
+    if(needsLive){
+      if(liveTruth?.identity?.live_verified){
+        const price=liveTruth.current?.price_aed;const av=cleanText(liveTruth.current?.availability||"",120);
+        lines.push(`  Odoo Live: ${price!==null&&price!==undefined?`${price} ${liveTruth.current.currency||"AED"}`:"السعر غير ظاهر"}${av?` — ${av}`:" — التوفر غير واضح"}`);
+      }else lines.push("  Odoo Live: تعذر تثبيت السعر والتوفر حاليًا.");
+    }
+    return lines.join("\n");
+  });
+  const reply=`مقارنة موثقة بين المنتجين:\n\n${blocks.join("\n\n")}\n\nهنا قارنت فقط المعلومات المكتوبة صراحة. أي مواصفة غير موجودة تظل غير مؤكدة، ومش هاعتبر تشابه المنتجات دليلًا على نفس الاستخدام.`;
+  return {reply,source:"v23_bound_product_comparison",bound_products:rows.map(x=>({name:x.facts.name||x.ref.name,sku:x.facts.sku||x.ref.sku||"",external_id:x.facts.external_id||x.ref.external_id||""})),results:rendered.slice(0,4),intent:"comparison",quick_replies:["قارن السعر","قارن التوفر","اختار منتج تاني"]};
 }
 
 async function tryDeterministicVisualCommerce({frame={},activeContext={},history=[],locale="ar"}={}){
@@ -879,6 +968,7 @@ export async function POST(request){
   const history=normalizeHistory(body?.history);
   const productContext=normalizeProductContext(body?.product_context);
   const selectedProductContext=normalizeSelectedProductContext(body?.selected_product_context||body?.chat_product_context);
+  const selectedProductContexts=normalizeSelectedProductContexts(body?.selected_product_contexts||body?.comparison_product_contexts);
   const serverSession=await readServerSession(sessionId);
   const persistentRead=await readPersistentSnapshot(sessionId);
   const mergedIncomingState=mergeSessionState(serverSession,body?.conversation_state);
@@ -913,20 +1003,33 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V22.5 Product Context Lock: a product-card action must stay attached to that exact product.
-  // This runs before agricultural knowledge so a generic phrase such as "تفاصيل المنتج واستخدامه" can never fall into pest/disease retrieval.
-  if(selectedProductContext){
-    const bound=await tryBoundProductContextReply({message,selectedProduct:selectedProductContext,state,history,locale});
-    if(bound){
-      return await makeResponse({payload:{reply:bound.reply,display_reply:bound.reply,results:bound.results||[],quick_replies:bound.quick_replies||[],bound_product:bound.bound_product||selectedProductContext,product_context_lock:true},cors,sessionId,state,analysis,signals,profile,message,source:bound.source,results:bound.results||[],locale,cognition});
+  // V23 Product Context Intelligence: the server resolves card selection, persisted focus,
+  // explicit product mentions, visible ordinals and multi-product comparisons before any agronomy/RAG route.
+  const productFocus=resolveProductContext({message,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,state,analysis});
+  if(productFocus.action==="clear"){
+    delete state.active_product_context;
+    delete state.comparison_context;
+  }
+  if(productFocus.action==="compare"){
+    const comparison=await tryBoundProductComparisonReply({products:productFocus.products,message,history,locale});
+    if(comparison){
+      return await makeResponse({payload:{reply:comparison.reply,display_reply:comparison.reply,results:comparison.results||[],quick_replies:comparison.quick_replies||[],bound_products:comparison.bound_products||productFocus.products,comparison_context_lock:true,product_context_intent:"comparison",product_context_reason:productFocus.reason,product_context_confidence:productFocus.confidence},cors,sessionId,state,analysis,signals,profile,message,source:comparison.source,results:comparison.results||[],locale,cognition});
     }
-  }else if(isGenericProductDetailRequest(message)){
-    const candidates=(Array.isArray(state?.last_products)?state.last_products:[]).filter(x=>x?.name).slice(0,4);
-    const reply=candidates.length>1?`حدد أي منتج تقصد من النتائج اللي فوق؛ زر التفاصيل لازم يكون مربوط بمنتج محدد عشان ما أخلطش المعلومات.`:`اكتب اسم المنتج أو اضغط زر «التفاصيل» الموجود داخل كارت المنتج، وأنا أجيب وصفه واستخدامه من ملفه نفسه.`;
-    return await makeResponse({payload:{reply,display_reply:reply,quick_replies:candidates.map(x=>`تفاصيل ${x.name}`).slice(0,4),product_context_lock:true},cors,sessionId,state,analysis,signals,profile,message,source:"v22_5_unbound_product_detail_guard",locale,cognition});
+  }
+  if(["bind","reuse"].includes(productFocus.action)&&productFocus.product){
+    const bound=await tryBoundProductContextReply({message,selectedProduct:productFocus.product,state,history,locale,intent:productFocus.intent});
+    if(bound){
+      return await makeResponse({payload:{reply:bound.reply,display_reply:bound.reply,results:bound.results||[],quick_replies:bound.quick_replies||[],bound_product:bound.bound_product||productFocus.product,product_context_lock:true,product_context_intent:bound.intent||productFocus.intent,product_context_reason:productFocus.reason,product_context_confidence:productFocus.confidence},cors,sessionId,state,analysis,signals,profile,message,source:bound.source,results:bound.results||[],locale,cognition});
+    }
+  }
+  if(productFocus.action==="ambiguous"||isGenericProductDetailRequest(message)){
+    const candidates=(productFocus.products?.length?productFocus.products:(Array.isArray(state?.last_products)?state.last_products:[])).filter(x=>x?.name).slice(0,4);
+    const reply=candidates.length>1?`حدد أي منتج تقصد من النتائج الظاهرة؛ كل إجابة لازم تظل مربوطة بهوية منتج واحدة عشان ما أخلطش السعر أو الاستخدام أو المواصفات.`:`اكتب اسم المنتج أو اضغط زر «التفاصيل والاستخدام» داخل كارت المنتج، وأنا أراجع ملفه نفسه بدون تخمين.`;
+    const quickReplies=candidates.map(x=>({label:`تفاصيل ${x.name}`,message:"تفاصيل المنتج واستخدامه",product:x})).slice(0,4);
+    return await makeResponse({payload:{reply,display_reply:reply,quick_replies:quickReplies,product_context_lock:true,product_context_intent:productFocus.intent,product_context_reason:productFocus.reason},cors,sessionId,state,analysis,signals,profile,message,source:"v23_unbound_product_context_guard",locale,cognition});
   }
 
-  // V22.5: recognition-first multimodal vision + current-turn + conversion + live product truth control the neural sales employee before legacy deterministic fallbacks.
+  // V23: recognition-first multimodal vision + server-side product context + current-turn conversion control the neural sales employee.
   // All deterministic FAQ/agronomy/commerce layers below remain safety fallbacks if the neural employee is unavailable.
   if(visionFrame?.has_visual_context || !isClearlyOffDomain(message)){
     try{
