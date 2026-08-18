@@ -12,8 +12,8 @@ async function ask(body){
 }
 
 const health=await (await GET()).json();
-assert.equal(health.version,"23.0.0");
-assert.equal(health.mode,"server_authoritative_product_context_intelligence_os_v23");
+assert.equal(health.version,"24.0.0");
+assert.equal(health.mode,"semantic_human_conversation_orchestrator_os_v24");
 for(const feature of ["server_authoritative_active_product_memory","same_category_product_switch_detection","multi_product_comparison_context","dosage_evidence_guard","suitability_evidence_guard"])assert.ok(health.features.includes(feature),feature);
 
 const oldKey=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;
@@ -26,7 +26,7 @@ try{
 
   const follow=await ask({message:"استخدامه؟",session_id:"v23-bind",conversation_state:first.conversation_state,history:[{role:"user",content:"تفاصيل المنتج واستخدامه"},{role:"assistant",content:first.reply}]});
   assert.equal(follow.source,"v23_bound_product_dossier");
-  assert.equal(follow.product_context_reason,"persisted_active_product");
+  assert.ok(["persisted_active_product","semantic_resolved_reference"].includes(follow.product_context_reason));
   assert.equal(follow.bound_product?.sku,"287F1");
 
   const suitability=await ask({message:"هل ينفع للطماطم؟",session_id:"v23-bind",conversation_state:follow.conversation_state});
