@@ -1,0 +1,56 @@
+{
+  "release": "MIG FARM AI V22.4 Visual Recognition Pipeline MAX",
+  "version": "22.4.0",
+  "mode": "multimodal_visual_recognition_pipeline_os_v22_3",
+  "built_at_utc": "2026-08-18T09:59:56.373684+00:00",
+  "quality": {
+    "full_regression_v6_to_v22_3": "PASS",
+    "test_files_executed": 39,
+    "runtime_json_files_parsed": 14,
+    "odoo_xml_parse": "PASS",
+    "odoo_embedded_javascript_syntax": "PASS",
+    "forced_neural_recognition_preflight": "PASS",
+    "known_sku_visual_match": "PASS",
+    "medium_candidate_confirmation": "PASS",
+    "retake_loop_guard": "PASS",
+    "different_image_revision_tracking": "PASS",
+    "source_js_mjs_syntax_files_checked": 85,
+    "release_js_mjs_syntax_files_checked": 84,
+    "exact_zip_full_regression": "PASS",
+    "exact_zip_runtime_json_parse": "PASS (14 files)",
+    "exact_zip_odoo_xml_parse": "PASS",
+    "exact_zip_odoo_javascript_syntax": "PASS",
+    "exact_zip_health_contract": "PASS"
+  },
+  "vision": {
+    "product_visual_signatures": 704,
+    "visual_agronomy_cards": 540,
+    "max_images_per_turn": 4,
+    "recognition_before_identity_guard": true,
+    "forced_product_recognition_preflight": true,
+    "medium_candidate_confirmation": true,
+    "retake_loop_guard": true,
+    "different_image_detector": true,
+    "image_revision_tracking": true,
+    "fuzzy_visual_text_ranking": true
+  },
+  "catalog": {
+    "product_dossiers": 704,
+    "descriptions": 704,
+    "reliable_explicit_product_facts": 727,
+    "need_terms": 16352,
+    "product_graph_edges": 11776,
+    "current_price_stock_source": "Odoo Live after identity verification"
+  },
+  "agriculture": {
+    "agricultural_master_cards": 2802
+  },
+  "runtime": {
+    "shopify_dependency": false,
+    "openai_model": "gpt-5.6",
+    "api": "Responses API",
+    "store": false
+  },
+  "production_validation_note": "Local regression mocks the neural network path where needed and does not use the production OpenAI key; perform a real product-image acceptance test after deployment.",
+  "finalized_at_utc": "2026-08-18T10:01:19.470250+00:00"
+}

@@ -1,0 +1,43 @@
+طريقة رفع MIG FARM AI V22.4
+
+1) فك ضغط ملف:
+MIG_FARM_AI_V22_3_VISUAL_RECOGNITION_PIPELINE_MAX_RELEASE.zip
+
+2) ارفع كل المحتويات إلى GitHub Root للمشروع الحالي واعمل Replace للملفات المتطابقة.
+
+3) انتظر Vercel Deployment ثم افتح:
+/api/health
+
+المتوقع:
+version = 22.4.0
+mode = multimodal_visual_recognition_pipeline_os_v22_3
+vision_intelligence.version = 22.4
+human_conversation_brain.version = 22.4
+conversion_decision_brain.version = 22.4
+sales_employee.version = 22.4
+sales_conversation_os.version = 22.4
+neural_brain.version = 22.4
+
+ويجب أن تظهر في vision_intelligence:
+recognition_before_identity_guard = true
+forced_product_recognition_preflight = true
+medium_candidate_confirmation = true
+retake_loop_guard = true
+different_image_detector = true
+image_revision_tracking = true
+fuzzy_visual_text_ranking = true
+
+4) بعد نجاح Backend، استبدل واجهة الشات في Odoo بملف:
+MIG_FARM_ODOO_CHAT_UI_V22_3_VISUAL_RECOGNITION_PIPELINE.txt
+
+5) اختبار القبول الأساسي:
+- ارفع صورة منتج واضحة واكتب: هل متوفر؟
+- النظام يجب أن يحاول التعرف أولًا، لا أن يطلب الباركود مباشرة.
+- إذا ثبت المنتج: يتحقق من Odoo Live.
+- إذا كان التطابق متوسطًا: يسأل هل أقرب منتج هو X؟
+- إذا فشل بعد محاولة حقيقية: يطلب جزءًا محددًا من الصورة.
+- ارفع صورة ثانية: يجب تحليلها كصورة جديدة وعدم تكرار نفس طلب إعادة التصوير.
+- بعدها اكتب: بكام؟ ويظل على نفس المنتج.
+- بعدها غيّر الموضوع: سيبك منه عندكم بذور طماطم؟ ويجب إلغاء سياق الصورة القديم.
+
+لا يلزم API Key جديد ولا تعديل GTM.
