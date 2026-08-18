@@ -1,0 +1,27 @@
+طريقة الرفع:
+1. فك ضغط الملف.
+2. ارفع كل الملفات والمجلدات الموجودة داخله إلى Root مشروع GitHub الحالي.
+3. وافق على Replace للملفات الموجودة بنفس المسارات.
+4. لا تحذف بقية ملفات المشروع القديمة؛ هذا ZIP هو Upgrade Overlay فوق V16.
+5. انتظر Vercel Deployment.
+6. افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+
+يجب أن يظهر:
+"version":"17.0.0"
+"mode":"adaptive_human_sales_conversation_os_v17"
+
+ويظهر قسم:
+"sales_conversation_os": {
+  "version":"17.0",
+  "mode":"human_sales_conversation_os"
+}
+
+ويظهر:
+"sales_employee":{"version":"17.0" ...}
+"neural_brain":{"version":"17.0","mode":"human_sales_conversation_os" ...}
+
+لا يحتاج تعديل Odoo.
+لا يحتاج GTM.
+لا يحتاج API Key جديد إذا OPENAI_API_KEY الحالي يعمل.
+الذاكرة الدائمة ليست مطلوبة لـ V17.
