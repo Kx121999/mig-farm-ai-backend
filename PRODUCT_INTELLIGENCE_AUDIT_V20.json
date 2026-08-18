@@ -1,0 +1,15 @@
+{
+  "version": "20.0",
+  "catalog_products": 704,
+  "description_coverage": 704,
+  "description_coverage_percent": 100,
+  "original_descriptions": 502,
+  "completed_descriptions": 202,
+  "retrieval_chunks": 1410,
+  "product_intelligence_megabytes": 7.14,
+  "total_knowledge_folder_megabytes": 12.23,
+  "current_price_policy": "live_odoo_only",
+  "current_stock_policy": "live_odoo_only",
+  "description_policy": "stored_exact_dossier_text_no_invented_specs",
+  "regression": "V6_to_V20_PASS"
+}

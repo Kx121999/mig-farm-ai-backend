@@ -1,0 +1,30 @@
+طريقة رفع V20
+
+1) فك ضغط الملف.
+2) ارفع محتويات الـZIP نفسها على Root مشروع mig-farm-ai-backend في GitHub.
+3) اعمل Replace للملفات الموجودة بنفس الاسم.
+4) مهم: ارفع مجلد knowledge بالكامل؛ ملفات V20 الكبيرة موجودة بداخله.
+5) لا تحتاج أي تعديل في Odoo.
+6) لا تحتاج أي تعديل في GTM.
+7) لا تحتاج API Key جديد.
+8) انتظر Vercel Deployment.
+9) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+
+المفروض يظهر:
+version: 20.0.0
+mode: product_intelligence_human_sales_employee_v20
+
+وفي product_intelligence:
+version: 20.0
+products: 704
+descriptions: 704
+original_descriptions: 502
+generated_completed_descriptions: 202
+retrieval_chunks: 1410
+total_megabytes: 7.14
+
+وفي neural_brain.tools:
+search_product_dossiers
+get_product_dossier
+compare_product_dossiers

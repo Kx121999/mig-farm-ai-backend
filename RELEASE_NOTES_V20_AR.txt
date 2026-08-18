@@ -1,0 +1,67 @@
+MIG FARM AI V20 — PRODUCT INTELLIGENCE SALES BRAIN MAX
+
+الهدف
+تحويل كل كتالوج MIG FARM في Odoo إلى طبقة معرفة منتجات كاملة داخل عقل موظف المبيعات، مع إبقاء السعر والتوفر الحاليين من Odoo Live فقط.
+
+ما تم إضافته
+- 704 Product Dossiers — ملف معرفي لكل منتج في الكتالوج.
+- 704/704 منتج لديهم Sales/eCommerce Description محفوظة.
+- 502 وصف أصلي محفوظ كما هو من ملفات المنتجات القديمة.
+- 202 وصف مكمل ثنائي اللغة من ملف استكمال الوصف، مع سياسة عدم اختراع مواصفات تقنية.
+- 1410 مقطع Retrieval للبحث داخل الديسكريبشنات بالمعنى والكلمات والـSKU والتصنيف والـTags.
+- طبقة Product Intelligence جديدة بحجم 7.14 MB تقريبًا.
+- إجمالي ملفات المعرفة الموجودة داخل Release حوالي 12.23 MB غير الكود والاختبارات.
+
+المعلومات المحفوظة لكل منتج
+- External ID
+- اسم المنتج
+- SKU / Internal Reference
+- التصنيف
+- Supplier / Type / Feature Tags
+- Sales Description كاملة
+- eCommerce Description HTML كاملة
+- نسخة eCommerce نظيفة للبحث
+- السعر كـSnapshot أرشيفي
+- المخزون كـSnapshot أرشيفي
+- الوزن
+- حالة النشر
+- QA Notes
+- Price validation evidence عند توفرها
+- aliases + semantic retrieval chunks
+- provenance للوصف: original_502 أو generated_202
+
+قاعدة الدقة
+- السعر الحالي والمخزون الحالي: Odoo Live هو المصدر الأعلى دائمًا.
+- وصف المنتج والمواصفات: Product Dossier هو المصدر الموثق.
+- إذا المواصفة غير موجودة داخل الديسكريبشن/الداتا، الشات لا يخترعها.
+- لا يتم اعتبار منتجات نفس التصنيف متطابقة في المواصفات.
+- جرعات المبيدات والأسمدة تظل Label / verified product data only.
+
+أدوات GPT-5.6 الجديدة
+- search_product_dossiers
+- get_product_dossier
+- compare_product_dossiers
+
+طريقة العمل
+- لو العميل سأل عن منتج محدد: يستدعي الـDossier الخاص به.
+- لو وصف احتياجه بدون اسم المنتج: يبحث داخل كل 704 منتج وديسكريبشناتهم.
+- لو طلب مقارنة مواصفات: يقارن فقط الحقائق المكتوبة فعليًا.
+- لو طلب سعر/توفر: يرجع إلى Odoo Live قبل الرد.
+- Live catalog results يتم إثراؤها بملخص Dossier عند وجود تطابق.
+
+الحماية
+- Archived vs Live precedence guard
+- Missing specification guard
+- Product description grounding
+- Current stock/price live-only policy
+- Existing V18 current-turn conversation guards مستمرة
+- Existing V19 ethical conversion brain مستمر ومحدث لتوجيه أسئلة مواصفات المنتجات إلى Product Dossier evidence
+
+الاختبارات
+Full Regression V6 -> V20: PASS
+V20 Product Intelligence: PASS
+V20 API Regression: PASS
+
+الإصدار
+version: 20.0.0
+mode: product_intelligence_human_sales_employee_v20
