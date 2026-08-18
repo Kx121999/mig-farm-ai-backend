@@ -74,9 +74,13 @@ import {
 } from "../lib/human_conversation_brain.js";
 import { buildConversionDecision, evaluateConversionReply } from "../lib/conversion_decision_brain.js";
 import { searchAgriculturalMasterKnowledge, agriculturalMasterHealth } from "../lib/agricultural_master_knowledge.js";
+import {
+  searchProductDossiers, getProductDossier, compareProductDossiers,
+  enrichLiveProductsWithDossiers, productIntelligenceHealth
+} from "../lib/product_intelligence.js";
 
-const VERSION="19.0.0";
-const MODE="conversion_decision_human_sales_employee_v19";
+const VERSION="20.0.0";
+const MODE="product_intelligence_human_sales_employee_v20";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -289,6 +293,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       session_persistence:sessionPersistenceMode(),
       persistent_cognitive_store:persistentStoreHealth(),
       product_index:productIndexStatus(),
+      product_intelligence:productIntelligenceHealth(),
       knowledge:githubKnowledgeStatus()
     },
     commerce:commerceCapabilities(),
@@ -367,7 +372,24 @@ async function tryV19NeuralAgent({analysis,state,message,history,locale,profile,
       if(!toolAnalysis.emirate&&analysis?.emirate) toolAnalysis.emirate=analysis.emirate;
       if(!toolAnalysis.cultivation&&analysis?.cultivation) toolAnalysis.cultivation=analysis.cultivation;
       const found=await searchCatalog(toolAnalysis,state,query,history);
-      return {query:found.query,category:found.categoryKey,products:clientProducts(found.products).slice(0,limit)};
+      const live=clientProducts(found.products).slice(0,limit);
+      return {query:found.query,category:found.categoryKey,products:enrichLiveProductsWithDossiers(live,{descriptionChars:1000})};
+    },
+    search_product_dossiers:async args=>{
+      const query=cleanText(args?.query||message,1200);
+      const limit=Math.max(1,Math.min(10,Number(args?.limit)||6));
+      const category=cleanText(args?.category||analysis?.category?.key||state?.category||"",120);
+      return {query,product_intelligence:productIntelligenceHealth(),products:searchProductDossiers(query,{limit,category,descriptionChars:2800})};
+    },
+    get_product_dossier:async args=>{
+      const identifier=cleanText(args?.identifier||message,900);
+      const dossier=getProductDossier(identifier,{includeFull:Boolean(args?.include_full_description),includeHtml:false});
+      return dossier?{identifier,product:dossier,policy:"Current price and availability must be checked with live Odoo before stating them as current."}:{identifier,error:"product_dossier_not_found"};
+    },
+    compare_product_dossiers:async args=>{
+      const identifiers=Array.isArray(args?.identifiers)?args.identifiers.slice(0,6):[];
+      const criteria=Array.isArray(args?.criteria)?args.criteria.slice(0,8):[];
+      return compareProductDossiers(identifiers,criteria);
     },
     search_knowledge:async args=>{
       const query=cleanText(args?.query||message,700);
@@ -497,7 +519,7 @@ async function tryV19NeuralAgent({analysis,state,message,history,locale,profile,
       toolHandlers
     });
     if(!result?.handled||!result.reply) return null;
-    const products=clientProducts(result.products||[]).slice(0,8);
+    const products=enrichLiveProductsWithDossiers(clientProducts(result.products||[]).slice(0,8),{descriptionChars:900});
     const portfolio=optimizeLivePortfolio({products,mission,maxItems:mission.requested_count||undefined});
     const verification=verifyCommerceResponse({reply:result.reply,products,mission,portfolio});
     const commerceCritical=Boolean(mission?.needs_live_catalog&&["recommend","compare","bundle","budget_optimize","solution_plan","purchase"].includes(mission.kind));
