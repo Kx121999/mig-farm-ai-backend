@@ -1,0 +1,43 @@
+طريقة رفع MIG FARM AI V15
+========================
+
+1) فك ضغط ZIP.
+2) ارفع محتويات الملف إلى ROOT نفس Repository الخاص بـ mig-farm-ai-backend.
+3) حافظ على نفس المسارات كما هي:
+   api/
+   lib/
+   knowledge/
+   tests/
+   package.json
+4) اعمل Replace للملفات الموجودة عند طلب GitHub.
+5) لا تحذف ملفات المشروع القديمة غير الموجودة داخل ZIP.
+6) لا تحتاج تعديل Odoo أو GTM.
+7) لا تحتاج Token جديد؛ OPENAI_API_KEY الحالي يظل كما هو.
+8) انتظر Vercel Deployment.
+9) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+
+المتوقع:
+version = 15.0.0
+mode = agricultural_engineer_uae_intelligence_autonomous_commerce_v15
+
+داخل agricultural_engineer:
+version = 15.0
+curriculum_modules = 19
+knowledge_cards = 516
+diagnostic_rules = 31
+calculators = 8
+crop_profiles = 31
+
+داخل neural_brain:
+version = 15.0
+knowledge_layer = 15.0
+configured = true
+
+الأدوات الجديدة المتوقع ظهورها:
+search_agricultural_engineering
+diagnose_crop_problem
+agriculture_calculator
+
+ملاحظة:
+persistent_store غير مطلوب لـ V15، ويمكن أن يبقى configured:false بدون مشكلة.
