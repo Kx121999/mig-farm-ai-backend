@@ -38,15 +38,17 @@ import { autonomousCustomerOSHealthV30 } from "../lib/autonomous_customer_os_v30
 import { customerDigitalTwinHealthV30 } from "../lib/customer_digital_twin_v30.js";
 import { confidenceGatewayHealthV30 } from "../lib/confidence_gateway_v30.js";
 import { closedLoopLearningHealthV30, closedLoopLearningSnapshotV30 } from "../lib/closed_loop_learning_v30.js";
+import { llmFirstHealthV31 } from "../lib/llm_first_orchestrator_v31.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V30 Neural Autonomous Customer OS",
-    version:"30.0.0",
-    mode:"neural_autonomous_customer_os_v30",
+    service:"MIG FARM V31 LLM-First Semantic Orchestrator",
+    version:"31.0.0",
+    mode:"llm_first_semantic_orchestrator_v31",
     features:[
+      "v31_llm_first_full_utterance_understanding","meaning_before_keyword_routing","structured_semantic_interpretation","latest_message_sovereignty","new_topic_context_quarantine","genuine_followup_context_reuse","speech_act_detection","multi_intent_semantic_decomposition_v31","llm_primary_natural_answer","legacy_router_fallback_only","legacy_route_intent_alignment","stale_agriculture_context_leak_block","social_intent_hijack_block","business_intent_hijack_block","identity_question_protection","structured_output_no_chain_of_thought","bounded_meaning_cache","provider_failure_exact_intent_guard","no_raw_message_meaning_metrics",
       "v30_neural_autonomous_customer_orchestrator","specialist_agent_mission_planning","neural_when_useful_deterministic_when_needed","bounded_per_turn_tool_policy","risk_aware_tool_budget","evidence_contract_before_answer","provider_failure_resilience","privacy_bounded_customer_digital_twin","explicit_fact_only_customer_memory","confidence_calibration_gateway","answer_clarify_handoff_block_decisions","unverified_dosage_hard_block","unverified_action_claim_hard_block","privacy_safe_closed_loop_learning","hashed_outcome_patterns","no_raw_transcript_learning","v30_admin_operational_visibility",
       "v29_conversational_reasoning_core","expected_answer_memory","bounded_question_state","short_answer_understanding","fuzzy_quick_reply_resolution","specific_clarification_instead_of_generic_fallback","pronoun_product_resolution_v29","ordinal_product_resolution_v29","correction_supersession_v29","natural_response_deduplication","one_question_response_contract","privacy_safe_reasoning_metrics",
       "enterprise_multi_agent_supervisor","specialized_product_truth_agent","senior_agronomist_agent","business_facts_agent","vision_specialist_agent","commerce_orchestrator_agent","pre_send_quality_critic","natural_structured_response_blocks","hybrid_vector_and_local_retrieval","openai_vector_store_adapter","400mb_resilient_local_fallback","privacy_safe_enterprise_telemetry","persistent_admin_analytics","protected_http_only_admin_session","live_quality_dashboard","knowledge_and_service_health_dashboard","downloadable_privacy_safe_reports","scalable_external_knowledge_plane","no_secret_browser_exposure",
@@ -101,6 +103,7 @@ export async function GET(){
     customer_digital_twin:customerDigitalTwinHealthV30(),
     confidence_gateway:confidenceGatewayHealthV30(),
     closed_loop_learning:{...closedLoopLearningHealthV30(),snapshot:closedLoopLearningSnapshotV30()},
+    llm_first_orchestrator:llmFirstHealthV31(),
     enterprise_supervisor:enterpriseSupervisorHealthV28(),
     enterprise_retrieval:enterpriseRetrievalHealthV28(),
     enterprise_telemetry:enterpriseTelemetryHealthV28(),

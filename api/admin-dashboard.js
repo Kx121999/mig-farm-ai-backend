@@ -10,6 +10,7 @@ import { autonomousCustomerOSHealthV30 } from "../lib/autonomous_customer_os_v30
 import { customerDigitalTwinHealthV30 } from "../lib/customer_digital_twin_v30.js";
 import { confidenceGatewayHealthV30 } from "../lib/confidence_gateway_v30.js";
 import { closedLoopLearningHealthV30, closedLoopLearningSnapshotV30 } from "../lib/closed_loop_learning_v30.js";
+import { llmFirstHealthV31 } from "../lib/llm_first_orchestrator_v31.js";
 import { customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
 import { persistentStoreHealth } from "../lib/persistent_store.js";
 import { autonomousActionHealth } from "../lib/autonomous_action_os.js";
@@ -21,6 +22,7 @@ function configured(name){return Boolean(String(process.env[name]||"").trim());}
 function manifest(){try{return JSON.parse(readFileSync(join(ROOT,"knowledge_v28","enterprise_manifest.json"),"utf8"));}catch{return null;}}
 function evalReport(){try{return JSON.parse(readFileSync(join(ROOT,"evals","v28_eval_report.json"),"utf8"));}catch{return {status:"not_generated",passed:0,total:0};}}
 function v30EvalReport(){try{return JSON.parse(readFileSync(join(ROOT,"evals","v30_eval_report.json"),"utf8"));}catch{return {status:"not_generated",passed:0,total:0};}}
+function v31EvalReport(){try{return JSON.parse(readFileSync(join(ROOT,"evals","v31_eval_report.json"),"utf8"));}catch{return {status:"not_generated",passed:0,total:0};}}
 
 export async function GET(request){
   const auth=authenticateAdminV28(request);if(!auth.ok)return json({ok:false,error:auth.error},auth.status);
@@ -37,13 +39,14 @@ export async function GET(request){
     {key:"autonomous_os",label:"العقل المستقل V30",ready:autonomousCustomerOSHealthV30().ready,detail:autonomousCustomerOSHealthV30().neural_configured?"العقل العصبي متصل مع مسار احتياطي":"المسار الحتمي الاحتياطي فعّال"},
     {key:"confidence",label:"بوابة الثقة V30",ready:confidenceGatewayHealthV30().ready,detail:"تراجع الرد قبل الإرسال"},
     {key:"digital_twin",label:"ملف العميل الآمن",ready:customerDigitalTwinHealthV30().ready,detail:"حقائق صريحة فقط بدون بيانات حساسة"}
+    ,{key:"llm_first",label:"فهم المعنى V31",ready:llmFirstHealthV31().ready,detail:llmFirstHealthV31().configured?"يفهم الجملة كاملة قبل أي مسار":"OpenAI غير متصل؛ حارس الطوارئ فعّال"}
   ];
   return json({
-    ok:true,version:"30.0.0",mode:"neural_autonomous_customer_os_v30",generated_at:new Date().toISOString(),
+    ok:true,version:"31.0.0",mode:"llm_first_semantic_orchestrator_v31",generated_at:new Date().toISOString(),
     telemetry,
     knowledge:{local:knowledge,enterprise_manifest:enterpriseManifest,retrieval:enterpriseRetrievalHealthV28()},
-    quality:{evaluation:evalReport(),v30_evaluation:v30EvalReport(),self_learning:selfLearningHealth(),closed_loop:closedLoopLearningSnapshotV30()},
-    platform:{autonomous_customer_os:autonomousCustomerOSHealthV30(),customer_digital_twin:customerDigitalTwinHealthV30(),confidence_gateway:confidenceGatewayHealthV30(),closed_loop_learning:closedLoopLearningHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:enterpriseSupervisorHealthV28(),telemetry:enterpriseTelemetryHealthV28(),persistence:persistentStoreHealth(),actions:autonomousActionHealth(),auth:adminAuthHealthV28(),services},
+    quality:{evaluation:evalReport(),v30_evaluation:v30EvalReport(),v31_evaluation:v31EvalReport(),self_learning:selfLearningHealth(),closed_loop:closedLoopLearningSnapshotV30()},
+    platform:{llm_first_orchestrator:llmFirstHealthV31(),autonomous_customer_os:autonomousCustomerOSHealthV30(),customer_digital_twin:customerDigitalTwinHealthV30(),confidence_gateway:confidenceGatewayHealthV30(),closed_loop_learning:closedLoopLearningHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:enterpriseSupervisorHealthV28(),telemetry:enterpriseTelemetryHealthV28(),persistence:persistentStoreHealth(),actions:autonomousActionHealth(),auth:adminAuthHealthV28(),services},
     security:{secrets_returned:false,raw_transcripts_returned:false,admin_session:auth.method,cache:"no-store"}
   });
 }
