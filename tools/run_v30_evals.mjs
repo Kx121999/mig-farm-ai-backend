@@ -15,7 +15,7 @@ const planCases=[
   ["product","عايز بذور خيار","product_search","search_catalog"],
   ["compare","قارن بين بذور الخيار","compare","compare_product_dossiers"],
   ["purchase","عايز أشتري سماد","purchase","prepare_purchase_plan"],
-  ["diagnosis","الخيار عليه بقع وذبول","diagnosis","diagnose_agricultural_problem"],
+  ["diagnosis","الخيار عليه بقع وذبول","diagnosis","diagnose_crop_problem"],
   ["dosage","جرعة المبيد كام مل لكل لتر؟","known_product_info","get_product_dossier"],
   ["availability","هل المنتج متوفر؟","availability","verify_live_product_truth"],
   ["price","سعر السماد كام؟","price","verify_live_product_truth"],
