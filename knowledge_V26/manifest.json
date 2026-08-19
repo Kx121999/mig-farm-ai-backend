@@ -1,0 +1,194 @@
+{
+  "version": "26.0",
+  "name": "MIG FARM V26 GitHub Sharded Conversation Knowledge OS",
+  "generated_at": "2026-08-19T05:48:08.050Z",
+  "format": "jsonl_utf8",
+  "target_megabytes": 400,
+  "target_bytes": 419430400,
+  "total_pack_bytes": 419431468,
+  "total_pack_megabytes": 400,
+  "total_records": 221481,
+  "max_pack_bytes": 18874364,
+  "max_pack_megabytes": 18,
+  "sources": {
+    "product_dossiers": 704,
+    "agricultural_master_cards": 2802,
+    "business_conversation_cases": 10
+  },
+  "policies": {
+    "current_turn_first": true,
+    "live_price_stock_only": true,
+    "official_label_dosage_only": true,
+    "no_generated_description_as_technical_fact": true,
+    "one_question_max": true,
+    "dialect_mirroring": true
+  },
+  "github": {
+    "browser_upload_safe": true,
+    "individual_file_limit_safe": true,
+    "pack_target_megabytes": 18
+  },
+  "packs": [
+    {
+      "file": "knowledge-pack-001.jsonl",
+      "bytes": 18873280,
+      "megabytes": 18,
+      "records": 9966,
+      "sha256": "b74cc536fd7dcfe3b48fd6535b49c5039602435b4b9e9d6a28374c2f70443060"
+    },
+    {
+      "file": "knowledge-pack-002.jsonl",
+      "bytes": 18872846,
+      "megabytes": 18,
+      "records": 9965,
+      "sha256": "dcf31f981f138155c43b636b01d5113fa537d4dfee5c6ef38470b2d8e5ff0d50"
+    },
+    {
+      "file": "knowledge-pack-003.jsonl",
+      "bytes": 18873321,
+      "megabytes": 18,
+      "records": 9962,
+      "sha256": "987d8a712b4c63222c9b7dca81e86b22ba84edcf2f76a6aacf505acf63b0c694"
+    },
+    {
+      "file": "knowledge-pack-004.jsonl",
+      "bytes": 18873720,
+      "megabytes": 18,
+      "records": 9966,
+      "sha256": "8ed01f53f86f3e63669ff9d2103ced3d17bd953c910a37f4cdcbb0ee91ba7c8e"
+    },
+    {
+      "file": "knowledge-pack-005.jsonl",
+      "bytes": 18873697,
+      "megabytes": 18,
+      "records": 9970,
+      "sha256": "7aa6d28ae2add6236a13237ee56f744e01b1ca511331633d2200945e27c43117"
+    },
+    {
+      "file": "knowledge-pack-006.jsonl",
+      "bytes": 18874364,
+      "megabytes": 18,
+      "records": 9964,
+      "sha256": "052832e0a7477422b15c73e098db3cb3d04731a4c22eb778d92e0b136a6dce9e"
+    },
+    {
+      "file": "knowledge-pack-007.jsonl",
+      "bytes": 18873239,
+      "megabytes": 18,
+      "records": 9967,
+      "sha256": "f6e34600277381ad1ecd6f051b1a9c5c70f76367f51c88a7288bf0b594fae2c0"
+    },
+    {
+      "file": "knowledge-pack-008.jsonl",
+      "bytes": 18872326,
+      "megabytes": 18,
+      "records": 9967,
+      "sha256": "6726d3b5c32ca9a37562da409ac8d300e5e2c0e2917f81ddd7dab823123e5846"
+    },
+    {
+      "file": "knowledge-pack-009.jsonl",
+      "bytes": 18872032,
+      "megabytes": 18,
+      "records": 9967,
+      "sha256": "48066d5ced44ca548e5edb5a24293eaf69795f3fb314018290a85ec4bc553b08"
+    },
+    {
+      "file": "knowledge-pack-010.jsonl",
+      "bytes": 18872843,
+      "megabytes": 18,
+      "records": 9962,
+      "sha256": "0aa1d14fe18d45030d2a8d127c0c786715a3c85a7339a32e672dd55333a464fd"
+    },
+    {
+      "file": "knowledge-pack-011.jsonl",
+      "bytes": 18874184,
+      "megabytes": 18,
+      "records": 9966,
+      "sha256": "2b4ebdc95c09ae623a3c99ead3dd3ef842967dea7b8b1d2ffe82934cbd449367"
+    },
+    {
+      "file": "knowledge-pack-012.jsonl",
+      "bytes": 18873017,
+      "megabytes": 18,
+      "records": 9966,
+      "sha256": "bbe28805bd2d7c33dc8157ea19ef331113fda528a00d08b915fc7512cc08b688"
+    },
+    {
+      "file": "knowledge-pack-013.jsonl",
+      "bytes": 18873732,
+      "megabytes": 18,
+      "records": 9973,
+      "sha256": "720757a4aa3c52386a272c066ca2963b88044dbc824133397debd981aef63ba9"
+    },
+    {
+      "file": "knowledge-pack-014.jsonl",
+      "bytes": 18873287,
+      "megabytes": 18,
+      "records": 9968,
+      "sha256": "b1cb9863147bf0ca982cbb49445ce85fa65d9333ca98cbce24345975c4bafefa"
+    },
+    {
+      "file": "knowledge-pack-015.jsonl",
+      "bytes": 18872909,
+      "megabytes": 18,
+      "records": 9964,
+      "sha256": "a452ce814831d2acfad31d63ffeff27808f8bb5d263d0fa87d63b91c87901bf6"
+    },
+    {
+      "file": "knowledge-pack-016.jsonl",
+      "bytes": 18872954,
+      "megabytes": 18,
+      "records": 9962,
+      "sha256": "9dd48a30b5591bd8d348f09af7103f489e93d6477696c450a28c56c9392a1e86"
+    },
+    {
+      "file": "knowledge-pack-017.jsonl",
+      "bytes": 18873527,
+      "megabytes": 18,
+      "records": 9969,
+      "sha256": "003b21259af5d2d824597fa8e17d03840340bbfd1bb26c847d9b909565919132"
+    },
+    {
+      "file": "knowledge-pack-018.jsonl",
+      "bytes": 18874196,
+      "megabytes": 18,
+      "records": 9966,
+      "sha256": "95ec37174a92d1fd9ca5a0f9e3885cb3a684e61774a30d8cdf8acf79b04b3a93"
+    },
+    {
+      "file": "knowledge-pack-019.jsonl",
+      "bytes": 18872636,
+      "megabytes": 18,
+      "records": 9967,
+      "sha256": "ea0b5fce8c5cc2be4e22443235827393ba0edc8f76bf8cab031d25a6a797eafd"
+    },
+    {
+      "file": "knowledge-pack-020.jsonl",
+      "bytes": 18872223,
+      "megabytes": 18,
+      "records": 9964,
+      "sha256": "496879fea34be342015ea248f6987e077e5c3c01998eef24e3b10c3cd0a096b8"
+    },
+    {
+      "file": "knowledge-pack-021.jsonl",
+      "bytes": 18874018,
+      "megabytes": 18,
+      "records": 9969,
+      "sha256": "4be94e480eea8b4579d5c801f707a279b60563c880d884fb4ff1572667e0545e"
+    },
+    {
+      "file": "knowledge-pack-022.jsonl",
+      "bytes": 18873772,
+      "megabytes": 18,
+      "records": 9965,
+      "sha256": "6d2fd76406a6d51b5a6cb28620f9b7198251bf39781c17869b64dd6565407348"
+    },
+    {
+      "file": "knowledge-pack-023.jsonl",
+      "bytes": 4219345,
+      "megabytes": 4.02,
+      "records": 2226,
+      "sha256": "e986bc368550498cb8bcb4b6de0126d38a390394739080dec6500746290f2577"
+    }
+  ]
+}
