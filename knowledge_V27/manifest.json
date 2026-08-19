@@ -1,0 +1,242 @@
+{
+  "version": "27.0",
+  "name": "MIG FARM V27 Customer Brain & Decision Knowledge OS",
+  "generated_at": "2026-08-19T06:02:22.811Z",
+  "format": "jsonl_utf8",
+  "target_megabytes": 400,
+  "target_bytes": 419430400,
+  "total_pack_bytes": 419431906,
+  "total_pack_megabytes": 400,
+  "total_records": 200025,
+  "max_pack_bytes": 18874362,
+  "max_pack_megabytes": 18,
+  "allocations": {
+    "agriculture_decision_case": {
+      "records": 36000,
+      "bytes": 93393653,
+      "megabytes": 89.07,
+      "percent": 22.3
+    },
+    "business_fact_case": {
+      "records": 8000,
+      "bytes": 7585658,
+      "megabytes": 7.23,
+      "percent": 1.8
+    },
+    "customer_journey_case": {
+      "records": 56025,
+      "bytes": 86094503,
+      "megabytes": 82.11,
+      "percent": 20.5
+    },
+    "objection_resolution_case": {
+      "records": 30000,
+      "bytes": 67216935,
+      "megabytes": 64.1,
+      "percent": 16
+    },
+    "product_decision_case": {
+      "records": 40000,
+      "bytes": 110672858,
+      "megabytes": 105.55,
+      "percent": 26.4
+    },
+    "response_correction_case": {
+      "records": 20000,
+      "bytes": 39062863,
+      "megabytes": 37.25,
+      "percent": 9.3
+    },
+    "safety_guard_case": {
+      "records": 10000,
+      "bytes": 15405436,
+      "megabytes": 14.69,
+      "percent": 3.7
+    }
+  },
+  "sources": {
+    "product_dossiers": 704,
+    "agricultural_master_cards": 2802,
+    "business_facts": 8,
+    "compound_templates": 8,
+    "objection_classes": 8
+  },
+  "policies": {
+    "multi_intent_completion": true,
+    "current_turn_first": true,
+    "privacy_bounded_memory": true,
+    "pre_send_audit": true,
+    "live_price_stock_only": true,
+    "official_label_dosage_only": true,
+    "ethical_sales": true,
+    "one_question_max": true
+  },
+  "github": {
+    "browser_upload_safe": true,
+    "individual_file_limit_safe": true,
+    "pack_target_megabytes": 18
+  },
+  "packs": [
+    {
+      "file": "customer-brain-pack-001.jsonl",
+      "bytes": 18873089,
+      "megabytes": 18,
+      "records": 9018,
+      "sha256": "03dbe7966f0d183ab24ead280989d339172f06a26526f7473d07517e71298217"
+    },
+    {
+      "file": "customer-brain-pack-002.jsonl",
+      "bytes": 18873738,
+      "megabytes": 18,
+      "records": 8963,
+      "sha256": "4a121f11ef73106b4b9387c4314cd2efff86156c2950eecd6b63fb4836e3ccd7"
+    },
+    {
+      "file": "customer-brain-pack-003.jsonl",
+      "bytes": 18873513,
+      "megabytes": 18,
+      "records": 9031,
+      "sha256": "70e5c578b521af070e5238e19ee9869125639f2c52aed05b2630a8fa3264e402"
+    },
+    {
+      "file": "customer-brain-pack-004.jsonl",
+      "bytes": 18873567,
+      "megabytes": 18,
+      "records": 8983,
+      "sha256": "a69b553af59ec7f3a2ba9d5dc2fff7d0b445a1c387e78899f651a2137ba1abd0"
+    },
+    {
+      "file": "customer-brain-pack-005.jsonl",
+      "bytes": 18873075,
+      "megabytes": 18,
+      "records": 9013,
+      "sha256": "94586b3eef978e4f6ba5774bf0d9795744743273535790b0cf6f0c73357b1748"
+    },
+    {
+      "file": "customer-brain-pack-006.jsonl",
+      "bytes": 18874288,
+      "megabytes": 18,
+      "records": 9001,
+      "sha256": "1399441f2b59554ab31d1cd1112f3c0075bdbfc3105f3aad06b3288e249f913a"
+    },
+    {
+      "file": "customer-brain-pack-007.jsonl",
+      "bytes": 18873105,
+      "megabytes": 18,
+      "records": 8977,
+      "sha256": "74a5576157e6c1662b8a5209b2faf7478b697a6f1ae40736851201853eafbe18"
+    },
+    {
+      "file": "customer-brain-pack-008.jsonl",
+      "bytes": 18872987,
+      "megabytes": 18,
+      "records": 9026,
+      "sha256": "0898b883bea46ed5b1bee88e8ab0ff598a16d83fcb8650c4e0e0f6748bf5556c"
+    },
+    {
+      "file": "customer-brain-pack-009.jsonl",
+      "bytes": 18874362,
+      "megabytes": 18,
+      "records": 8977,
+      "sha256": "942f3f24f808c6c53a29442dbb56c873af71c893ceb4bd4515068888f6b6665b"
+    },
+    {
+      "file": "customer-brain-pack-010.jsonl",
+      "bytes": 18873937,
+      "megabytes": 18,
+      "records": 9029,
+      "sha256": "83b1d4bbc15b5cf9ac7166e60940e30c52d3752272d830c54cc9316fefd3f0ba"
+    },
+    {
+      "file": "customer-brain-pack-011.jsonl",
+      "bytes": 18872930,
+      "megabytes": 18,
+      "records": 8976,
+      "sha256": "e9552b3a72ba6ae5921e4d0538c1c9c1421f25181dc9bb508e9bac0269130c38"
+    },
+    {
+      "file": "customer-brain-pack-012.jsonl",
+      "bytes": 18873789,
+      "megabytes": 18,
+      "records": 9011,
+      "sha256": "e3cc086e4435378f79980502ddfeb4bd16a0b138f1b1fc024da6a049de7fd983"
+    },
+    {
+      "file": "customer-brain-pack-013.jsonl",
+      "bytes": 18873927,
+      "megabytes": 18,
+      "records": 8993,
+      "sha256": "e22ce691ac6c8b890f4afc92f158079e83b66825fadc31f683aee00bafa46c38"
+    },
+    {
+      "file": "customer-brain-pack-014.jsonl",
+      "bytes": 18873310,
+      "megabytes": 18,
+      "records": 9002,
+      "sha256": "2acd9bdb3612649da638e6acd0f447d3ac3899b31b1f181a6864323a3b72c2e1"
+    },
+    {
+      "file": "customer-brain-pack-015.jsonl",
+      "bytes": 18872785,
+      "megabytes": 18,
+      "records": 9015,
+      "sha256": "0653f6c3e48ea7d0c6f34a0ff5e96fddcc6d6c74a2abb0b353e1c4f41da8f0fb"
+    },
+    {
+      "file": "customer-brain-pack-016.jsonl",
+      "bytes": 18873285,
+      "megabytes": 18,
+      "records": 8975,
+      "sha256": "aabb93bd303be87e4c01a7803c43ab9ded387bf4fd5e1eafe3f2e18dd080efac"
+    },
+    {
+      "file": "customer-brain-pack-017.jsonl",
+      "bytes": 18874089,
+      "megabytes": 18,
+      "records": 9018,
+      "sha256": "e31be5e4e02e8f485beb01e2a0fbffd1107f0fedbb65b683147263ff01b02d66"
+    },
+    {
+      "file": "customer-brain-pack-018.jsonl",
+      "bytes": 18873655,
+      "megabytes": 18,
+      "records": 8981,
+      "sha256": "248bcc3760739ce2f241f0d466f98e7fbe8ef48c2282c3915fe5477ec5ed3e59"
+    },
+    {
+      "file": "customer-brain-pack-019.jsonl",
+      "bytes": 18873550,
+      "megabytes": 18,
+      "records": 9028,
+      "sha256": "98f21a0cc6d096d58a1c6fefed23036318ebcfcc4ed5c461052df6e341b7bcc5"
+    },
+    {
+      "file": "customer-brain-pack-020.jsonl",
+      "bytes": 18873463,
+      "megabytes": 18,
+      "records": 8986,
+      "sha256": "3fa1373e02d4fe1825b6f5c3eaae5a70627598074ae37f5acc50d99f0a623321"
+    },
+    {
+      "file": "customer-brain-pack-021.jsonl",
+      "bytes": 18873052,
+      "megabytes": 18,
+      "records": 9010,
+      "sha256": "e7fbe25ba9267ff69d74c3d22bfca34af604978bd2dfe02389cf4a90b237162d"
+    },
+    {
+      "file": "customer-brain-pack-022.jsonl",
+      "bytes": 18873374,
+      "megabytes": 18,
+      "records": 8979,
+      "sha256": "0c785c2efb86c516720b030d69036e00f1f68f827338b841fa66f1ee42c8755c"
+    },
+    {
+      "file": "customer-brain-pack-023.jsonl",
+      "bytes": 4215036,
+      "megabytes": 4.02,
+      "records": 2033,
+      "sha256": "f2b8f305b5121bcfbd7380740c1e68d03cbdc03d7f3cae4ca6f9e3ef948a77fe"
+    }
+  ]
+}
