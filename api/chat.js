@@ -570,7 +570,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
       const toolAnalysis=analyzeTurn(query,state,history,locale);
       const managed=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
-      const deep=searchCustomerKnowledgeV27(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||"",frame:state?.__customer_brain_v27||null});
+      const deep=await searchCustomerKnowledgeV27(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||"",frame:state?.__customer_brain_v27||null});
       const items=[...managed.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score})),...deep.items].slice(0,limit);
       return {query,items,deep_knowledge:{version:"27.0",packs_scanned:deep.packs_scanned||[],frame:deep.frame||{}}};
     },
