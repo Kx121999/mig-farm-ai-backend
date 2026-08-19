@@ -87,12 +87,12 @@ assert.equal(focus.action,"clear");
 assert.equal(focus.reason,"semantic_fresh_product_need");
 
 const publicFrame=semanticFrameForClient(fresh);
-assert.equal(publicFrame.version,"25.0");
+assert.equal(publicFrame.version,"26.0");
 assert.equal(publicFrame.plan.route,"semantic_multi_intent");
 assert.equal("raw" in publicFrame,false);
 
 const health=semanticHumanBrainHealth();
-assert.equal(health.version,"25.0");
+assert.equal(health.version,"26.0");
 for(const capability of ["arabizi_normalization","multi_intent_decomposition","pronoun_resolution","correction_supersession","unified_tool_budget"])assert.ok(health.capabilities.includes(capability),capability);
 
 console.log("V24 Semantic Human Brain unit & adversarial tests PASS");
