@@ -1,4 +1,3 @@
-# The 400 MiB knowledge packs stay on GitHub (or another object store).
-# They are fetched one pack at a time and must not be bundled into a Vercel Function.
-knowledge_V26/packs/**
-knowledge_v26/packs/**
+# Keep the 400 MiB packs in remote storage; bundle only manifest.json and router.json.
+knowledge_v27/packs/**
+knowledge_V27/packs/**
