@@ -1,0 +1,42 @@
+MIG FARM AI — V26 GITHUB KNOWLEDGE & NATURAL CONVERSATION OS
+
+هذه هي النسخة الكاملة الجاهزة للرفع إلى GitHub ثم النشر التلقائي على Vercel.
+
+أهم الملفات:
+
+1) كود واجهة Odoo:
+   ODOO_CHAT_UI_V26_GITHUB_KNOWLEDGE_CONVERSATION_OS.txt
+
+2) Backend:
+   api/
+   lib/
+   knowledge/
+   knowledge_v26/
+   package.json
+   vercel.json
+
+3) قاعدة المعرفة الجديدة:
+   knowledge_v26/manifest.json
+   knowledge_v26/router.json
+   knowledge_v26/packs/
+
+حجم حزم المعرفة: 400 MiB فعلية غير مضغوطة.
+عدد حالات المعرفة والمحادثة: أكثر من 222 ألف حالة.
+عدد الحزم: 23 حزمة، وكل حزمة أقل من 25 MiB لتناسب الرفع من واجهة GitHub.
+
+طريقة الرفع:
+
+- لا ترفع ملف ZIP داخل مشروع GitHub.
+- ارفع محتويات هذا المجلد كاملة مكان محتويات النسخة الحالية.
+- لا تحذف مفتاح OPENAI_API_KEY من Vercel.
+- لا تضف أي مفاتيح سرية داخل GitHub.
+- انتظر اكتمال Vercel Deployment.
+- بعد نجاح النشر افتح /api/health وتأكد من version = 26.0.0 وconversation_knowledge.megabytes = 400.
+- استبدل كود شات Odoo كاملًا بملف واجهة V26.
+
+ربط إجراءات Odoo اختياري ومقفول افتراضيًا. الشات والذكاء والمعرفة يعملون بدونه.
+
+اختبار محلي شامل:
+
+   npm run release:check
+

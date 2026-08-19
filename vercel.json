@@ -1,7 +1,14 @@
 {
   "functions": {
     "api/chat.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "knowledge_v26/**"
+    },
+    "api/health.js": {
+      "includeFiles": [
+        "knowledge_v26/manifest.json",
+        "knowledge_v26/router.json"
+      ]
     }
   }
 }
