@@ -1,0 +1,51 @@
+طريقة رفع MIG FARM AI V30
+==========================
+
+المهم أولًا:
+- لا تمسح المستودع.
+- لا تمسح أو تعيد رفع knowledge أو knowledge_v27 أو knowledge_v28 أو data.
+- فك ضغط حزمة V30، ثم ارفع محتوياتها فوق الملفات الموجودة مع الموافقة على الاستبدال.
+- ارفع التحديث في Commit واحد حتى يبدأ Vercel Deployment واحد.
+- اترك ODOO_ACTIONS_ENABLED=false حاليًا.
+
+الرفع إلى GitHub:
+1) فك ملف MIG_FARM_AI_V30_NEURAL_AUTONOMOUS_CUSTOMER_OS_UPGRADE.zip على جهازك.
+2) افتح مستودع mig-farm-ai-backend على GitHub.
+3) ارفع كل الملفات والمجلدات الموجودة داخل الحزمة مع الحفاظ على نفس المسارات.
+4) الملفات المشتركة مثل api/chat.js وpackage.json يجب استبدال نسختها القديمة.
+5) لا تحذف أي ملف غير موجود داخل حزمة التحديث.
+6) اكتب Commit message:
+   MIG FARM AI V30 Neural Autonomous Customer OS
+
+بعد الرفع:
+1) انتظر نجاح Vercel Deployment.
+2) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+3) يجب أن يظهر:
+   version = 30.0.0
+   mode = neural_autonomous_customer_os_v30
+   autonomous_customer_os.ready = true
+   customer_digital_twin.ready = true
+   confidence_gateway.ready = true
+   closed_loop_learning.ready = true
+
+لو ظهر إصدار قديم:
+- افتح Vercel > Deployments وتأكد أن آخر Commit هو المستخدم في Production.
+- نفّذ Redeploy لنفس الـCommit بدون تغيير الملفات.
+
+تحديث واجهة Odoo:
+1) افتح محرر كود واجهة الشات الحالية في Odoo.
+2) افتح الملف ODOO_CHAT_UI_V30_NEURAL_AUTONOMOUS_CUSTOMER_OS.txt من الحزمة.
+3) انسخ محتواه كاملًا واستبدل كود الشات القديم كاملًا.
+4) احفظ الصفحة ثم اعمل Ctrl+F5.
+
+اختبار سريع:
+1) اكتب: وين مكانكم؟
+2) اكتب: 3ain
+3) يجب أن يعرض بيانات فرع العين مباشرة.
+4) اكتب سؤالًا عن جرعة بدون اسم منتج؛ يجب أن يطلب اسم المنتج أو صورة الملصق بدل اختراع جرعة.
+
+لوحة التحكم:
+https://mig-farm-ai-backend.vercel.app/admin
+
+لا توجد Environment Variables جديدة إلزامية في V30.

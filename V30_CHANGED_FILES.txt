@@ -1,0 +1,38 @@
+MIG FARM AI V30 — ملفات التحديث
+================================
+
+طبقات V30 الجديدة:
+lib/autonomous_customer_os_v30.js
+lib/customer_digital_twin_v30.js
+lib/confidence_gateway_v30.js
+lib/closed_loop_learning_v30.js
+
+ملفات التشغيل المحدثة:
+lib/dialogue.js
+api/chat.js
+api/health.js
+api/admin-dashboard.js
+api/admin-export.js
+admin/index.html
+package.json
+
+واجهة Odoo:
+ODOO_CHAT_UI_V30_NEURAL_AUTONOMOUS_CUSTOMER_OS.txt
+
+الاختبارات والتحقق:
+tests/
+tools/run_v30_evals.mjs
+tools/validate_release.mjs
+evals/v30_eval_report.json
+evals/v29_eval_report.json
+evals/v28_eval_report.json
+
+التوثيق:
+RELEASE_NOTES_V30_AR.md
+UPLOAD_V30_AR.txt
+V30_ARCHITECTURE_AR.md
+V30_BUILD_AUDIT.json
+V30_CHANGED_FILES.txt
+
+مجلدات المعرفة غير موجودة داخل حزمة الترقية لأنها موجودة بالفعل على GitHub.
+لا تحذفها ولا تعيد رفعها.

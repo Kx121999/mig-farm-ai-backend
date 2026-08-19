@@ -1,0 +1,38 @@
+{
+  "version": "30.0.0",
+  "mode": "neural_autonomous_customer_os_v30",
+  "status": "pass",
+  "validation": {
+    "release_validator": "pass",
+    "javascript_files_checked": 144,
+    "json_files_checked": 28,
+    "v30_autonomous_evals": "65/65",
+    "v30_multi_turn_api": "pass",
+    "v29_conversation_regression": "pass",
+    "v28_api_contract": "pass",
+    "v28_admin_security": "pass",
+    "v29_conversation_evals": "63/63",
+    "v28_enterprise_evals": "24/24",
+    "knowledge_records": 200025,
+    "knowledge_megabytes": 400,
+    "odoo_ui_javascript": "pass"
+  },
+  "v30_components": {
+    "autonomous_customer_os": "pass",
+    "customer_digital_twin": "pass",
+    "confidence_gateway": "pass",
+    "closed_loop_learning": "pass",
+    "admin_visibility": "pass",
+    "odoo_ui_v30": "pass"
+  },
+  "safety": {
+    "new_subscription_required": false,
+    "new_environment_variables_required": false,
+    "neural_provider_required_for_basic_operation": false,
+    "odoo_actions_enabled": false,
+    "raw_messages_in_v30_learning": false,
+    "raw_replies_in_v30_learning": false,
+    "direct_identifiers_in_digital_twin": false,
+    "knowledge_reupload_required": false
+  }
+}
