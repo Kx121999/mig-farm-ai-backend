@@ -3,10 +3,10 @@
   "functions": {
     "api/chat.js": {
       "maxDuration": 60,
-      "includeFiles": "knowledge_v27/*.json"
+      "includeFiles": "knowledge_*27/*.json"
     },
     "api/health.js": {
-      "includeFiles": "knowledge_v27/*.json"
+      "includeFiles": "knowledge_*27/*.json"
     },
     "api/admin-dashboard.js": {
       "includeFiles": "**/*.json"
