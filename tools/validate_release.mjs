@@ -28,12 +28,14 @@ for(const path of jsonFiles)JSON.parse(readFileSync(path,"utf8"));
 const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
-if(health.mode!=="autonomous_sales_learning_agent_os_v25")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.mode!=="github_knowledge_natural_conversation_os_v26")throw new Error(`Unexpected mode: ${health.mode}`);
 if(health.autonomous_actions?.version!=="25.0")throw new Error("V25 autonomous action health missing");
 if(health.self_learning?.version!=="25.0")throw new Error("V25 self-learning health missing");
+if(health.current_turn_router?.version!=="26.0")throw new Error("V26 current-turn router missing");
+if(health.conversation_knowledge?.version!=="26.0"||health.conversation_knowledge?.ready!==true||health.conversation_knowledge?.megabytes<400)throw new Error("V26 400 MB conversation knowledge missing");
 
-const ui=readFileSync(join(root,"ODOO_CHAT_UI_V25_AUTONOMOUS_SALES_LEARNING_OS.txt"),"utf8");
-for(const marker of ["UI_VERSION='25.0.0'","mig_ai_session_id_v25","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply"]){
+const ui=readFileSync(join(root,"ODOO_CHAT_UI_V26_GITHUB_KNOWLEDGE_CONVERSATION_OS.txt"),"utf8");
+for(const marker of ["UI_VERSION='26.0.0'","mig_ai_session_id_v26","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply"]){
   if(!ui.includes(marker))throw new Error(`UI contract missing: ${marker}`);
 }
 if((ui.match(/<!\[CDATA\[/g)||[]).length!==(ui.match(/\]\]>/g)||[]).length)throw new Error("Odoo UI CDATA is unbalanced");
@@ -41,4 +43,4 @@ const uiScript=ui.match(/<!\[CDATA\[([\s\S]*?)\]\]>/)?.[1];
 if(!uiScript)throw new Error("Odoo UI script CDATA is missing");
 try{new Function(uiScript);}catch(error){throw new Error(`Odoo UI JavaScript syntax failed: ${error.message}`);}
 
-console.log(`MIG FARM release validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, V${health.version}`);
+console.log(`MIG FARM release validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, V${health.version}`);
