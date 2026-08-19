@@ -110,9 +110,13 @@ import {
   composeNaturalResponseV29, contextualClarificationV29, trackConversationReasoningV29,
   conversationReasoningHealthV29
 } from "../lib/conversation_reasoning_v29.js";
+import { buildAutonomousCustomerPlanV30, constrainToolsWithPlanV30, autonomousCustomerOSHealthV30 } from "../lib/autonomous_customer_os_v30.js";
+import { mergeCustomerDigitalTwinV30, customerDigitalTwinClientV30, customerDigitalTwinHealthV30 } from "../lib/customer_digital_twin_v30.js";
+import { evaluateConfidenceGatewayV30, enforceConfidenceGatewayV30, confidenceGatewayHealthV30 } from "../lib/confidence_gateway_v30.js";
+import { recordClosedLoopOutcomeV30, closedLoopLearningSnapshotV30, closedLoopLearningHealthV30 } from "../lib/closed_loop_learning_v30.js";
 
-const VERSION="29.0.0";
-const MODE="conversational_reasoning_natural_language_os_v29";
+const VERSION="30.0.0";
+const MODE="neural_autonomous_customer_os_v30";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -250,6 +254,7 @@ function sourceNeedsLearning(source=""){
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
   const semanticFrame=state?.__semantic_frame||null;
   const conversationalReasoning=state?.__conversation_reasoning_v29||analysis?.__conversation_reasoning_v29||null;
+  const autonomousCustomerPlan=state?.__autonomous_customer_os_v30||analysis?.__autonomous_customer_os_v30||buildAutonomousCustomerPlanV30({message,analysis,semanticFrame,reasoning:conversationalReasoning,state,profile,cognition,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
   const customerFrame=state?.__customer_brain_v27||buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
   const enterprisePlan=createSupervisorPlanV28({message,frame:customerFrame,analysis,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
   payload=composeNaturalResponseV29({payload,reasoning:conversationalReasoning,source});
@@ -270,9 +275,11 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=supervision.payload;
   customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
   const enterpriseReview={...supervision.review,quality_score:customerAudit.score,passed:Boolean(supervision.review?.passed&&customerAudit.passed),missing_tasks:customerAudit.missing_tasks||[],flags:[...new Set([...(supervision.review?.flags||[]),...(customerAudit.dose_claim_risk?["unsafe_dosage_claim"]:[]),...(customerAudit.stale_context_risk?["stale_context"]:[])])]};
+  const confidenceAssessment=evaluateConfidenceGatewayV30({payload,plan:autonomousCustomerPlan,source,results,audit:customerAudit,review:enterpriseReview,evidence,reasoning:conversationalReasoning});
+  payload=enforceConfidenceGatewayV30({payload,assessment:confidenceAssessment,reasoning:conversationalReasoning});
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=29;
+  next.v=30;
   next.dialogue_v29=updateDialogueStateV29({previous:state,next,analysis,message,source,payload,reasoning:conversationalReasoning});
   delete next.__v28_request_started_at;
   next.customer_brain_memory=mergeCustomerMemoryV27(state?.customer_brain_memory||{},customerFrame,next.turn);
@@ -324,6 +331,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   next.lead_score=lead.score;
   next.lead_temperature=lead.temperature;
   next.last_handoff_summary=handoffSummary.slice(0,1500);
+  next.customer_digital_twin_v30=mergeCustomerDigitalTwinV30(state?.customer_digital_twin_v30||{}, {frame:customerFrame,analysis,semanticFrame,profile:nextProfile,reasoning:conversationalReasoning,turn:next.turn});
 
   const persistentSnapshot=consolidatePersistentSnapshot({
     previous:priorPersistent,state:next,profile:nextProfile,analysis,message,source,results,responseGraph,decision,route:retrievalRoute
@@ -354,6 +362,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   let enterpriseTelemetry={recorded:false,mode:"disabled",reason:"not_attempted"};
   try{enterpriseTelemetry=await recordEnterpriseTurnV28(enterpriseEvent);}catch(error){enterpriseTelemetry={recorded:false,mode:"memory",reason:String(error?.message||"telemetry_failed").slice(0,120)};}
   trackConversationReasoningV29(conversationalReasoning,source);
+  const closedLoopOutcome=recordClosedLoopOutcomeV30({analysis,reasoning:conversationalReasoning,plan:autonomousCustomerPlan,assessment:confidenceAssessment,source,results});
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -391,6 +400,10 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       enterprise_retrieval:enterpriseRetrievalHealthV28(),
       enterprise_telemetry:enterpriseTelemetryHealthV28(),
       conversation_reasoning:conversationReasoningHealthV29(),
+      autonomous_customer_os:autonomousCustomerOSHealthV30(),
+      customer_digital_twin:customerDigitalTwinHealthV30(),
+      confidence_gateway:confidenceGatewayHealthV30(),
+      closed_loop_learning:closedLoopLearningHealthV30(),
       autonomous_actions:autonomousActionHealth(),
       self_learning:selfLearningHealth(),
       vision_intelligence:visionHealth(),
@@ -407,8 +420,12 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
-    enterprise_platform:{version:"29.0",conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    enterprise_platform:{version:"30.0",autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
     conversation_reasoning:{...conversationReasoningHealthV29(),current:conversationalReasoning},
+    autonomous_customer_os:{...autonomousCustomerOSHealthV30(),current_plan:autonomousCustomerPlan},
+    customer_digital_twin:{...customerDigitalTwinHealthV30(),current:customerDigitalTwinClientV30(next.customer_digital_twin_v30)},
+    confidence_gateway:{...confidenceGatewayHealthV30(),current:confidenceAssessment},
+    closed_loop_learning:{...closedLoopLearningHealthV30(),outcome:closedLoopOutcome,snapshot:closedLoopLearningSnapshotV30()},
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -460,7 +477,7 @@ async function searchCatalog(analysis,state,message,history){
 }
 
 
-async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null,semanticFrame=null}){
+async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null,semanticFrame=null,autonomousPlanV30=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
   if(!semanticFrame?.compound?.is_multi_intent && !shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn,image_count:images.length,semanticFrame}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
@@ -718,8 +735,8 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{semantic_frame:semanticFrame,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_mission:{...mission,tool_budget:semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
-      toolHandlers,images,allowedTools:humanTurn?.tool_policy?.allowed
+      context:{semantic_frame:semanticFrame,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      toolHandlers,images,allowedTools:constrainToolsWithPlanV30(humanTurn?.tool_policy?.allowed,autonomousPlanV30||{})
     });
     if(!result?.handled||!result.reply) return null;
     const products=enrichLiveProductsWithDossiers(clientProducts(result.products||[]).slice(0,8),{descriptionChars:900});
@@ -1130,10 +1147,14 @@ export async function POST(request){
   const agriculturalContext=analyzeAgriculturalRequest(message,{analysis,state,profile});
   const legacyHumanTurn=analyzeHumanConversationTurn(message,{analysis,state,profile,history,agriculturalContext,visionContext:visionFrame});
   const humanTurn=mergeHumanTurnWithSemanticFrame(legacyHumanTurn,semanticFrame);
+  const autonomousPlanV30=buildAutonomousCustomerPlanV30({message,analysis,semanticFrame,reasoning:conversationalReasoning,state,profile,cognition,hasImages:images.length>0,humanTurn});
+  state.__autonomous_customer_os_v30=autonomousPlanV30;
+  Object.defineProperty(analysis,"__autonomous_customer_os_v30",{value:autonomousPlanV30,enumerable:false,configurable:true});
   const turnState=isolateStateForCurrentTurn(state,humanTurn);
   turnState.__customer_brain_v27=customerFrame;
   turnState.__semantic_frame=semanticFrame;
   turnState.__conversation_reasoning_v29=conversationalReasoning;
+  turnState.__autonomous_customer_os_v30=autonomousPlanV30;
   turnState.__persistent_snapshot=state.__persistent_snapshot;
   turnState.__persistent_read=state.__persistent_read;
   turnState.__v28_request_started_at=state.__v28_request_started_at;
@@ -1225,7 +1246,7 @@ export async function POST(request){
   if(visionFrame?.has_visual_context || !isClearlyOffDomain(message)){
     try{
       const currentProductEarly=await resolveCurrentProduct(pageUrl,productContext);
-      const adaptive=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId,images,visionFrame,semanticFrame});
+      const adaptive=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:currentProductEarly,sessionId,images,visionFrame,semanticFrame,autonomousPlanV30});
       if(adaptive) return await makeResponse({
         payload:adaptive.payload,cors,sessionId,state,analysis,signals,profile,message,source:adaptive.source,
         results:adaptive.results,locale,cognition,retrieval:adaptive.retrieval,plan:adaptive.plan
@@ -1356,7 +1377,7 @@ export async function POST(request){
   }
 
   // V18 fallback retry: retained for resilience after deterministic context routing.
-  const neural=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId,images,visionFrame,semanticFrame});
+  const neural=await tryV22NeuralAgent({analysis,state:turnState,message,history,locale,profile,cognition,persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,currentProduct:await resolveCurrentProduct(pageUrl,productContext),sessionId,images,visionFrame,semanticFrame,autonomousPlanV30});
   if(neural){
     return await makeResponse({
       payload:neural.payload,cors,sessionId,state,analysis,signals,profile,message,
