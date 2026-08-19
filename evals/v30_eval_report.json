@@ -1,0 +1,670 @@
+{
+  "version": "30.0",
+  "generated_at": "2026-08-19T10:21:38.748Z",
+  "status": "pass",
+  "passed": 65,
+  "total": 65,
+  "categories": {
+    "orchestration": {
+      "passed": 12,
+      "total": 12
+    },
+    "safety_plan": {
+      "passed": 6,
+      "total": 6
+    },
+    "confidence_gateway": {
+      "passed": 7,
+      "total": 7
+    },
+    "digital_twin": {
+      "passed": 7,
+      "total": 7
+    },
+    "privacy": {
+      "passed": 3,
+      "total": 3
+    },
+    "stability": {
+      "passed": 30,
+      "total": 30
+    }
+  },
+  "results": [
+    {
+      "id": "plan_branches",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "get_business_fact"
+      }
+    },
+    {
+      "id": "plan_shipping",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "get_business_fact"
+      }
+    },
+    {
+      "id": "plan_contact",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "get_business_fact"
+      }
+    },
+    {
+      "id": "plan_product",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "search_catalog"
+      }
+    },
+    {
+      "id": "plan_compare",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "compare_product_dossiers"
+      }
+    },
+    {
+      "id": "plan_purchase",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "high",
+        "tool": "prepare_purchase_plan"
+      }
+    },
+    {
+      "id": "plan_diagnosis",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "medium",
+        "tool": "diagnose_agricultural_problem"
+      }
+    },
+    {
+      "id": "plan_dosage",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "high",
+        "tool": "get_product_dossier"
+      }
+    },
+    {
+      "id": "plan_availability",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "verify_live_product_truth"
+      }
+    },
+    {
+      "id": "plan_price",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "high",
+        "tool": "verify_live_product_truth"
+      }
+    },
+    {
+      "id": "plan_recommend",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "high",
+        "tool": "search_catalog"
+      }
+    },
+    {
+      "id": "plan_company",
+      "category": "orchestration",
+      "passed": true,
+      "detail": {
+        "mode": "deterministic_resilient",
+        "risk": "low",
+        "tool": "get_business_fact"
+      }
+    },
+    {
+      "id": "risk_12",
+      "category": "safety_plan",
+      "passed": true,
+      "detail": {
+        "risk": {
+          "level": "high",
+          "score": 7,
+          "dosage": true,
+          "diagnosis": false,
+          "live_commerce": false,
+          "private_data": false,
+          "regulated": true,
+          "requires_human_on_failure": true,
+          "semantic_confidence": 0.55
+        }
+      }
+    },
+    {
+      "id": "risk_13",
+      "category": "safety_plan",
+      "passed": true,
+      "detail": {
+        "risk": {
+          "level": "high",
+          "score": 7,
+          "dosage": true,
+          "diagnosis": false,
+          "live_commerce": false,
+          "private_data": false,
+          "regulated": true,
+          "requires_human_on_failure": true,
+          "semantic_confidence": 0.55
+        }
+      }
+    },
+    {
+      "id": "risk_14",
+      "category": "safety_plan",
+      "passed": true,
+      "detail": {
+        "risk": {
+          "level": "high",
+          "score": 7,
+          "dosage": true,
+          "diagnosis": false,
+          "live_commerce": false,
+          "private_data": false,
+          "regulated": true,
+          "requires_human_on_failure": true,
+          "semantic_confidence": 0.55
+        }
+      }
+    },
+    {
+      "id": "risk_15",
+      "category": "safety_plan",
+      "passed": true,
+      "detail": {
+        "risk": {
+          "level": "high",
+          "score": 7,
+          "dosage": true,
+          "diagnosis": false,
+          "live_commerce": false,
+          "private_data": false,
+          "regulated": true,
+          "requires_human_on_failure": true,
+          "semantic_confidence": 0.55
+        }
+      }
+    },
+    {
+      "id": "risk_16",
+      "category": "safety_plan",
+      "passed": true,
+      "detail": {
+        "risk": {
+          "level": "high",
+          "score": 3,
+          "dosage": false,
+          "diagnosis": false,
+          "live_commerce": false,
+          "private_data": false,
+          "regulated": true,
+          "requires_human_on_failure": true,
+          "semantic_confidence": 0.55
+        }
+      }
+    },
+    {
+      "id": "risk_17",
+      "category": "safety_plan",
+      "passed": true,
+      "detail": {
+        "risk": {
+          "level": "high",
+          "score": 3,
+          "dosage": false,
+          "diagnosis": false,
+          "live_commerce": false,
+          "private_data": false,
+          "regulated": true,
+          "requires_human_on_failure": true,
+          "semantic_confidence": 0.55
+        }
+      }
+    },
+    {
+      "id": "gate_dose_18",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "block",
+        "score": 25
+      }
+    },
+    {
+      "id": "gate_dose_19",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "block",
+        "score": 25
+      }
+    },
+    {
+      "id": "gate_dose_20",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "block",
+        "score": 25
+      }
+    },
+    {
+      "id": "gate_dose_21",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "block",
+        "score": 25
+      }
+    },
+    {
+      "id": "gate_safe_branches",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "answer",
+        "score": 96
+      }
+    },
+    {
+      "id": "gate_safe_contact",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "answer",
+        "score": 96
+      }
+    },
+    {
+      "id": "gate_safe_acknowledgment",
+      "category": "confidence_gateway",
+      "passed": true,
+      "detail": {
+        "decision": "answer",
+        "score": 96
+      }
+    },
+    {
+      "id": "twin_emirate",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 2
+      }
+    },
+    {
+      "id": "twin_crop",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 3
+      }
+    },
+    {
+      "id": "twin_cultivation",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 4
+      }
+    },
+    {
+      "id": "twin_category",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 5
+      }
+    },
+    {
+      "id": "twin_quantity",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 6
+      }
+    },
+    {
+      "id": "twin_budget_aed",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 7
+      }
+    },
+    {
+      "id": "twin_product_reference",
+      "category": "digital_twin",
+      "passed": true,
+      "detail": {
+        "facts": 8
+      }
+    },
+    {
+      "id": "privacy_32",
+      "category": "privacy",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "privacy_33",
+      "category": "privacy",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "privacy_34",
+      "category": "privacy",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_0",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_1",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_2",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_3",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_4",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_5",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_6",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_7",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_8",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_9",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_10",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_11",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_12",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_13",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_14",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_15",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_16",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_17",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_18",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_19",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_20",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_21",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_22",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_23",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_24",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_25",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_26",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_27",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_28",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 4,
+        "tasks": 4
+      }
+    },
+    {
+      "id": "stability_29",
+      "category": "stability",
+      "passed": true,
+      "detail": {
+        "agents": 5,
+        "tasks": 4
+      }
+    }
+  ]
+}
