@@ -28,7 +28,11 @@ for(const path of jsonFiles)JSON.parse(readFileSync(path,"utf8"));
 const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
-if(health.mode!=="conversational_reasoning_natural_language_os_v29")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.mode!=="neural_autonomous_customer_os_v30")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.autonomous_customer_os?.version!=="30.0"||health.autonomous_customer_os?.ready!==true)throw new Error("V30 autonomous customer OS missing");
+if(health.customer_digital_twin?.version!=="30.0"||health.customer_digital_twin?.ready!==true)throw new Error("V30 customer digital twin missing");
+if(health.confidence_gateway?.version!=="30.0"||health.confidence_gateway?.ready!==true)throw new Error("V30 confidence gateway missing");
+if(health.closed_loop_learning?.version!=="30.0"||health.closed_loop_learning?.ready!==true)throw new Error("V30 closed-loop learning missing");
 if(health.conversation_reasoning?.version!=="29.0"||health.conversation_reasoning?.ready!==true)throw new Error("V29 conversational reasoning core missing");
 if(health.autonomous_actions?.version!=="25.0")throw new Error("V25 autonomous action health missing");
 if(health.self_learning?.version!=="25.0")throw new Error("V25 self-learning health missing");
@@ -42,8 +46,8 @@ if(health.enterprise_retrieval?.version!=="28.0"||health.enterprise_retrieval?.l
 if(health.enterprise_telemetry?.version!=="28.0")throw new Error("V28 enterprise telemetry missing");
 if(health.admin_auth?.version!=="28.0")throw new Error("V28 admin auth missing");
 
-const ui=readFileSync(join(root,"ODOO_CHAT_UI_V29_CONVERSATIONAL_REASONING_OS.txt"),"utf8");
-for(const marker of ["UI_VERSION='29.0.0'","mig_ai_session_id_v29","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply","function appendSafeInline"]){
+const ui=readFileSync(join(root,"ODOO_CHAT_UI_V30_NEURAL_AUTONOMOUS_CUSTOMER_OS.txt"),"utf8");
+for(const marker of ["UI_VERSION='30.0.0'","mig_ai_session_id_v30","mig_ai_conversation_state_v30","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply","function appendSafeInline"]){
   if(!ui.includes(marker))throw new Error(`UI contract missing: ${marker}`);
 }
 if((ui.match(/<!\[CDATA\[/g)||[]).length!==(ui.match(/\]\]>/g)||[]).length)throw new Error("Odoo UI CDATA is unbalanced");
@@ -57,5 +61,7 @@ const evalReport=JSON.parse(readFileSync(join(root,"evals","v28_eval_report.json
 if(evalReport.status!=="pass"||evalReport.passed!==evalReport.total)throw new Error("V28 eval report is not passing");
 const conversationEvalReport=JSON.parse(readFileSync(join(root,"evals","v29_eval_report.json"),"utf8"));
 if(conversationEvalReport.status!=="pass"||conversationEvalReport.passed!==conversationEvalReport.total)throw new Error("V29 conversation eval report is not passing");
+const autonomousEvalReport=JSON.parse(readFileSync(join(root,"evals","v30_eval_report.json"),"utf8"));
+if(autonomousEvalReport.status!=="pass"||autonomousEvalReport.passed!==autonomousEvalReport.total)throw new Error("V30 autonomous customer OS eval report is not passing");
 
 console.log(`MIG FARM release validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, V${health.version}`);
