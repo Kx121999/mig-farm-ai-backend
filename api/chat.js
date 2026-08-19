@@ -97,9 +97,11 @@ import {
 } from "../lib/semantic_human_brain.js";
 import { handleAutonomousAction, autonomousActionHealth } from "../lib/autonomous_action_os.js";
 import { evaluateAndRecordTurn, selfLearningHealth } from "../lib/self_learning_os.js";
+import { detectCurrentTurnPriorityV26, quarantineCurrentTurnStateV26, currentTurnRouterHealth } from "../lib/current_turn_router_v26.js";
+import { searchConversationKnowledgeV26, conversationKnowledgeHealth } from "../lib/conversation_knowledge_v26.js";
 
-const VERSION="25.0.0";
-const MODE="autonomous_sales_learning_agent_os_v25";
+const VERSION="26.0.0";
+const MODE="github_knowledge_natural_conversation_os_v26";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -250,7 +252,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceResponseQuality(applyCriticGuard(payload,review));
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=25;
+  next.v=26;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
   const productContextUpdate=evolveProductContext({previous:state,next,message,analysis,source,results,payload});
@@ -352,6 +354,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       product_truth_os:productTruthHealth(),
       product_context_intelligence:productContextHealth(),
       semantic_human_brain:semanticHumanBrainHealth(),
+      current_turn_router:currentTurnRouterHealth(),
+      conversation_knowledge:conversationKnowledgeHealth(),
       autonomous_actions:autonomousActionHealth(),
       self_learning:selfLearningHealth(),
       vision_intelligence:visionHealth(),
@@ -363,6 +367,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     autonomous_actions:{...autonomousActionHealth(),current_status:payload?.autonomous_action?.status||next?.autonomous_action?.status||"idle"},
     product_context_intelligence:{...productContextHealth(),event:productContextUpdate.event,active:Boolean(productContextUpdate.active),comparison_active:Boolean(productContextUpdate.comparison)},
     semantic_human_brain:{...semanticHumanBrainHealth(),frame:semanticFrameForClient(semanticFrame)},
+    current_turn_router:currentTurnRouterHealth(),
+    conversation_knowledge:conversationKnowledgeHealth(),
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -550,8 +556,10 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       const query=cleanText(args?.query||message,700);
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
       const toolAnalysis=analyzeTurn(query,state,history,locale);
-      const items=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
-      return {query,items:items.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score}))};
+      const managed=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
+      const deep=searchConversationKnowledgeV26(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||""});
+      const items=[...managed.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score})),...deep.items].slice(0,limit);
+      return {query,items,deep_knowledge:{version:"26.0",packs_scanned:deep.packs_scanned||[],intent:deep.intent||""}};
     },
     search_uae_agriculture:async args=>{
       const query=cleanText(args?.query||message,700);
@@ -1044,6 +1052,19 @@ export async function POST(request){
 
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
+
+  // V26 current-turn sovereignty: explicit social and business questions are answered
+  // before product locks, dosage guards, neural tools, or stale agricultural memory.
+  const priorityTurn=detectCurrentTurnPriorityV26({message,analysis,semanticFrame,hasImages:images.length>0});
+  if(priorityTurn){
+    const priorityAnalysis={...analysis,intent:priorityTurn.intent,semantic_intent:priorityTurn.intent,semantic_intents:[priorityTurn.intent]};
+    const priorityState=quarantineCurrentTurnStateV26(turnState);
+    const priorityDirect=directReply(priorityAnalysis,priorityState,message,sessionId);
+    if(priorityDirect)return await makeResponse({
+      payload:{reply:priorityDirect.reply,display_reply:priorityDirect.reply,quick_replies:priorityDirect.quick_replies||[],suggested_actions:priorityDirect.actions||[],escalation:priorityDirect.escalation,current_turn_router:priorityTurn,human_conversation:{...humanTurn,stale_context_quarantine:true}},
+      cors,sessionId,state:priorityState,analysis:priorityAnalysis,signals,profile,message,source:priorityDirect.source,locale,cognition
+    });
+  }
 
   // V25: short human/social questions are deterministic and current-turn only.
   // They must never enter neural/agronomy routing with an old product or dose context.

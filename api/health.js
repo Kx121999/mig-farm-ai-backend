@@ -24,15 +24,18 @@ import { productContextHealth } from "../lib/product_context_intelligence.js";
 import { semanticHumanBrainHealth } from "../lib/semantic_human_brain.js";
 import { autonomousActionHealth } from "../lib/autonomous_action_os.js";
 import { selfLearningHealth } from "../lib/self_learning_os.js";
+import { currentTurnRouterHealth } from "../lib/current_turn_router_v26.js";
+import { conversationKnowledgeHealth } from "../lib/conversation_knowledge_v26.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V25 Autonomous Sales & Learning Agent OS",
-    version:"25.0.0",
-    mode:"autonomous_sales_learning_agent_os_v25",
+    service:"MIG FARM V26 GitHub Knowledge & Natural Conversation OS",
+    version:"26.0.0",
+    mode:"github_knowledge_natural_conversation_os_v26",
     features:[
+      "400mb_github_sharded_conversation_knowledge","222k_grounded_conversation_cases","23_browser_upload_safe_knowledge_packs","manifest_routed_knowledge_retrieval","current_turn_sovereignty_router","business_question_before_product_context","explicit_location_language_understanding","stale_product_and_dosage_quarantine","natural_business_social_replies","dialect_question_lattice","product_agriculture_business_coverage",
       "explicit_confirmation_action_os","server_authoritative_action_state","odoo_allowlisted_jsonrpc_gateway","draft_quotation_creation","crm_lead_creation","phone_verified_order_tracking","action_idempotency","safe_action_failure","no_automatic_order_confirmation","no_payment_capture","privacy_safe_continuous_evaluation","multi_intent_completion_scoring","evidence_grounding_scoring","action_outcome_learning","hashed_knowledge_gap_fingerprints","admin_protected_learning_endpoint","identity_question_direct_route","stale_dose_context_quarantine","structured_safe_reply_renderer","mixed_direction_product_cards","comparison_answer_preservation",
       "semantic_human_brain","meaning_before_routing","egyptian_dialect_understanding","emirati_gulf_dialect_understanding","levantine_dialect_understanding","msa_and_english_understanding","arabizi_normalization","arabic_english_code_switching","multi_intent_decomposition","multi_intent_answer_completion","pronoun_product_resolution","ordinal_product_resolution","correction_topic_supersession","semantic_context_isolation","one_question_clarification_gate","evidence_task_planner","unified_tool_budget","natural_dialect_response_contract",
       "server_authoritative_active_product_memory","refresh_safe_product_context","same_category_product_switch_detection","explicit_product_mention_binding","visible_ordinal_product_binding","multi_product_comparison_context","comparison_card_selection","dosage_evidence_guard","suitability_evidence_guard","product_context_ttl","product_context_trace","multimodal_image_input","product_context_lock","product_card_bound_actions","generic_product_detail_agronomy_guard","selected_product_context_transport","bound_product_live_truth","per_product_details_button","recognition_before_identity_guard","forced_product_recognition_preflight","medium_candidate_confirmation","retake_loop_guard","different_image_detector","image_revision_tracking","fuzzy_visual_text_ranking","visual_intent_contract","intent_aware_retake_guidance","deterministic_visual_next_action","visual_availability_precision","visual_price_precision","visual_identity_before_live_commerce","visual_guidance_actions","deterministic_visual_live_fallback","active_visual_context_persistence","visual_followup_image_reuse","vision_first_routing","vision_tool_whitelist_enforcement","visual_grounding_retry","generic_visual_fallback_block","product_visual_recognition","readable_label_text_to_catalog_match","sku_barcode_visual_matching","visual_product_identity_guard","multi_image_evidence_fusion","plant_visual_triage","crop_visual_diagnostic_atlas","observation_before_inference","one_best_next_photo","image_quality_retake_protocol","pesticide_label_visual_claim_guard","visual_dosage_hallucination_guard","unknown_product_visual_mode","image_prompt_injection_guard","visual_to_live_odoo_verification",
@@ -57,7 +60,7 @@ export async function GET(){
       "mig_farm_seeds_only","page_product_context","safe_pesticide_and_fertilizer_guidance","github_managed_knowledge",
       "privacy_safe_learning_telemetry"
     ],
-    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth(),product_intelligence:productIntelligenceHealth(),product_truth_os:productTruthHealth(),product_context_intelligence:productContextHealth(),semantic_human_brain:semanticHumanBrainHealth(),vision_intelligence:visionHealth()},
+    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),conversation_knowledge:conversationKnowledgeHealth(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth(),product_intelligence:productIntelligenceHealth(),product_truth_os:productTruthHealth(),product_context_intelligence:productContextHealth(),semantic_human_brain:semanticHumanBrainHealth(),vision_intelligence:visionHealth()},
     cognition:cognitionHealth(),
     hybrid_brain:hybridBrainHealth(),
     autonomous_commerce:autonomousCommerceHealth(),
@@ -72,13 +75,15 @@ export async function GET(){
     product_truth_os:productTruthHealth(),
     product_context_intelligence:productContextHealth(),
     semantic_human_brain:semanticHumanBrainHealth(),
+    current_turn_router:currentTurnRouterHealth(),
+    conversation_knowledge:conversationKnowledgeHealth(),
     autonomous_actions:autonomousActionHealth(),
     self_learning:selfLearningHealth(),
     vision_intelligence:visionHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v25:false},
+    persistent_store:{...persistence,required_for_v26:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
