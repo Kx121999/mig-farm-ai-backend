@@ -97,11 +97,14 @@ import {
 } from "../lib/semantic_human_brain.js";
 import { handleAutonomousAction, autonomousActionHealth } from "../lib/autonomous_action_os.js";
 import { evaluateAndRecordTurn, selfLearningHealth } from "../lib/self_learning_os.js";
-import { detectCurrentTurnPriorityV26, quarantineCurrentTurnStateV26, currentTurnRouterHealth } from "../lib/current_turn_router_v26.js";
-import { searchConversationKnowledgeV26, conversationKnowledgeHealth } from "../lib/conversation_knowledge_v26.js";
+import { detectCurrentTurnPriorityV27, quarantineCurrentTurnStateV27, currentTurnRouterHealthV27 } from "../lib/current_turn_router_v27.js";
+import { buildCustomerBrainFrameV27, customerBrainHealthV27 } from "../lib/customer_brain_v27.js";
+import { mergeCustomerMemoryV27, customerMemoryHealthV27 } from "../lib/customer_memory_v27.js";
+import { auditCustomerResponseV27, enforceCustomerResponseV27, responseAuditorHealthV27 } from "../lib/response_auditor_v27.js";
+import { searchCustomerKnowledgeV27, customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
 
-const VERSION="26.0.0";
-const MODE="github_knowledge_natural_conversation_os_v26";
+const VERSION="27.0.0";
+const MODE="customer_brain_decision_os_v27";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -238,6 +241,7 @@ function sourceNeedsLearning(source=""){
 
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
   const semanticFrame=state?.__semantic_frame||null;
+  const customerFrame=state?.__customer_brain_v27||buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
   payload=enforceResponseQuality(payload);
   const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
   const executionPlan=plan||buildHybridPlan({message,analysis,cognition:frame,state,profile});
@@ -249,10 +253,13 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
 
   const evidence=evidenceSummary({source,payload,results,analysis});
   const review=criticReview({payload,source,results,evidence,cognition:frame,retrieval:retrievalBundle,plan:executionPlan});
-  payload=enforceResponseQuality(applyCriticGuard(payload,review));
+  payload=enforceCustomerResponseV27(enforceResponseQuality(applyCriticGuard(payload,review)),customerFrame);
+  const customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=26;
+  next.v=27;
+  next.customer_brain_memory=mergeCustomerMemoryV27(state?.customer_brain_memory||{},customerFrame,next.turn);
+  delete next.__customer_brain_v27;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
   if(activeVisual) next.active_visual_context=activeVisual; else delete next.active_visual_context;
   const productContextUpdate=evolveProductContext({previous:state,next,message,analysis,source,results,payload});
@@ -354,8 +361,11 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       product_truth_os:productTruthHealth(),
       product_context_intelligence:productContextHealth(),
       semantic_human_brain:semanticHumanBrainHealth(),
-      current_turn_router:currentTurnRouterHealth(),
-      conversation_knowledge:conversationKnowledgeHealth(),
+      current_turn_router:currentTurnRouterHealthV27(),
+      customer_brain:customerBrainHealthV27(),
+      customer_memory:customerMemoryHealthV27(),
+      response_auditor:responseAuditorHealthV27(),
+      conversation_knowledge:customerKnowledgeHealthV27(),
       autonomous_actions:autonomousActionHealth(),
       self_learning:selfLearningHealth(),
       vision_intelligence:visionHealth(),
@@ -367,8 +377,11 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     autonomous_actions:{...autonomousActionHealth(),current_status:payload?.autonomous_action?.status||next?.autonomous_action?.status||"idle"},
     product_context_intelligence:{...productContextHealth(),event:productContextUpdate.event,active:Boolean(productContextUpdate.active),comparison_active:Boolean(productContextUpdate.comparison)},
     semantic_human_brain:{...semanticHumanBrainHealth(),frame:semanticFrameForClient(semanticFrame)},
-    current_turn_router:currentTurnRouterHealth(),
-    conversation_knowledge:conversationKnowledgeHealth(),
+    current_turn_router:currentTurnRouterHealthV27(),
+    customer_brain:{...customerBrainHealthV27(),frame:customerFrame},
+    customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
+    response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
+    conversation_knowledge:customerKnowledgeHealthV27(),
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -557,9 +570,9 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
       const toolAnalysis=analyzeTurn(query,state,history,locale);
       const managed=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
-      const deep=await searchConversationKnowledgeV26(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||""});
+      const deep=searchCustomerKnowledgeV27(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||"",frame:state?.__customer_brain_v27||null});
       const items=[...managed.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score})),...deep.items].slice(0,limit);
-      return {query,items,deep_knowledge:{version:"26.0",packs_scanned:deep.packs_scanned||[],intent:deep.intent||""}};
+      return {query,items,deep_knowledge:{version:"27.0",packs_scanned:deep.packs_scanned||[],frame:deep.frame||{}}};
     },
     search_uae_agriculture:async args=>{
       const query=cleanText(args?.query||message,700);
@@ -993,6 +1006,43 @@ async function multiIntentShippingProducts({analysis,state,message,history,local
   });
 }
 
+function compoundLabel(intent){
+  return {branches:"الفروع",contact:"التواصل",hours:"الدوام",shipping:"التوصيل",payment:"الدفع",returns:"الاسترجاع",identity:"التعريف",social:"الرد",thanks:"الرد",price:"السعر",availability:"التوفر",product_details:"التفاصيل",product_search:"الاختيارات",purchase:"الطلب"}[intent]||intent;
+}
+function compactCompoundText(value="",intent=""){
+  let text=cleanText(value,1200).replace(/\n{2,}/g,"\n");
+  if(intent==="branches")text=text.replace(/\s*تحب بيانات (?:أنهي|أي) فرع[؟?.]*/i,"");
+  return text.replace(/[؟?]+/g,".").trim();
+}
+function isExplicitActionCommandV27(message=""){return /(?:عرض سعر|كوتيشن|quotation|quote|جهز(?:لي| لي)? (?:عرض|الطلب|السله|السلة)|حضّر(?:لي| لي)? الطلب|prepare (?:a )?quote|عايز (?:اطلب|أطلب|اشتري|أشتري)|ابغي (?:اطلب|أطلب)|أبغي (?:اطلب|أطلب)|ابي (?:اطلب|أطلب)|أبي (?:اطلب|أطلب)|buy now|order this)/i.test(cleanText(message,1000));}
+async function executeCustomerBrainCompoundV27({customerFrame,analysis,state,message,history,locale,sessionId}){
+  if(!customerFrame?.can_execute_deterministically)return null;
+  const tasks=customerFrame.tasks||[],lines=[],actions=[],handled=new Set();let liveResults=[];
+  const business=new Set(["branches","contact","hours","shipping","payment","returns","identity","social","thanks"]);
+  for(const task of tasks){
+    if(!business.has(task.intent))continue;
+    const direct=directReply({...analysis,intent:task.intent,semantic_intent:task.intent,semantic_intents:[task.intent]},quarantineCurrentTurnStateV27(state),message,sessionId);
+    if(direct?.reply){lines.push(`**${compoundLabel(task.intent)}:** ${compactCompoundText(direct.reply,task.intent)}`);actions.push(...(direct.actions||[]));handled.add(task.intent);}
+  }
+  const productTasks=tasks.filter(x=>["price","availability","product_details","product_search","purchase"].includes(x.intent));
+  if(productTasks.length){
+    const identifier=cleanText(customerFrame.entities?.sku||customerFrame.entities?.product_reference||message,600);
+    try{liveResults=clientProducts(await searchProducts(identifier||message,history,10)).slice(0,6);}catch(error){console.error("V27 compound live product lookup failed",error?.message);}
+    const first=liveResults[0]||null,name=cleanText(first?.name||identifier||"المنتج",300);
+    for(const task of productTasks){
+      if(task.intent==="price")lines.push(`**السعر:** ${first?.price!==null&&first?.price!==undefined&&String(first.price)!==""?`${name}: ${first.price} ${first.currency||"AED"}.`:`السعر الحالي لـ ${name} محتاج مراجعة Odoo Live؛ مش هستخدم سعر قديم.`}`);
+      else if(task.intent==="availability")lines.push(`**التوفر:** ${first?.availability?`${name}: ${cleanText(first.availability,140)}.`:`التوفر الحالي لـ ${name} محتاج مراجعة Odoo Live؛ مش هخمن المخزون.`}`);
+      else if(task.intent==="product_details")lines.push(`**التفاصيل:** ${first?.description?`${name}: ${cleanText(first.description,650)}`:`ثبت اسم المنتج أو SKU أولًا عشان أجيب ملفه الصحيح بدون خلط.`}`);
+      else if(task.intent==="product_search")lines.push(`**الاختيارات:** ${liveResults.length?`لقيت ${liveResults.length} خيارات من المتجر الحي وظهرتها تحت.`:`ما قدرتش أثبت نتيجة حية مطابقة، فمش هعرض منتج عشوائي.`}`);
+      else if(task.intent==="purchase")lines.push(`**الطلب:** ${liveResults.length?`أقدر أكمّل اختيار ${name} بعد تحديد الكمية، لكن مش هقول إن الطلب تم قبل تأكيد التنفيذ.`:`لازم أثبت المنتج والكمية قبل تجهيز خطوة الشراء.`}`);
+      handled.add(task.intent);
+    }
+  }
+  if(handled.size!==tasks.length||!lines.length)return null;
+  const reply=lines.join("\n\n");
+  return {payload:{reply,display_reply:reply,results:liveResults,quick_replies:liveResults.length?salesQuickReplies({category:analysis?.category?.key||state?.category||"",stage:"consider",results:liveResults,profile:state?.customer_profile||{}}):[],suggested_actions:actions,multi_intent:true,customer_brain_execution:{version:"27.0",ordered_tasks:tasks.map(x=>x.intent),completed_tasks:[...handled],complete:true}},results:liveResults,source:"v27_customer_brain_compound"};
+}
+
 export async function OPTIONS(request){
   const origin=request.headers.get("origin")||"";
   if(!isAllowedOrigin(origin)) return new Response(null,{status:403});
@@ -1032,6 +1082,8 @@ export async function POST(request){
   const semanticFrame=buildSemanticFrame({message,analysis,state,history,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts});
   enrichAnalysisWithSemanticFrame(analysis,semanticFrame);
   state.__semantic_frame=semanticFrame;
+  const customerFrame=buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
+  state.__customer_brain_v27=customerFrame;
   const signals=extractCustomerSignals(message,analysis,state);
   const profile=mergeCustomerProfile(existingProfile,signals,analysis,state);
   const cognition=buildCognitiveFrame({message,analysis,state,profile,history});
@@ -1040,6 +1092,7 @@ export async function POST(request){
   const legacyHumanTurn=analyzeHumanConversationTurn(message,{analysis,state,profile,history,agriculturalContext,visionContext:visionFrame});
   const humanTurn=mergeHumanTurnWithSemanticFrame(legacyHumanTurn,semanticFrame);
   const turnState=isolateStateForCurrentTurn(state,humanTurn);
+  turnState.__customer_brain_v27=customerFrame;
   const salesTurn=analyzeSalesConversation(message,{analysis,state:turnState,profile,history,agriculturalContext,humanTurn});
   const conversionDecision=buildConversionDecision({message,analysis,profile,state:turnState,history,humanTurn,salesTurn,agriculturalContext});
   salesTurn.conversion_decision=conversionDecision;
@@ -1053,12 +1106,17 @@ export async function POST(request){
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
 
-  // V26 current-turn sovereignty: explicit social and business questions are answered
+  // V27: execute supported compound business + product questions in the user's
+  // original order before a single-intent router or a stale product lock can win.
+  const compound=isExplicitActionCommandV27(message)?null:await executeCustomerBrainCompoundV27({customerFrame,analysis,state:turnState,message,history,locale,sessionId});
+  if(compound)return await makeResponse({payload:compound.payload,cors,sessionId,state:turnState,analysis,signals,profile,message,source:compound.source,results:compound.results,locale,cognition});
+
+  // V27 current-turn sovereignty: explicit social and business questions are answered
   // before product locks, dosage guards, neural tools, or stale agricultural memory.
-  const priorityTurn=detectCurrentTurnPriorityV26({message,analysis,semanticFrame,hasImages:images.length>0});
+  const priorityTurn=detectCurrentTurnPriorityV27({message,analysis,semanticFrame,hasImages:images.length>0});
   if(priorityTurn){
     const priorityAnalysis={...analysis,intent:priorityTurn.intent,semantic_intent:priorityTurn.intent,semantic_intents:[priorityTurn.intent]};
-    const priorityState=quarantineCurrentTurnStateV26(turnState);
+    const priorityState=quarantineCurrentTurnStateV27(turnState);
     const priorityDirect=directReply(priorityAnalysis,priorityState,message,sessionId);
     if(priorityDirect)return await makeResponse({
       payload:{reply:priorityDirect.reply,display_reply:priorityDirect.reply,quick_replies:priorityDirect.quick_replies||[],suggested_actions:priorityDirect.actions||[],escalation:priorityDirect.escalation,current_turn_router:priorityTurn,human_conversation:{...humanTurn,stale_context_quarantine:true}},
@@ -1358,4 +1416,3 @@ ${checks}`:""}${question?`
 
   return await makeResponse({payload:{reply:pick(TONE.fallbackAr,`${sessionId}:${message}`),quick_replies:["منتج","شحن","فرع","خدمة"],suggested_actions:[buildWhatsAppHandoff({profile,state,analysis,message})],escalation:true,page_context:{page_title:pageTitle,page_url:pageUrl},knowledge_stats:knowledgeStats()},cors,sessionId,state,analysis,signals,profile,message,source:"safe_human_fallback",locale,retrieval:hybridRetrieval});
 }
-

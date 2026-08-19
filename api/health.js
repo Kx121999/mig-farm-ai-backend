@@ -24,17 +24,21 @@ import { productContextHealth } from "../lib/product_context_intelligence.js";
 import { semanticHumanBrainHealth } from "../lib/semantic_human_brain.js";
 import { autonomousActionHealth } from "../lib/autonomous_action_os.js";
 import { selfLearningHealth } from "../lib/self_learning_os.js";
-import { currentTurnRouterHealth } from "../lib/current_turn_router_v26.js";
-import { conversationKnowledgeHealth } from "../lib/conversation_knowledge_v26.js";
+import { currentTurnRouterHealthV27 } from "../lib/current_turn_router_v27.js";
+import { customerBrainHealthV27 } from "../lib/customer_brain_v27.js";
+import { customerMemoryHealthV27 } from "../lib/customer_memory_v27.js";
+import { responseAuditorHealthV27 } from "../lib/response_auditor_v27.js";
+import { customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V26 GitHub Knowledge & Natural Conversation OS",
-    version:"26.0.0",
-    mode:"github_knowledge_natural_conversation_os_v26",
+    service:"MIG FARM V27 Customer Brain & Decision OS",
+    version:"27.0.0",
+    mode:"customer_brain_decision_os_v27",
     features:[
+      "400mb_customer_brain_decision_knowledge","ordered_multi_intent_execution","customer_journey_scenarios","ethical_objection_resolution","product_decision_graph","agricultural_decision_cases","response_error_corrections","pre_send_response_auditor","multi_intent_completion_check","one_question_enforcement","privacy_bounded_customer_memory","dialect_and_goal_memory","topic_switch_memory_guard","compound_business_product_answer","self_evaluating_response_contract",
       "400mb_github_sharded_conversation_knowledge","222k_grounded_conversation_cases","23_browser_upload_safe_knowledge_packs","manifest_routed_knowledge_retrieval","current_turn_sovereignty_router","business_question_before_product_context","explicit_location_language_understanding","stale_product_and_dosage_quarantine","natural_business_social_replies","dialect_question_lattice","product_agriculture_business_coverage",
       "explicit_confirmation_action_os","server_authoritative_action_state","odoo_allowlisted_jsonrpc_gateway","draft_quotation_creation","crm_lead_creation","phone_verified_order_tracking","action_idempotency","safe_action_failure","no_automatic_order_confirmation","no_payment_capture","privacy_safe_continuous_evaluation","multi_intent_completion_scoring","evidence_grounding_scoring","action_outcome_learning","hashed_knowledge_gap_fingerprints","admin_protected_learning_endpoint","identity_question_direct_route","stale_dose_context_quarantine","structured_safe_reply_renderer","mixed_direction_product_cards","comparison_answer_preservation",
       "semantic_human_brain","meaning_before_routing","egyptian_dialect_understanding","emirati_gulf_dialect_understanding","levantine_dialect_understanding","msa_and_english_understanding","arabizi_normalization","arabic_english_code_switching","multi_intent_decomposition","multi_intent_answer_completion","pronoun_product_resolution","ordinal_product_resolution","correction_topic_supersession","semantic_context_isolation","one_question_clarification_gate","evidence_task_planner","unified_tool_budget","natural_dialect_response_contract",
@@ -60,7 +64,7 @@ export async function GET(){
       "mig_farm_seeds_only","page_product_context","safe_pesticide_and_fertilizer_guidance","github_managed_knowledge",
       "privacy_safe_learning_telemetry"
     ],
-    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),conversation_knowledge:conversationKnowledgeHealth(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth(),product_intelligence:productIntelligenceHealth(),product_truth_os:productTruthHealth(),product_context_intelligence:productContextHealth(),semantic_human_brain:semanticHumanBrainHealth(),vision_intelligence:visionHealth()},
+    knowledge:{static:knowledgeStats(),github:githubKnowledgeStatus(),conversation_knowledge:customerKnowledgeHealthV27(),rag:semanticRagHealth(),response_graph:knowledgeGraphHealth(),agricultural_master:agriculturalMasterHealth(),product_intelligence:productIntelligenceHealth(),product_truth_os:productTruthHealth(),product_context_intelligence:productContextHealth(),semantic_human_brain:semanticHumanBrainHealth(),vision_intelligence:visionHealth()},
     cognition:cognitionHealth(),
     hybrid_brain:hybridBrainHealth(),
     autonomous_commerce:autonomousCommerceHealth(),
@@ -75,15 +79,18 @@ export async function GET(){
     product_truth_os:productTruthHealth(),
     product_context_intelligence:productContextHealth(),
     semantic_human_brain:semanticHumanBrainHealth(),
-    current_turn_router:currentTurnRouterHealth(),
-    conversation_knowledge:conversationKnowledgeHealth(),
+    current_turn_router:currentTurnRouterHealthV27(),
+    customer_brain:customerBrainHealthV27(),
+    customer_memory:customerMemoryHealthV27(),
+    response_auditor:responseAuditorHealthV27(),
+    conversation_knowledge:customerKnowledgeHealthV27(),
     autonomous_actions:autonomousActionHealth(),
     self_learning:selfLearningHealth(),
     vision_intelligence:visionHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v26:false},
+    persistent_store:{...persistence,required_for_v27:false},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
