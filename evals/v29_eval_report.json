@@ -1,0 +1,1023 @@
+{
+  "version": "29.0",
+  "generated_at": "2026-08-19T10:03:52.205Z",
+  "status": "pass",
+  "passed": 63,
+  "total": 63,
+  "categories": {
+    "branches": 11,
+    "crops": 22,
+    "cultivation": 13,
+    "product_reference": 17
+  },
+  "results": [
+    {
+      "id": "branch_العين_0",
+      "message": "العين",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_العين_1",
+      "message": "عين",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_العين_2",
+      "message": "فرع العين",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_العين_3",
+      "message": "3ain",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "expected_location"
+    },
+    {
+      "id": "branch_العين_4",
+      "message": "alain",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "expected_location"
+    },
+    {
+      "id": "branch_العين_5",
+      "message": "al ain",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "expected_location"
+    },
+    {
+      "id": "branch_الشارقة_0",
+      "message": "الشارقه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_الشارقة_1",
+      "message": "الشارقة",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_الشارقة_2",
+      "message": "شارقة",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_الشارقة_3",
+      "message": "فرع الشارقه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "branch_الشارقة_4",
+      "message": "sharjah",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "branches",
+      "resolution": "expected_location"
+    },
+    {
+      "id": "crop_cucumber_0",
+      "message": "خيار",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "crop_cucumber_1",
+      "message": "5yar",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_cucumber_2",
+      "message": "khyar",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_cucumber_3",
+      "message": "cucumber",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_tomato_0",
+      "message": "طماطم",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "crop_tomato_1",
+      "message": "طماطمم",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "crop_tomato_2",
+      "message": "بندوره",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_tomato_3",
+      "message": "بندورة",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_tomato_4",
+      "message": "tomato",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_pepper_0",
+      "message": "فلفل",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "crop_pepper_1",
+      "message": "فليفله",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_pepper_2",
+      "message": "pepper",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_pepper_3",
+      "message": "capsicum",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_eggplant_0",
+      "message": "باذنجان",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "crop_eggplant_1",
+      "message": "بتنجان",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_eggplant_2",
+      "message": "eggplant",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_zucchini_0",
+      "message": "كوسه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_zucchini_1",
+      "message": "كوسة",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_zucchini_2",
+      "message": "zucchini",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_okra_0",
+      "message": "باميه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_okra_1",
+      "message": "بامية",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "crop_okra_2",
+      "message": "okra",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_crop"
+    },
+    {
+      "id": "cultivation_open_field_0",
+      "message": "مكشوف",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "cultivation_open_field_1",
+      "message": "ارض مكشوفه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "cultivation_open_field_2",
+      "message": "حقل مفتوح",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_open_field_3",
+      "message": "open field",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_greenhouse_0",
+      "message": "محمي",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "cultivation_greenhouse_1",
+      "message": "بيت محمي",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "fuzzy_choice"
+    },
+    {
+      "id": "cultivation_greenhouse_2",
+      "message": "صوبه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_greenhouse_3",
+      "message": "صوبة",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_greenhouse_4",
+      "message": "greenhouse",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_hydroponic_0",
+      "message": "مائي",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_hydroponic_1",
+      "message": "زراعة مائية",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_hydroponic_2",
+      "message": "هيدروبونيك",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "cultivation_hydroponic_3",
+      "message": "hydroponic",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "recommendation",
+      "resolution": "expected_cultivation"
+    },
+    {
+      "id": "ordinal_0_0",
+      "message": "الاول",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_0_1",
+      "message": "الأول",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_0_2",
+      "message": "اول",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_0_3",
+      "message": "first",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_1_0",
+      "message": "التاني",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_1_1",
+      "message": "الثاني",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_1_2",
+      "message": "تاني",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_1_3",
+      "message": "second",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_2_0",
+      "message": "التالت",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_2_1",
+      "message": "الثالث",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_2_2",
+      "message": "third",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_3_0",
+      "message": "الرابع",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ordinal_3_1",
+      "message": "fourth",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "product_memory",
+      "resolution": "ordinal_product"
+    },
+    {
+      "id": "ambiguous_سعره كام",
+      "message": "سعره كام",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "unknown",
+      "resolution": "none"
+    },
+    {
+      "id": "ambiguous_هو متوفر؟",
+      "message": "هو متوفر؟",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "unknown",
+      "resolution": "none"
+    },
+    {
+      "id": "ambiguous_استخدامه ايه",
+      "message": "استخدامه ايه",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "unknown",
+      "resolution": "none"
+    },
+    {
+      "id": "ambiguous_تفاصيل المنتج ده",
+      "message": "تفاصيل المنتج ده",
+      "passed": true,
+      "checks": {
+        "intent": true,
+        "emirate": true,
+        "crop": true,
+        "cultivation": true,
+        "memory_action": true,
+        "clarification": true,
+        "resolved": true
+      },
+      "intent": "unknown",
+      "resolution": "none"
+    }
+  ]
+}
