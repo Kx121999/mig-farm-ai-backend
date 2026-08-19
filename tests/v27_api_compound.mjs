@@ -6,7 +6,7 @@ async function ask(message,id){
   const res=await POST(req);assert.equal(res.status,200);return await res.json();
 }
 const identity=await ask("إنت مين ومكانكم فين؟","v27-compound-identity");
-assert.equal(identity.version,"28.0.0");assert.equal(identity.mode,"enterprise_autonomous_intelligence_platform_v28");assert.equal(identity.source,"v27_customer_brain_compound");
+assert.equal(identity.version,"29.0.0");assert.equal(identity.mode,"conversational_reasoning_natural_language_os_v29");assert.equal(identity.source,"v27_customer_brain_compound");
 assert.match(identity.reply,/MIG FARM AI/i);assert.match(identity.reply,/الشارق[هة]/);assert.match(identity.reply,/العين/);assert.equal(identity.customer_brain.frame.is_multi_intent,true);assert.deepEqual(identity.customer_brain.frame.tasks.map(x=>x.intent),["identity","branches"]);assert.deepEqual(identity.response_auditor.current.missing_tasks,[]);assert.ok(identity.response_auditor.current.question_count<=1);assert.notEqual(identity.conversation_state.active_product_context?.name,"Old Fertilizer");
 
 const logistics=await ask("الدفع إزاي والشحن بكام؟","v27-compound-logistics");

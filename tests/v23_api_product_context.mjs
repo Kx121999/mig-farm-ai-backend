@@ -12,8 +12,8 @@ async function ask(body){
 }
 
 const health=await (await GET()).json();
-assert.equal(health.version,"28.0.0");
-assert.equal(health.mode,"enterprise_autonomous_intelligence_platform_v28");
+assert.equal(health.version,"29.0.0");
+assert.equal(health.mode,"conversational_reasoning_natural_language_os_v29");
 for(const feature of ["server_authoritative_active_product_memory","same_category_product_switch_detection","multi_product_comparison_context","dosage_evidence_guard","suitability_evidence_guard"])assert.ok(health.features.includes(feature),feature);
 
 const oldKey=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;

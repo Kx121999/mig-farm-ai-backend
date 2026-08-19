@@ -4,8 +4,8 @@ import { GET } from '../api/health.js';
 import { POST } from '../api/chat.js';
 
 const h=await (await GET()).json();
-assert.equal(h.version,'28.0.0');
-assert.equal(h.mode,'enterprise_autonomous_intelligence_platform_v28');
+assert.equal(h.version,'29.0.0');
+assert.equal(h.mode,'conversational_reasoning_natural_language_os_v29');
 for(const f of ['product_context_lock','product_card_bound_actions','generic_product_detail_agronomy_guard','selected_product_context_transport','per_product_details_button']) assert.ok(h.features.includes(f),f);
 
 const oldKey=process.env.OPENAI_API_KEY; delete process.env.OPENAI_API_KEY;
