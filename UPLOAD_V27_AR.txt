@@ -10,7 +10,7 @@
    MIG FARM AI V27 Customer Brain & Decision OS
 6. Push إلى GitHub.
 7. انتظر نشر Vercel ثم افتح /api/health.
-8. إذا ظهر الإصدار 27.0.0 وحجم المعرفة 400MB فالنشر صحيح.
+8. إذا ظهر الإصدار 27.0.0 وحجم المعرفة 400MB وfunction_bundle = manifest_router_only فالنشر صحيح.
 9. في Odoo استبدل واجهة الشات بملف:
    ODOO_CHAT_UI_V27_CUSTOMER_BRAIN_DECISION_OS.txt
 10. امسح كاش الصفحة واختبر جلسة جديدة.
@@ -25,3 +25,4 @@
 
 لا تضع مفاتيح API داخل GitHub. المتغيرات السرية تظل في Vercel Environment Variables فقط.
 
+مهم: لا تحذف .vercelignore. هذا الملف يمنع حزم الـ400MB من الدخول إلى Vercel Function. الكود يحمل الحزمة المطلوبة فقط من GitHub ويتحقق من حجمها وSHA-256 قبل استعمالها.
