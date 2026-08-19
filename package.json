@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "28.0.0",
+  "version": "29.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM V28 Enterprise Autonomous Intelligence Platform: multi-agent supervision, protected administration dashboard, hybrid vector/local retrieval, persistent privacy-safe telemetry, live quality gates, grounded product and agricultural decisions",
+  "description": "MIG FARM V29 Conversational Reasoning and Natural Language OS: bounded expected-answer memory, short-answer and pronoun resolution, correction handling, natural response composition, plus the V28 enterprise platform and 400 MB grounded knowledge",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
@@ -11,7 +11,8 @@
     "knowledge:validate": "node tools/validate_v27_customer_brain_knowledge.mjs",
     "enterprise:manifest": "node tools/build_v28_enterprise_manifest.mjs",
     "enterprise:eval": "node tools/run_v28_evals.mjs",
+    "conversation:eval": "node tools/run_v29_evals.mjs",
     "enterprise:sync": "node tools/sync_v28_vector_store.mjs",
-    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run validate && npm test"
+    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run validate && npm test"
   }
 }

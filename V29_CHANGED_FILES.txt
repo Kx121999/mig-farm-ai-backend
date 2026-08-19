@@ -1,0 +1,30 @@
+MIG FARM AI V29 — ملفات التحديث
+================================
+
+ملفات التشغيل الأساسية:
+lib/conversation_reasoning_v29.js
+lib/dialogue.js
+api/chat.js
+api/health.js
+api/admin-dashboard.js
+api/admin-export.js
+admin/index.html
+package.json
+
+واجهة Odoo:
+ODOO_CHAT_UI_V29_CONVERSATIONAL_REASONING_OS.txt
+
+التحقق والاختبارات:
+tools/run_v29_evals.mjs
+tools/validate_release.mjs
+evals/v29_eval_report.json
+evals/v28_eval_report.json
+tests/
+
+التوثيق:
+RELEASE_NOTES_V29_AR.md
+UPLOAD_V29_AR.txt
+V29_BUILD_AUDIT.json
+V29_CHANGED_FILES.txt
+
+مجلدات المعرفة غير موجودة داخل الحزمة لأنها موجودة بالفعل على GitHub ولا يجب حذفها أو إعادة رفعها.

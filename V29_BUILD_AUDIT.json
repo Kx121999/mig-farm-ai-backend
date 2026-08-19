@@ -1,0 +1,39 @@
+{
+  "version": "29.0.0",
+  "mode": "conversational_reasoning_natural_language_os_v29",
+  "status": "pass",
+  "validation": {
+    "release_validator": "pass",
+    "javascript_files_checked": 138,
+    "json_files_checked": 25,
+    "v29_conversation_evals": "63/63",
+    "v28_enterprise_evals": "24/24",
+    "knowledge_records": 200025,
+    "knowledge_megabytes": 400,
+    "odoo_ui_javascript": "pass",
+    "isolated_regression_suites": [
+      "v29_conversation_reasoning",
+      "v28_branch_context_and_rtl",
+      "v24_api_semantic_orchestrator",
+      "v26_current_turn_sovereignty",
+      "v27_api_compound",
+      "v28_supervisor",
+      "v28_api_contract",
+      "smoke",
+      "v17_freeform_sales_language",
+      "v18_current_turn_brain",
+      "v23_product_context_intelligence",
+      "v25_self_learning_os",
+      "v27_customer_brain",
+      "v27_knowledge_and_ui",
+      "v28_admin_security"
+    ]
+  },
+  "safety": {
+    "new_subscription_required": false,
+    "new_environment_variables_required": false,
+    "odoo_actions_enabled": false,
+    "raw_messages_in_reasoning_metrics": false,
+    "knowledge_reupload_required": false
+  }
+}

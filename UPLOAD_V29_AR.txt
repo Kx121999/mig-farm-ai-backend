@@ -1,0 +1,50 @@
+طريقة رفع MIG FARM AI V29
+==========================
+
+مهم:
+- لا تمسح ملفات قاعدة المعرفة القديمة.
+- لا تعيد رفع مجلد knowledge_v27 أو ملفات الـ400MB.
+- ارفع التحديث كله في Commit واحد حتى يعمل Vercel Deployment واحد فقط.
+- لا تضف أي Environment Variables جديدة.
+- اترك ODOO_ACTIONS_ENABLED=false كما هو.
+
+الملفات الجديدة:
+- lib/conversation_reasoning_v29.js
+- tests/v29_conversation_reasoning.mjs
+- tools/run_v29_evals.mjs
+- evals/v29_eval_report.json
+- ODOO_CHAT_UI_V29_CONVERSATIONAL_REASONING_OS.txt
+- RELEASE_NOTES_V29_AR.md
+- UPLOAD_V29_AR.txt
+
+الملفات التي يجب استبدالها في GitHub:
+- lib/dialogue.js
+- api/chat.js
+- api/health.js
+- api/admin-dashboard.js
+- api/admin-export.js
+- admin/index.html
+- package.json
+- tools/validate_release.mjs
+
+يمكن رفع مجلد tests المرفق للاحتفاظ بتوقعات الإصدار الجديدة، لكنه لا يدخل في تشغيل الموقع نفسه.
+
+بعد رفع GitHub:
+1) انتظر اكتمال Vercel Deployment.
+2) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+3) يجب أن يظهر:
+   version = 29.0.0
+   mode = conversational_reasoning_natural_language_os_v29
+   conversation_reasoning.ready = true
+
+تحديث Odoo:
+1) افتح كود واجهة الشات الحالي.
+2) استبدله كاملًا بمحتوى ODOO_CHAT_UI_V29_CONVERSATIONAL_REASONING_OS.txt.
+3) احفظ الصفحة.
+4) اعمل Ctrl+F5.
+
+اختبار سريع:
+1) اكتب: وين مكانكم؟
+2) اكتب: 3ain
+3) يجب أن يعرض فرع العين ورقمه مباشرة بدون رسالة عدم فهم.
