@@ -1,0 +1,96 @@
+{
+  "version": "28.0",
+  "release_version": "28.0.0",
+  "name": "MIG FARM Enterprise Autonomous Intelligence Knowledge Plane",
+  "generated_at": "2026-08-19T09:02:33.931Z",
+  "architecture": "hybrid_local_vector_data_plane",
+  "local_fallback": {
+    "version": "27.0",
+    "bytes": 419431906,
+    "megabytes": 400,
+    "records": 200025,
+    "packs": 23,
+    "manifest_sha256": "d4995258855fce79e5a96cf4f2ad3345269a94b4e8f6e2cab88393f2c81b27e7",
+    "policies": {
+      "multi_intent_completion": true,
+      "current_turn_first": true,
+      "privacy_bounded_memory": true,
+      "pre_send_audit": true,
+      "live_price_stock_only": true,
+      "official_label_dosage_only": true,
+      "ethical_sales": true,
+      "one_question_max": true
+    }
+  },
+  "curated_sources": {
+    "files": 15,
+    "bytes": 18083328,
+    "paths": [
+      "data/knowledge.json",
+      "knowledge/AGRICULTURAL_ENGINEER_CURRICULUM_V15.json",
+      "knowledge/AGRICULTURAL_ENGINEER_HANDBOOK_V15_AR.md",
+      "knowledge/AGRICULTURAL_MASTER_KNOWLEDGE_V18.json",
+      "knowledge/AGRICULTURAL_MASTER_SOURCES_V18.md",
+      "knowledge/AGRICULTURAL_VISUAL_DIAGNOSTIC_ATLAS_V22.json",
+      "knowledge/MIG_FARM_PRODUCT_DOSSIERS_V20.json",
+      "knowledge/MIG_FARM_PRODUCT_FACT_INDEX_V21.json",
+      "knowledge/MIG_FARM_PRODUCT_RELATIONSHIP_GRAPH_V21.json",
+      "knowledge/MIG_FARM_PRODUCT_RETRIEVAL_V20.json",
+      "knowledge/MIG_FARM_VISUAL_PRODUCT_SIGNATURES_V22.json",
+      "knowledge/SALES_EMPLOYEE_PLAYBOOK_V16.json",
+      "knowledge/SALES_EMPLOYEE_PLAYBOOK_V16_AR.md",
+      "knowledge/UAE_AGRICULTURE_KNOWLEDGE_PACK_AR.md",
+      "knowledge/UAE_AGRICULTURE_OFFICIAL_SOURCES_2026.json"
+    ]
+  },
+  "retrieval": {
+    "local": "manifest_router+intent_signature+product_topic+bounded_rerank",
+    "external": "OpenAI Responses file_search + vector store",
+    "fusion": "external-first dedupe with resilient local fallback",
+    "external_optional": true,
+    "fail_open_to_local": true
+  },
+  "agents": [
+    "enterprise_supervisor",
+    "business_facts",
+    "product_truth",
+    "product_intelligence",
+    "sales_advisor",
+    "commerce_orchestrator",
+    "senior_agronomist",
+    "agricultural_safety",
+    "vision_specialist",
+    "odoo_operations",
+    "quality_critic"
+  ],
+  "governance": {
+    "raw_transcripts_default": false,
+    "pii_redaction": true,
+    "hashed_sessions": true,
+    "live_price_stock_only": true,
+    "official_label_dosage_only": true,
+    "admin_auth": "signed_http_only_cookie",
+    "continuous_learning": "evaluation_and_human_review_only",
+    "automatic_model_training": false
+  },
+  "scale": {
+    "github_code_and_local_fallback": true,
+    "large_documents_external_vector_store": true,
+    "media_external_blob_storage": true,
+    "incremental_sync_by_sha256": true
+  },
+  "required_for_full_mode": [
+    "OPENAI_API_KEY",
+    "OPENAI_MODEL",
+    "OPENAI_VECTOR_STORE_ID",
+    "MIG_ENTERPRISE_RETRIEVAL_ENABLED"
+  ],
+  "optional_enterprise_services": [
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN",
+    "ODOO_ACTION_URL",
+    "ODOO_DB",
+    "ODOO_USERNAME",
+    "ODOO_API_KEY"
+  ]
+}
