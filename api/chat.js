@@ -101,10 +101,13 @@ import { detectCurrentTurnPriorityV27, quarantineCurrentTurnStateV27, currentTur
 import { buildCustomerBrainFrameV27, customerBrainHealthV27 } from "../lib/customer_brain_v27.js";
 import { mergeCustomerMemoryV27, customerMemoryHealthV27 } from "../lib/customer_memory_v27.js";
 import { auditCustomerResponseV27, enforceCustomerResponseV27, responseAuditorHealthV27 } from "../lib/response_auditor_v27.js";
-import { searchCustomerKnowledgeV27, customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
+import { customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
+import { createSupervisorPlanV28, superviseResponseV28, enterpriseSupervisorHealthV28 } from "../lib/supervisor_v28.js";
+import { retrieveEnterpriseKnowledgeV28, enterpriseRetrievalHealthV28 } from "../lib/enterprise_retrieval_v28.js";
+import { buildEnterpriseTurnEventV28, recordEnterpriseTurnV28, enterpriseTelemetryHealthV28 } from "../lib/enterprise_telemetry_v28.js";
 
-const VERSION="27.0.0";
-const MODE="customer_brain_decision_os_v27";
+const VERSION="28.0.0";
+const MODE="enterprise_autonomous_intelligence_platform_v28";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -242,6 +245,7 @@ function sourceNeedsLearning(source=""){
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
   const semanticFrame=state?.__semantic_frame||null;
   const customerFrame=state?.__customer_brain_v27||buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
+  const enterprisePlan=createSupervisorPlanV28({message,frame:customerFrame,analysis,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
   payload=enforceResponseQuality(payload);
   const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
   const executionPlan=plan||buildHybridPlan({message,analysis,cognition:frame,state,profile});
@@ -254,10 +258,15 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   const evidence=evidenceSummary({source,payload,results,analysis});
   const review=criticReview({payload,source,results,evidence,cognition:frame,retrieval:retrievalBundle,plan:executionPlan});
   payload=enforceCustomerResponseV27(enforceResponseQuality(applyCriticGuard(payload,review)),customerFrame);
-  const customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
+  let customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
+  const supervision=superviseResponseV28({payload,plan:enterprisePlan,frame:customerFrame,source,audit:customerAudit});
+  payload=supervision.payload;
+  customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
+  const enterpriseReview={...supervision.review,quality_score:customerAudit.score,passed:Boolean(supervision.review?.passed&&customerAudit.passed),missing_tasks:customerAudit.missing_tasks||[],flags:[...new Set([...(supervision.review?.flags||[]),...(customerAudit.dose_claim_risk?["unsafe_dosage_claim"]:[]),...(customerAudit.stale_context_risk?["stale_context"]:[])])]};
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=27;
+  next.v=28;
+  delete next.__v28_request_started_at;
   next.customer_brain_memory=mergeCustomerMemoryV27(state?.customer_brain_memory||{},customerFrame,next.turn);
   delete next.__customer_brain_v27;
   const activeVisual=updateActiveVisualContext(state?.active_visual_context||{},payload?.vision||state?.__current_vision_frame||{},payload?.visual_evidence||{},next.turn);
@@ -333,6 +342,9 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   if(selfLearning.gap_fingerprint){try{await recordKnowledgeGaps([selfLearning.gap_fingerprint]);}catch{}}
   const autonomousMission=buildCommerceMission({message,analysis,cognition:frame,state:next,profile:nextProfile,locale});
   const autonomousMeta=autonomousCommerceMeta({mission:autonomousMission});
+  const enterpriseEvent=buildEnterpriseTurnEventV28({sessionId,message,analysis,frame:customerFrame,source,audit:enterpriseReview,selfLearning,leadTemperature:lead.temperature,startedAt:Number(state?.__v28_request_started_at)||Date.now()});
+  let enterpriseTelemetry={recorded:false,mode:"disabled",reason:"not_attempted"};
+  try{enterpriseTelemetry=await recordEnterpriseTurnV28(enterpriseEvent);}catch(error){enterpriseTelemetry={recorded:false,mode:"memory",reason:String(error?.message||"telemetry_failed").slice(0,120)};}
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -366,6 +378,9 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       customer_memory:customerMemoryHealthV27(),
       response_auditor:responseAuditorHealthV27(),
       conversation_knowledge:customerKnowledgeHealthV27(),
+      enterprise_supervisor:enterpriseSupervisorHealthV28(),
+      enterprise_retrieval:enterpriseRetrievalHealthV28(),
+      enterprise_telemetry:enterpriseTelemetryHealthV28(),
       autonomous_actions:autonomousActionHealth(),
       self_learning:selfLearningHealth(),
       vision_intelligence:visionHealth(),
@@ -382,6 +397,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
+    enterprise_platform:{version:"28.0",supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -570,9 +586,9 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       const limit=Math.max(1,Math.min(8,Number(args?.limit)||6));
       const toolAnalysis=analyzeTurn(query,state,history,locale);
       const managed=semanticKnowledgeCandidates(query,{locale,analysis:toolAnalysis,state,profile,cognition},limit);
-      const deep=await searchCustomerKnowledgeV27(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||"",frame:state?.__customer_brain_v27||null});
+      const deep=await retrieveEnterpriseKnowledgeV28(query,{limit,domain:semanticFrame?.entities?.categories?.[0]||agriculturalContext?.domain||"",frame:state?.__customer_brain_v27||null});
       const items=[...managed.map(x=>({id:x.id,title:x.title,answer:x.answer,verified:x.verified,source:x.source,score:x.score})),...deep.items].slice(0,limit);
-      return {query,items,deep_knowledge:{version:"27.0",packs_scanned:deep.packs_scanned||[],frame:deep.frame||{}}};
+      return {query,items,enterprise_knowledge:deep.trace};
     },
     search_uae_agriculture:async args=>{
       const query=cleanText(args?.query||message,700);
@@ -1070,6 +1086,7 @@ export async function POST(request){
   const mergedIncomingState=mergeSessionState(serverSession,body?.conversation_state);
   const hydratedIncomingState=hydrateStateFromPersistent(mergedIncomingState,persistentRead.snapshot);
   const state=mergeState(hydratedIncomingState,history);
+  state.__v28_request_started_at=Date.now();
   state.__persistent_snapshot=persistentRead.snapshot;
   state.__persistent_read={persisted:persistentRead.persisted,reason:persistentRead.reason};
   const activeVisualInput={...(state?.active_visual_context||{}),current_turn:Number(state?.turn||0)+1};

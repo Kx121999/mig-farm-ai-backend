@@ -29,15 +29,20 @@ import { customerBrainHealthV27 } from "../lib/customer_brain_v27.js";
 import { customerMemoryHealthV27 } from "../lib/customer_memory_v27.js";
 import { responseAuditorHealthV27 } from "../lib/response_auditor_v27.js";
 import { customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
+import { enterpriseSupervisorHealthV28 } from "../lib/supervisor_v28.js";
+import { enterpriseRetrievalHealthV28 } from "../lib/enterprise_retrieval_v28.js";
+import { enterpriseTelemetryHealthV28 } from "../lib/enterprise_telemetry_v28.js";
+import { adminAuthHealthV28 } from "../lib/admin_auth_v28.js";
 
 export async function GET(){
   const persistence=persistentStoreHealth();
   return Response.json({
     ok:true,
-    service:"MIG FARM V27 Customer Brain & Decision OS",
-    version:"27.0.0",
-    mode:"customer_brain_decision_os_v27",
+    service:"MIG FARM V28 Enterprise Autonomous Intelligence Platform",
+    version:"28.0.0",
+    mode:"enterprise_autonomous_intelligence_platform_v28",
     features:[
+      "enterprise_multi_agent_supervisor","specialized_product_truth_agent","senior_agronomist_agent","business_facts_agent","vision_specialist_agent","commerce_orchestrator_agent","pre_send_quality_critic","natural_structured_response_blocks","hybrid_vector_and_local_retrieval","openai_vector_store_adapter","400mb_resilient_local_fallback","privacy_safe_enterprise_telemetry","persistent_admin_analytics","protected_http_only_admin_session","live_quality_dashboard","knowledge_and_service_health_dashboard","downloadable_privacy_safe_reports","scalable_external_knowledge_plane","no_secret_browser_exposure",
       "400mb_customer_brain_decision_knowledge","ordered_multi_intent_execution","customer_journey_scenarios","ethical_objection_resolution","product_decision_graph","agricultural_decision_cases","response_error_corrections","pre_send_response_auditor","multi_intent_completion_check","one_question_enforcement","privacy_bounded_customer_memory","dialect_and_goal_memory","topic_switch_memory_guard","compound_business_product_answer","self_evaluating_response_contract",
       "400mb_github_sharded_conversation_knowledge","222k_grounded_conversation_cases","23_browser_upload_safe_knowledge_packs","manifest_routed_knowledge_retrieval","current_turn_sovereignty_router","business_question_before_product_context","explicit_location_language_understanding","stale_product_and_dosage_quarantine","natural_business_social_replies","dialect_question_lattice","product_agriculture_business_coverage",
       "explicit_confirmation_action_os","server_authoritative_action_state","odoo_allowlisted_jsonrpc_gateway","draft_quotation_creation","crm_lead_creation","phone_verified_order_tracking","action_idempotency","safe_action_failure","no_automatic_order_confirmation","no_payment_capture","privacy_safe_continuous_evaluation","multi_intent_completion_scoring","evidence_grounding_scoring","action_outcome_learning","hashed_knowledge_gap_fingerprints","admin_protected_learning_endpoint","identity_question_direct_route","stale_dose_context_quarantine","structured_safe_reply_renderer","mixed_direction_product_cards","comparison_answer_preservation",
@@ -84,13 +89,17 @@ export async function GET(){
     customer_memory:customerMemoryHealthV27(),
     response_auditor:responseAuditorHealthV27(),
     conversation_knowledge:customerKnowledgeHealthV27(),
+    enterprise_supervisor:enterpriseSupervisorHealthV28(),
+    enterprise_retrieval:enterpriseRetrievalHealthV28(),
+    enterprise_telemetry:enterpriseTelemetryHealthV28(),
+    admin_auth:adminAuthHealthV28(),
     autonomous_actions:autonomousActionHealth(),
     self_learning:selfLearningHealth(),
     vision_intelligence:visionHealth(),
     neural_brain:neuralBrainHealth(),
     vector_memory:vectorMemoryHealth(),
     cognitive_os:cognitiveOSHealth(persistence),
-    persistent_store:{...persistence,required_for_v27:false},
+    persistent_store:{...persistence,required_for_v28:false,recommended_for_admin_analytics:true},
     evidence:evidenceHealth(),
     time:new Date().toISOString()
   });
