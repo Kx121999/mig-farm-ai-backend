@@ -1,0 +1,55 @@
+طريقة تركيب MIG FARM AI V31
+============================
+
+مهم جدًا:
+- لا تمسح المستودع القديم.
+- لا تمسح knowledge أو knowledge_v27 أو knowledge_v28 أو data.
+- حزمة V31 ترقية للكود وليست بديلًا لقاعدة الـ400MB.
+- ارفع محتويات الحزمة فوق الملفات الحالية ووافق على الاستبدال.
+- ارفعها في Commit واحد.
+
+الرفع إلى GitHub:
+1) فك MIG_FARM_AI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR_UPGRADE.zip.
+2) افتح مستودع mig-farm-ai-backend.
+3) ارفع كل ما داخل الحزمة مع الحفاظ على المجلدات.
+4) استبدل الملفات المشتركة الموجودة بالفعل.
+5) لا تحذف أي ملف غير موجود في الحزمة.
+6) Commit message المقترح:
+   MIG FARM AI V31 LLM First Semantic Orchestrator
+
+Vercel:
+1) انتظر نجاح آخر Deployment.
+2) افتح:
+   https://mig-farm-ai-backend.vercel.app/api/health
+3) تأكد من ظهور:
+   version = 31.0.0
+   mode = llm_first_semantic_orchestrator_v31
+   llm_first_orchestrator.ready = true
+   llm_first_orchestrator.configured = true
+   llm_first_orchestrator.priority = full_utterance_before_legacy_routes
+
+لو configured = false:
+- افتح Vercel > Settings > Environment Variables.
+- تأكد أن OPENAI_API_KEY موجود في Production.
+- اعمل Redeploy بعد حفظه.
+
+واجهة Odoo:
+1) افتح كود الشات الحالي في Odoo.
+2) افتح ODOO_CHAT_UI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR.txt.
+3) انسخ محتواه كاملًا مكان الكود القديم.
+4) احفظ ثم اضغط Ctrl+F5.
+
+اختبار المشكلة القديمة:
+1) اسأل عن منتج أو جرعة.
+2) بعدها اكتب: اسمك ايه؟
+3) يجب أن يجيب: أنا MIG FARM AI، بدون كلام عن جرعة أو ملصق.
+4) بعدها اكتب: وين مكانكم؟
+5) يجب أن يجيب عن الشارقة والعين فقط.
+
+اختبارات إضافية:
+- اكتب جملة طويلة فيها أكثر من طلب.
+- اكتب تصحيحًا مثل: لا مش بسأل عن السعر أنا بسأل عن الاستخدام.
+- اكتب متابعة حقيقية مثل: طيب التاني متوفر؟ بعد ظهور عدة منتجات.
+
+لوحة التحكم:
+https://mig-farm-ai-backend.vercel.app/admin

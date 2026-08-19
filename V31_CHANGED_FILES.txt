@@ -1,0 +1,41 @@
+MIG FARM AI V31 — ملفات الترقية
+================================
+
+المحرك الجديد:
+lib/llm_first_orchestrator_v31.js
+
+ملفات التشغيل المحدثة:
+api/chat.js
+api/health.js
+api/admin-dashboard.js
+api/admin-export.js
+lib/neural_agent.js
+lib/autonomous_customer_os_v30.js
+admin/index.html
+package.json
+.env.example
+
+واجهة Odoo:
+ODOO_CHAT_UI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR.txt
+
+الاختبارات والتقييم:
+tests/v31_llm_first_orchestrator.mjs
+tests/v31_llm_primary_api.mjs
+tests/
+tools/run_v31_evals.mjs
+tools/run_v30_evals.mjs
+tools/validate_release.mjs
+evals/v31_eval_report.json
+evals/v30_eval_report.json
+evals/v29_eval_report.json
+evals/v28_eval_report.json
+
+التوثيق:
+RELEASE_NOTES_V31_AR.md
+UPLOAD_V31_AR.txt
+V31_ARCHITECTURE_AR.md
+V31_BUILD_AUDIT.json
+V31_CHANGED_FILES.txt
+
+لا تشمل الحزمة مجلدات المعرفة لأنها موجودة بالفعل على GitHub.
+لا تحذفها ولا تعيد رفعها.

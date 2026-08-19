@@ -1,0 +1,40 @@
+{
+  "version": "31.0.0",
+  "mode": "llm_first_semantic_orchestrator_v31",
+  "status": "pass",
+  "validation": {
+    "release_validator": "pass",
+    "javascript_files_checked": 148,
+    "json_files_checked": 30,
+    "v31_meaning_evals": "84/84",
+    "v31_poisoned_context_api": "pass",
+    "v31_primary_neural_api_mock": "pass",
+    "v30_autonomous_evals": "65/65",
+    "v29_conversation_evals": "63/63",
+    "v28_enterprise_evals": "24/24",
+    "v29_regression": "pass",
+    "v28_api_contract": "pass",
+    "v28_admin_security": "pass",
+    "knowledge_records": 200025,
+    "knowledge_megabytes": 400,
+    "odoo_ui_javascript": "pass"
+  },
+  "root_cause_fixes": {
+    "llm_understanding_before_keyword_router": true,
+    "neural_answer_before_legacy_templates": true,
+    "legacy_route_intent_gate": true,
+    "new_topic_context_quarantine": true,
+    "final_meaning_alignment_guard": true,
+    "undefined_neural_results_bug_fixed": true,
+    "v30_tool_names_matched_to_responses_api": true
+  },
+  "safety": {
+    "openai_required_for_full_natural_understanding": true,
+    "deterministic_emergency_guard_available": true,
+    "new_required_environment_variables": false,
+    "responses_api_store": false,
+    "raw_messages_in_v31_metrics": false,
+    "knowledge_reupload_required": false,
+    "odoo_actions_enabled": false
+  }
+}

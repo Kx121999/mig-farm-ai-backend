@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "30.0.0",
+  "version": "31.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM V30 Neural Autonomous Customer OS: specialist mission planning, bounded neural tools, privacy-safe customer twin, calibrated confidence gateway, closed-loop outcome learning, and resilient deterministic fallback over the V29/V28 platform and 400 MB grounded knowledge",
+  "description": "MIG FARM V31 LLM-First Semantic Orchestrator: full-utterance meaning before routing, primary natural generation with bounded grounded tools, stale-context quarantine, legacy keyword fallback only, and alignment guards over the V30 platform and 400 MB knowledge",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
@@ -13,7 +13,8 @@
     "enterprise:eval": "node tools/run_v28_evals.mjs",
     "conversation:eval": "node tools/run_v29_evals.mjs",
     "autonomous:eval": "node tools/run_v30_evals.mjs",
+    "meaning:eval": "node tools/run_v31_evals.mjs",
     "enterprise:sync": "node tools/sync_v28_vector_store.mjs",
-    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run autonomous:eval && npm run validate && npm test"
+    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run autonomous:eval && npm run meaning:eval && npm run validate && npm test"
   }
 }
