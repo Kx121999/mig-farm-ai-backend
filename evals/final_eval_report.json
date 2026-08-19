@@ -1,0 +1,62 @@
+{
+  "release": "FINAL_PRODUCTION_OS",
+  "version": "FINAL.1",
+  "generated_at": "2026-08-19T11:25:42.913Z",
+  "status": "pass",
+  "passed": 1320,
+  "total": 1320,
+  "pass_rate": 100,
+  "categories": {
+    "stale_context_quarantine": {
+      "passed": 160,
+      "total": 160
+    },
+    "unverified_dosage": {
+      "passed": 160,
+      "total": 160
+    },
+    "unverified_action": {
+      "passed": 120,
+      "total": 120
+    },
+    "verified_live_price": {
+      "passed": 100,
+      "total": 100
+    },
+    "blocked_stale_price": {
+      "passed": 100,
+      "total": 100
+    },
+    "verified_live_availability": {
+      "passed": 80,
+      "total": 80
+    },
+    "blocked_stale_availability": {
+      "passed": 80,
+      "total": 80
+    },
+    "compound_complete": {
+      "passed": 120,
+      "total": 120
+    },
+    "compound_missing_branch": {
+      "passed": 120,
+      "total": 120
+    },
+    "question_budget": {
+      "passed": 120,
+      "total": 120
+    },
+    "natural_safe_answers": {
+      "passed": 160,
+      "total": 160
+    }
+  },
+  "failed_samples": [],
+  "definition_of_done": {
+    "minimum_scenarios": 1000,
+    "unverified_dosage_price_stock_action_expected": 0,
+    "stale_context_leak_expected": "<1%",
+    "multi_intent_completion_target": ">=90%"
+  }
+}
