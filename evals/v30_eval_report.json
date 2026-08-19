@@ -1,6 +1,6 @@
 {
   "version": "30.0",
-  "generated_at": "2026-08-19T10:21:38.748Z",
+  "generated_at": "2026-08-19T10:38:49.372Z",
   "status": "pass",
   "passed": 65,
   "total": 65,
@@ -98,7 +98,7 @@
       "detail": {
         "mode": "deterministic_resilient",
         "risk": "medium",
-        "tool": "diagnose_agricultural_problem"
+        "tool": "diagnose_crop_problem"
       }
     },
     {

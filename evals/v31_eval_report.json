@@ -1,0 +1,644 @@
+{
+  "version": "31.0",
+  "generated_at": "2026-08-19T10:41:57.753Z",
+  "status": "pass",
+  "passed": 84,
+  "total": 84,
+  "categories": {
+    "full_utterance_guard": {
+      "passed": 22,
+      "total": 22
+    },
+    "alignment_guard": {
+      "passed": 4,
+      "total": 4
+    },
+    "legacy_route_gate": {
+      "passed": 28,
+      "total": 28
+    },
+    "stability": {
+      "passed": 30,
+      "total": 30
+    }
+  },
+  "results": [
+    {
+      "id": "guard_0",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "اسمك ايه؟",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_1",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "مين انت",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_2",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "انت مين؟",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_3",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "شو اسمك",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_4",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "ما اسمك؟",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_5",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "who are you",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_6",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "what is your name?",
+        "intent": "identity",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_7",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "اهلا",
+        "intent": "greeting",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_8",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "هلا",
+        "intent": "greeting",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_9",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "مرحبا",
+        "intent": "greeting",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_10",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "السلام عليكم",
+        "intent": "greeting",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_11",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "hello",
+        "intent": "greeting",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_12",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "hi",
+        "intent": "greeting",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_13",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "شكرا",
+        "intent": "thanks",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_14",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "مشكور",
+        "intent": "thanks",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_15",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "تسلم",
+        "intent": "thanks",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_16",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "thanks",
+        "intent": "thanks",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_17",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "وين مكانكم؟",
+        "intent": "branches",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_18",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "فين مكانكم",
+        "intent": "branches",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_19",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "وين فروعكم",
+        "intent": "branches",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_20",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "اين فروعكم؟",
+        "intent": "branches",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "guard_21",
+      "category": "full_utterance_guard",
+      "passed": true,
+      "detail": {
+        "message": "مكان الفرع",
+        "intent": "branches",
+        "provider": "deterministic_guard"
+      }
+    },
+    {
+      "id": "alignment_identity",
+      "category": "alignment_guard",
+      "passed": true,
+      "detail": {
+        "flags": [
+          "stale_agriculture_context_leak",
+          "social_intent_hijacked",
+          "identity_not_answered"
+        ],
+        "reply": "أنا MIG FARM AI، مساعدك للمنتجات والزراعة وخدمات MIG FARM."
+      }
+    },
+    {
+      "id": "alignment_branches",
+      "category": "alignment_guard",
+      "passed": true,
+      "detail": {
+        "flags": [
+          "stale_agriculture_context_leak",
+          "business_intent_hijacked"
+        ],
+        "reply": "إحنا موجودين في الشارقة والعين. تحب بيانات أي فرع؟"
+      }
+    },
+    {
+      "id": "alignment_contact",
+      "category": "alignment_guard",
+      "passed": true,
+      "detail": {
+        "flags": [
+          "stale_agriculture_context_leak",
+          "business_intent_hijacked"
+        ],
+        "reply": "تقصد بيانات التواصل لفرع الشارقة ولا فرع العين؟"
+      }
+    },
+    {
+      "id": "alignment_shipping",
+      "category": "alignment_guard",
+      "passed": true,
+      "detail": {
+        "flags": [
+          "stale_agriculture_context_leak",
+          "business_intent_hijacked"
+        ],
+        "reply": "اكتب الإمارة اللي تبي التوصيل لها، وأنا أحدد لك بيانات الشحن المناسبة."
+      }
+    },
+    {
+      "id": "route_allow_identity_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_identity_known_product_info",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_identity_dosage",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_identity_branches",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_allow_branches_branches",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_branches_known_product_info",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_branches_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_branches_dosage",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_allow_price_known_product_info",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_price_branches",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_price_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_price_diagnosis",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_allow_availability_known_product_info",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_availability_shipping",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_availability_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_availability_dosage",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_allow_dosage_known_product_info",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_dosage_branches",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_dosage_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_dosage_shipping",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_allow_compare_product_memory",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_compare_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_compare_branches",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_compare_diagnosis",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_allow_bundle_recommendation",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_bundle_identity",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_bundle_contact",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "route_block_bundle_dosage",
+      "category": "legacy_route_gate",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_0",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_1",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_2",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_3",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_4",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_5",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_6",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_7",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_8",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_9",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_10",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_11",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_12",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_13",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_14",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_15",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_16",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_17",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_18",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_19",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_20",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_21",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_22",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_23",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_24",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_25",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_26",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_27",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_28",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "id": "stability_29",
+      "category": "stability",
+      "passed": true,
+      "detail": {}
+    }
+  ]
+}
