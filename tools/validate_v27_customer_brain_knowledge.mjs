@@ -8,6 +8,7 @@ import { buildCustomerBrainFrameV27 } from "../lib/customer_brain_v27.js";
 import { customerKnowledgeHealthV27, searchCustomerKnowledgeV27 } from "../lib/customer_knowledge_v27.js";
 
 const ROOT=join(dirname(fileURLToPath(import.meta.url)),".."),DIR=join(ROOT,"knowledge_v27");
+process.env.MIG_V27_KNOWLEDGE_TRANSPORT="local";
 const manifest=JSON.parse(readFileSync(join(DIR,"manifest.json"),"utf8")),router=JSON.parse(readFileSync(join(DIR,"router.json"),"utf8"));
 assert.equal(manifest.version,"27.0");assert.equal(router.version,"27.0");assert.ok(manifest.total_pack_bytes>=400*1024*1024);assert.ok(manifest.packs.length>=20);assert.equal(manifest.github.browser_upload_safe,true);
 for(const key of ["customer_journey_case","product_decision_case","agriculture_decision_case","objection_resolution_case","response_correction_case","safety_guard_case","business_fact_case"])assert.ok(manifest.allocations?.[key]?.records>100,`${key} allocation missing`);
@@ -21,8 +22,7 @@ for(const pack of manifest.packs){
 }
 assert.equal(totalBytes,manifest.total_pack_bytes);assert.equal(totalRecords,manifest.total_records);assert.equal(types.size,7);assert.ok(Object.keys(router.product_routes||{}).length>=1000);assert.ok(Object.keys(router.signature_routes||{}).length>=5);
 const frame=buildCustomerBrainFrameV27({message:"مكانكم فين وهل خيار وفرة متوفر وبكام؟"});assert.equal(frame.is_multi_intent,true);for(const x of ["branches","availability","price"])assert.ok(frame.tasks.some(t=>t.intent===x),x);
-const hit=searchCustomerKnowledgeV27("مكانكم فين وهل خيار وفرة متوفر وبكام؟",{limit:4,frame});assert.ok(hit.items.length);assert.ok(hit.packs_scanned.length<=1);
-const agronomy=searchCustomerKnowledgeV27("اصفرار الطماطم والجذور والري",{limit:4});assert.ok(agronomy.items.length);
-const health=customerKnowledgeHealthV27();assert.equal(health.ready,true);assert.equal(health.megabytes,400);assert.equal(health.records,totalRecords);
+const hit=await searchCustomerKnowledgeV27("مكانكم فين وهل خيار وفرة متوفر وبكام؟",{limit:4,frame});assert.ok(hit.items.length);assert.ok(hit.packs_scanned.length<=1);
+const agronomy=await searchCustomerKnowledgeV27("اصفرار الطماطم والجذور والري",{limit:4});assert.ok(agronomy.items.length);
+const health=customerKnowledgeHealthV27();assert.equal(health.ready,true);assert.equal(health.megabytes,400);assert.equal(health.records,totalRecords);assert.equal(health.function_bundle,"manifest_router_only");
 console.log(`V27 customer-brain knowledge validation PASS — ${totalRecords} records, ${manifest.packs.length} packs, ${(totalBytes/1048576).toFixed(2)} MiB`);
-
