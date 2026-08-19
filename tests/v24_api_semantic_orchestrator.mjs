@@ -5,8 +5,8 @@ import { POST } from "../api/chat.js";
 delete process.env.OPENAI_API_KEY;
 
 const health=await (await GET()).json();
-assert.equal(health.version,"29.0.0");
-assert.equal(health.mode,"conversational_reasoning_natural_language_os_v29");
+assert.equal(health.version,"30.0.0");
+assert.equal(health.mode,"neural_autonomous_customer_os_v30");
 assert.equal(health.semantic_human_brain?.version,"27.0");
 for(const feature of ["semantic_human_brain","arabizi_normalization","multi_intent_decomposition","pronoun_product_resolution"])assert.ok(health.features.includes(feature),feature);
 
@@ -16,8 +16,8 @@ async function ask(body){
 }
 
 let result=await ask({message:"عامل ايه",session_id:"v24-api-social",locale:"ar",conversation_state:{turn:7,category:"fertilizer",crop:"tomato",visible_products:[{name:"سماد قديم",price:"99"}],active_product_context:{active:true,product:{name:"سماد قديم",sku:"OLD"},expires_turn:20}}});
-assert.equal(result.version,"29.0.0");
-assert.equal(result.mode,"conversational_reasoning_natural_language_os_v29");
+assert.equal(result.version,"30.0.0");
+assert.equal(result.mode,"neural_autonomous_customer_os_v30");
 assert.equal(result.semantic_human_brain?.frame?.dialect?.dialect,"egyptian");
 assert.equal(result.semantic_human_brain?.frame?.context?.scope,"current_turn_only");
 assert.doesNotMatch(result.reply,/سماد قديم|طماطم|99/);

@@ -4,8 +4,8 @@ import { POST } from "../api/chat.js";
 
 const h=await (await GET()).json();
 assert.equal(h.ok,true);
-assert.equal(h.version,"29.0.0");
-assert.equal(h.mode,"conversational_reasoning_natural_language_os_v29");
+assert.equal(h.version,"30.0.0");
+assert.equal(h.mode,"neural_autonomous_customer_os_v30");
 assert.equal(h.vision_intelligence?.version,"22.5");
 assert.equal(h.vision_intelligence?.recognition_before_identity_guard,true);
 assert.equal(h.vision_intelligence?.forced_product_recognition_preflight,true);
@@ -22,8 +22,8 @@ const oldKey=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;
 try{
   const req=new Request("https://mig-farm-ai-backend.vercel.app/api/chat",{method:"POST",headers:{"content-type":"application/json","origin":"https://www.migfarm.com"},body:JSON.stringify({message:"هل متوفر؟",session_id:"v223-api",locale:"ar",history:[],conversation_state:{},images:[{type:"input_image",image_url:"data:image/jpeg;base64,AAAA",detail:"high",client_image_id:"img-api"}],visual_context_reused:false})});
   const r=await (await POST(req)).json();
-  assert.equal(r.version,"29.0.0");
-  assert.equal(r.mode,"conversational_reasoning_natural_language_os_v29");
+  assert.equal(r.version,"30.0.0");
+  assert.equal(r.mode,"neural_autonomous_customer_os_v30");
   assert.equal(r.runtime?.vision_intelligence?.version,"22.5");
   assert.equal(r.vision?.requires_recognition_preflight,true);
   assert.ok(["v22_5_visual_recognition_safe_fallback","neural_multimodal_visual_recognition_sales_v22_5"].includes(r.source));
