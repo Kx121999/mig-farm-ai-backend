@@ -1,0 +1,26 @@
+MIG FARM AI — V27 CUSTOMER BRAIN & DECISION OS
+
+ابدأ من هنا
+
+1) هذه نسخة مستقلة كاملة، وليست ملفات تضاف فوق V26 يدويًا.
+2) فك الضغط وارفع محتويات هذا المجلد إلى مشروع GitHub الحالي.
+3) ارفع مجلد knowledge_v27 كاملًا؛ يحتوي 23 حزمة، وكل حزمة أقل من 19MB.
+4) لا ترفع ملف ZIP داخل المستودع.
+5) Vercel سيقرأ vercel.json ويضم حزم المعرفة إلى api/chat.js. الحزم لا تُحمّل كلها في الذاكرة؛ الموجّه يفتح الحزمة المناسبة فقط.
+6) متغير OPENAI_API_KEY الموجود عندك يكفي لتشغيل الطبقة العصبية.
+7) تنفيذ إجراءات Odoo يظل اختياريًا ومتوقفًا بأمان حتى تضيف بيانات الربط لاحقًا.
+8) بعد النشر افتح:
+   /api/health
+
+يجب أن ترى:
+   version: 27.0.0
+   mode: customer_brain_decision_os_v27
+   conversation_knowledge.megabytes: 400
+   customer_brain.version: 27.0
+   response_auditor.version: 27.0
+
+واجهة Odoo الجديدة:
+   ODOO_CHAT_UI_V27_CUSTOMER_BRAIN_DECISION_OS.txt
+
+استبدل كود واجهة الشات القديم كاملًا بهذا الملف، ثم امسح كاش المتصفح وابدأ جلسة جديدة.
+

@@ -1,14 +1,14 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "26.0.0",
+  "version": "27.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM V26 GitHub Knowledge & Natural Conversation OS: 400 MB sharded grounded knowledge, current-turn sovereignty, natural dialect replies, secure actions, live product truth, agricultural engineering and multimodal vision",
+  "description": "MIG FARM V27 Customer Brain & Decision OS: 400 MB sharded customer journeys, ordered multi-intent execution, privacy-bounded customer memory, pre-send response auditing, grounded sales, product and agricultural decisions",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
-    "knowledge:build": "node tools/build_v26_knowledge_packs.mjs",
-    "knowledge:validate": "node tools/validate_v26_knowledge_packs.mjs",
+    "knowledge:build": "node tools/build_v27_customer_brain_knowledge.mjs",
+    "knowledge:validate": "node tools/validate_v27_customer_brain_knowledge.mjs",
     "release:check": "npm run knowledge:validate && npm run validate && npm test"
   }
 }
