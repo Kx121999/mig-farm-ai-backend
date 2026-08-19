@@ -1,14 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/chat.js": {
       "maxDuration": 30,
-      "includeFiles": "knowledge_v26/**"
+      "includeFiles": "knowledge_V26/*.json"
     },
     "api/health.js": {
-      "includeFiles": [
-        "knowledge_v26/manifest.json",
-        "knowledge_v26/router.json"
-      ]
+      "includeFiles": "knowledge_V26/*.json"
     }
   }
 }
+
