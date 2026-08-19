@@ -1,0 +1,27 @@
+طريقة رفع FINAL_PRODUCTION_OS على GitHub
+========================================
+
+1) لا تمسح المستودع ولا النسخ أو مجلدات المعرفة الحالية.
+2) فك ملف الترقية النهائي.
+3) ارفع محتويات المجلد إلى جذر المستودع mig-farm-ai-backend مع الحفاظ على نفس المسارات.
+4) عند ظهور Replace / Overwrite وافق على استبدال الملفات الموجودة.
+5) لا تحذف هذه المجلدات:
+   knowledge/
+   knowledge_v27/
+   knowledge_v28/
+6) تأكد أن .vercelignore موجود؛ هو الذي يمنع ضم knowledge_v27/packs داخل Functions.
+7) اترك ODOO_ACTIONS_ENABLED=false حاليًا كما اتفقنا.
+8) في Vercel يكفي OPENAI_API_KEY. إعدادات FINAL الاختيارية لها قيم افتراضية آمنة:
+   FINAL_CRITIC_ENABLED=true
+   OPENAI_CRITIC_MODEL=gpt-5.6
+   FINAL_CRITIC_TIMEOUT_MS=5200
+9) انتظر نجاح Deployment ثم افتح /api/health وتأكد من:
+   ok=true
+   release=FINAL_PRODUCTION_OS
+   final_production_os.ready=true
+10) انسخ محتوى ODOO_CHAT_UI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR.txt إلى كتلة كود الشات في Odoo ثم احفظ وانشر.
+
+مهم:
+- لا ترفع ملف ZIP نفسه داخل المستودع.
+- حزم 400MB تظل في GitHub؛ لا تُرفع إلى Vercel Function bundle.
+- لو فشل النشر، أول شيء راجعه هو وجود .vercelignore وعدم وجود includeFiles="**/*.json".

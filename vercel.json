@@ -3,13 +3,17 @@
   "functions": {
     "api/chat.js": {
       "maxDuration": 60,
-      "includeFiles": "knowledge_*27/*.json"
+      "includeFiles": "knowledge_v27/{manifest.json,router.json}"
+    },
+    "api/chat-stream.js": {
+      "maxDuration": 60,
+      "includeFiles": "knowledge_v27/{manifest.json,router.json}"
     },
     "api/health.js": {
-      "includeFiles": "knowledge_*27/*.json"
+      "maxDuration": 10
     },
     "api/admin-dashboard.js": {
-      "includeFiles": "**/*.json"
+      "includeFiles": "{knowledge_v27/manifest.json,knowledge_v27/router.json,knowledge_v28/enterprise_manifest.json,evals/*.json}"
     }
   },
   "rewrites": [

@@ -1,0 +1,195 @@
+{
+  "release": "FINAL_PRODUCTION_OS",
+  "api_version": "31.0.0",
+  "generated_at": "2026-08-19T11:27:40.004Z",
+  "status": "pass",
+  "deployment": {
+    "serverless_health": "lightweight",
+    "knowledge_packs_in_function_bundle": false,
+    "progressive_sse": true,
+    "json_fallback": true
+  },
+  "intelligence": {
+    "whole_utterance": true,
+    "multi_intent_contract": true,
+    "context_quarantine": true,
+    "adaptive_critic": true,
+    "prompt_registry": true
+  },
+  "truth": {
+    "fresh_live_price_stock": true,
+    "price_value_conflict_guard": true,
+    "availability_value_conflict_guard": true,
+    "label_only_dosage": true,
+    "verified_action_receipt_only": true
+  },
+  "quality": {
+    "final_evals": "1320/1320",
+    "categories": {
+      "stale_context_quarantine": {
+        "passed": 160,
+        "total": 160
+      },
+      "unverified_dosage": {
+        "passed": 160,
+        "total": 160
+      },
+      "unverified_action": {
+        "passed": 120,
+        "total": 120
+      },
+      "verified_live_price": {
+        "passed": 100,
+        "total": 100
+      },
+      "blocked_stale_price": {
+        "passed": 100,
+        "total": 100
+      },
+      "verified_live_availability": {
+        "passed": 80,
+        "total": 80
+      },
+      "blocked_stale_availability": {
+        "passed": 80,
+        "total": 80
+      },
+      "compound_complete": {
+        "passed": 120,
+        "total": 120
+      },
+      "compound_missing_branch": {
+        "passed": 120,
+        "total": 120
+      },
+      "question_budget": {
+        "passed": 120,
+        "total": 120
+      },
+      "natural_safe_answers": {
+        "passed": 160,
+        "total": 160
+      }
+    }
+  },
+  "privacy": {
+    "raw_transcripts_in_final_metrics": false,
+    "raw_replies_in_final_metrics": false,
+    "direct_identifiers": false
+  },
+  "compatibility": {
+    "api_version_preserved": "31.0.0",
+    "odoo_storage_keys_preserved": true,
+    "odoo_actions_default_off": true
+  },
+  "files": {
+    "count": 26,
+    "bytes": 361211,
+    "items": [
+      {
+        "path": ".env.example",
+        "bytes": 1709
+      },
+      {
+        "path": ".vercelignore",
+        "bytes": 131
+      },
+      {
+        "path": "package.json",
+        "bytes": 1279
+      },
+      {
+        "path": "vercel.json",
+        "bytes": 1354
+      },
+      {
+        "path": "api/chat.js",
+        "bytes": 118790
+      },
+      {
+        "path": "api/chat-stream.js",
+        "bytes": 2609
+      },
+      {
+        "path": "api/health.js",
+        "bytes": 4906
+      },
+      {
+        "path": "api/admin-dashboard.js",
+        "bytes": 6362
+      },
+      {
+        "path": "api/admin-export.js",
+        "bytes": 1085
+      },
+      {
+        "path": "admin/index.html",
+        "bytes": 24373
+      },
+      {
+        "path": "lib/final_production_os.js",
+        "bytes": 26186
+      },
+      {
+        "path": "lib/neural_agent.js",
+        "bytes": 55045
+      },
+      {
+        "path": "lib/site.js",
+        "bytes": 17341
+      },
+      {
+        "path": "lib/commerce.js",
+        "bytes": 1490
+      },
+      {
+        "path": "lib/product_index.js",
+        "bytes": 6814
+      },
+      {
+        "path": "ODOO_CHAT_UI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR.txt",
+        "bytes": 60075
+      },
+      {
+        "path": "tests/final_production_os.mjs",
+        "bytes": 4476
+      },
+      {
+        "path": "tests/final_api_contract.mjs",
+        "bytes": 1808
+      },
+      {
+        "path": "tests/final_stream_contract.mjs",
+        "bytes": 950
+      },
+      {
+        "path": "tools/run_final_evals.mjs",
+        "bytes": 6784
+      },
+      {
+        "path": "tools/build_final_audit.mjs",
+        "bytes": 2516
+      },
+      {
+        "path": "tools/validate_release.mjs",
+        "bytes": 6577
+      },
+      {
+        "path": "evals/final_eval_report.json",
+        "bytes": 1282
+      },
+      {
+        "path": "RELEASE_FINAL_PRODUCTION_OS_AR.md",
+        "bytes": 3177
+      },
+      {
+        "path": "UPLOAD_FINAL_PRODUCTION_OS_AR.txt",
+        "bytes": 1556
+      },
+      {
+        "path": "FINAL_ARCHITECTURE_AR.md",
+        "bytes": 2536
+      }
+    ]
+  }
+}
