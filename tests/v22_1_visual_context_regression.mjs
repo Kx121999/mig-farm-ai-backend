@@ -58,7 +58,7 @@ const origin="https://edu-mig-for-agriculture.odoo.com";
 const req1=new Request("https://mig-farm-ai-backend.vercel.app/api/chat",{method:"POST",headers:{"content-type":"application/json","origin":origin},body:JSON.stringify({message:"",images:[{image_url:"data:image/jpeg;base64,AAAA",detail:"high"}],session_id:"v22-1-visual-context",locale:"ar",history:[],conversation_state:{},page_url:"https://edu-mig-for-agriculture.odoo.com/",page_title:"Home"})});
 const res1=await POST(req1);const r1=await res1.json();
 assert.equal(res1.status,200);
-assert.equal(r1.version,"26.0.0");
+assert.equal(r1.version,"27.0.0");
 assert.equal(r1.source,"v22_5_visual_recognition_safe_fallback");
 assert.equal(r1.conversation_state?.active_visual_context?.active,true);
 

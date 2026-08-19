@@ -17,9 +17,9 @@ for(const [index,message] of ["مكانكم فين","فين مكانكم","وي�
   assert.equal(route?.intent,"branches",message);assert.equal(route?.isolate,true,message);
   const req=new Request("https://backend.example/api/chat",{method:"POST",headers:{"content-type":"application/json","origin":"https://www.migfarm.com"},body:JSON.stringify({message,session_id:`v26-place-${index}`,conversation_state:staleState})});
   const res=await POST(req);assert.equal(res.status,200);const data=await res.json();
-  assert.equal(data.version,"26.0.0");assert.equal(data.mode,"github_knowledge_natural_conversation_os_v26");assert.equal(data.source,"branches");
+  assert.equal(data.version,"27.0.0");assert.equal(data.mode,"customer_brain_decision_os_v27");assert.equal(data.source,"branches");
   assert.match(data.reply,/الشارقة/);assert.match(data.reply,/العين/);assert.doesNotMatch(data.reply,/جرعة|جرعه|سماد قديم|مبيد قديم|99/);
-  assert.equal(data.current_turn_router?.mode,"current_turn_sovereignty_router");assert.equal(data.conversation_state.active_product_context,undefined);assert.equal(data.conversation_state.category,"");
+  assert.equal(data.current_turn_router?.mode,"current_turn_sovereignty_and_compound_message_router");assert.equal(data.current_turn_router?.version,"27.0");assert.equal(data.conversation_state.active_product_context,undefined);assert.equal(data.conversation_state.category,"");
 }
 
 const productMessage="المنتج ده ينفع في مكان مكشوف؟";

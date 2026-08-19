@@ -4,8 +4,8 @@ import { POST } from "../api/chat.js";
 
 const h=await (await GET()).json();
 assert.equal(h.ok,true);
-assert.equal(h.version,"26.0.0");
-assert.equal(h.mode,"github_knowledge_natural_conversation_os_v26");
+assert.equal(h.version,"27.0.0");
+assert.equal(h.mode,"customer_brain_decision_os_v27");
 assert.equal(h.vision_intelligence?.version,"22.5");
 assert.equal(h.vision_intelligence?.recognition_before_identity_guard,true);
 assert.equal(h.vision_intelligence?.forced_product_recognition_preflight,true);
@@ -14,7 +14,7 @@ assert.equal(h.human_conversation_brain?.version,"22.5");
 assert.equal(h.conversion_decision_brain?.version,"22.5");
 assert.equal(h.sales_employee?.version,"22.5");
 assert.equal(h.sales_conversation_os?.version,"22.5");
-assert.equal(h.neural_brain?.version,"26.0");
+assert.equal(h.neural_brain?.version,"27.0");
 assert.ok(h.features.includes("recognition_before_identity_guard"));
 assert.ok(h.neural_brain.tools.includes("match_visual_product"));
 
@@ -22,8 +22,8 @@ const oldKey=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;
 try{
   const req=new Request("https://mig-farm-ai-backend.vercel.app/api/chat",{method:"POST",headers:{"content-type":"application/json","origin":"https://www.migfarm.com"},body:JSON.stringify({message:"هل متوفر؟",session_id:"v223-api",locale:"ar",history:[],conversation_state:{},images:[{type:"input_image",image_url:"data:image/jpeg;base64,AAAA",detail:"high",client_image_id:"img-api"}],visual_context_reused:false})});
   const r=await (await POST(req)).json();
-  assert.equal(r.version,"26.0.0");
-  assert.equal(r.mode,"github_knowledge_natural_conversation_os_v26");
+  assert.equal(r.version,"27.0.0");
+  assert.equal(r.mode,"customer_brain_decision_os_v27");
   assert.equal(r.runtime?.vision_intelligence?.version,"22.5");
   assert.equal(r.vision?.requires_recognition_preflight,true);
   assert.ok(["v22_5_visual_recognition_safe_fallback","neural_multimodal_visual_recognition_sales_v22_5"].includes(r.source));
