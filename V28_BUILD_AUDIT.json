@@ -1,0 +1,45 @@
+{
+  "version": "28.0.0",
+  "generated_at": "2026-08-19T06:51:29.800Z",
+  "status": "pass",
+  "release": {
+    "service": "MIG FARM V28 Enterprise Autonomous Intelligence Platform",
+    "mode": "enterprise_autonomous_intelligence_platform_v28"
+  },
+  "validation": {
+    "test_suites": 59,
+    "enterprise_evals": "24/24",
+    "enterprise_eval_status": "pass",
+    "scripts": 133,
+    "json_files": 24
+  },
+  "knowledge": {
+    "local_megabytes": 400,
+    "records": 200025,
+    "packs": 23,
+    "external_optional": true,
+    "local_failover": true
+  },
+  "dashboard": {
+    "route": "/admin",
+    "signed_http_only_session": true,
+    "privacy_safe_telemetry": true,
+    "export_endpoint": "/api/admin-export"
+  },
+  "security": {
+    "committed_secrets": false,
+    "raw_transcripts_default": false,
+    "pii_redaction": true,
+    "odoo_actions_default": false,
+    "live_price_stock_only": true,
+    "label_only_dosage": true
+  },
+  "files": {
+    "total": 219,
+    "bytes": 439992434,
+    "largest_file": {
+      "file": "knowledge_v27/packs/customer-brain-pack-009.jsonl",
+      "bytes": 18874362
+    }
+  }
+}

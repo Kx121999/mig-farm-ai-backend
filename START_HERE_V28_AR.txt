@@ -1,0 +1,52 @@
+MIG FARM AI V28 — ابدأ من هنا
+================================
+
+هذه النسخة هي V28 Enterprise Autonomous Intelligence Platform.
+
+أهم ما تم تنفيذه:
+- مشرف مركزي يوزع كل سؤال على المحرك المتخصص المناسب ويراجع الرد قبل الإرسال.
+- فهم الرسائل المركبة باللهجات العربية والإنجليزية والعربيزي.
+- 400 MB معرفة محفوظة في GitHub/تخزين ملفات بعيد، ويحمّل النظام حزمة واحدة موثقة فقط حسب السؤال.
+- Vercel Function تحتوي manifest وrouter فقط؛ لذلك لا تتجاوز حد النشر 250 MB.
+- إمكانية ربط OpenAI Vector Store لتوسيع المعرفة بدون وضع ملفات ضخمة داخل GitHub.
+- لوحة تحكم عربية مستقلة على /admin.
+- تسجيل دخول آمن للوحة بجلسة HttpOnly مشفرة.
+- إحصاءات جودة وقرارات ومصادر إجابات بدون تخزين الرسائل الخام افتراضيًا.
+- تصدير تقرير تشغيلي آمن من اللوحة.
+- Odoo Actions تظل متوقفة إلى أن تقرر ربط بيانات Odoo لاحقًا.
+
+الرابط بعد النشر:
+https://YOUR-VERCEL-DOMAIN.vercel.app/admin
+
+المتغيرات المطلوبة الآن في Vercel:
+OPENAI_API_KEY
+OPENAI_MODEL
+MIG_ADMIN_TOKEN
+MIG_ADMIN_SESSION_SECRET
+
+المتغيرات الموصى بها لحفظ بيانات اللوحة بين عمليات النشر:
+UPSTASH_REDIS_REST_URL
+UPSTASH_REDIS_REST_TOKEN
+
+توسيع المعرفة خارجيًا اختياري:
+MIG_ENTERPRISE_RETRIEVAL_ENABLED=true
+OPENAI_VECTOR_STORE_ID
+
+مسار حزم معرفة V27 اختياري ولا يحتاج ضبطًا عند استخدام GitHub الحالي:
+MIG_V27_KNOWLEDGE_BASE_URL
+القيمة الافتراضية:
+https://raw.githubusercontent.com/Kx121999/mig-farm-ai-backend/main/knowledge_v27
+
+مهم: لا تحذف .vercelignore؛ هو الذي يمنع إدخال مجلد الحزم 400 MB داخل Vercel Function.
+كل حزمة يتم فحص حجمها وSHA-256 قبل استخدامها، مع كاش لحزمة واحدة لتقليل الذاكرة والتحميل.
+
+لا تكتب أي مفتاح حقيقي داخل ملفات GitHub.
+
+فحص النسخة قبل الرفع:
+npm run release:check
+
+بعد النشر افتح /api/health وتأكد أن:
+conversation_knowledge.function_bundle = manifest_router_only
+
+ملف واجهة Odoo المطلوب:
+ODOO_CHAT_UI_V28_ENTERPRISE_AUTONOMOUS_INTELLIGENCE_PLATFORM.txt

@@ -1,0 +1,53 @@
+طريقة رفع V28 على GitHub وVercel
+================================
+
+1) افتح مستودع GitHub الحالي.
+2) ارفع محتويات مجلد V28 نفسه، وليس ملف ZIP.
+3) استبدل الملفات المتشابهة بالإصدار الجديد.
+4) اترك ملفات knowledge_v27/packs كلها في GitHub؛ هي قاعدة المعرفة البعيدة 400 MB التي يقرأ منها النظام عند الطلب.
+5) تأكد أن كل حزمة أقل من حد GitHub الفردي. النسخة مقسمة بالفعل إلى 23 ملفًا آمنًا.
+6) لا ترفع .env أو أي API Key.
+7) لا تحذف ملف .vercelignore؛ فهو يمنع Vercel من ضم الحزم الضخمة داخل Function.
+8) بعد اكتمال الرفع، Vercel سيبدأ Deployment تلقائيًا.
+
+تصميم النشر الآمن:
+- داخل Vercel Function: knowledge_v27/manifest.json وknowledge_v27/router.json فقط.
+- خارج Function: knowledge_v27/packs وعددها 23 حزمة بحجم إجمالي يقارب 400 MB.
+- لكل سؤال: يتم اختيار حزمة واحدة، التحقق من الحجم وSHA-256، ثم حفظها مؤقتًا في كاش محدود.
+- لا يوجد متغير جديد مطلوب. النظام يستخدم GitHub Raw افتراضيًا.
+- عند النقل مستقبلًا إلى Vercel Blob أو S3 أضف MIG_V27_KNOWLEDGE_BASE_URL فقط.
+
+داخل Vercel > Settings > Environment Variables أضف:
+
+OPENAI_API_KEY
+القيمة: مفتاح OpenAI الحقيقي
+
+OPENAI_MODEL
+القيمة: اسم الموديل الفعلي الذي تستخدمه
+
+MIG_ADMIN_TOKEN
+القيمة: رمز طويل وعشوائي تستخدمه للدخول إلى اللوحة
+
+MIG_ADMIN_SESSION_SECRET
+القيمة: رمز طويل وعشوائي مختلف تمامًا عن MIG_ADMIN_TOKEN
+
+الموصى به للذاكرة واللوحة:
+UPSTASH_REDIS_REST_URL
+UPSTASH_REDIS_REST_TOKEN
+
+ثم اعمل Redeploy.
+
+اختبار النشر:
+/api/health
+يجب أن يظهر version = 28.0.0
+ويجب أن يظهر conversation_knowledge.function_bundle = manifest_router_only
+
+/admin
+تظهر شاشة دخول لوحة التحكم
+
+واجهة Odoo:
+استبدل كود الشات القديم بمحتوى:
+ODOO_CHAT_UI_V28_ENTERPRISE_AUTONOMOUS_INTELLIGENCE_PLATFORM.txt
+
+Odoo Actions:
+اترك ODOO_ACTIONS_ENABLED=false الآن. الربط التنفيذي يتم لاحقًا عندما تتوفر بيانات Odoo.

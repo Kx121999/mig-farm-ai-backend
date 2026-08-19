@@ -1,14 +1,17 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "27.0.0",
+  "version": "28.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM V27 Customer Brain & Decision OS: 400 MB sharded customer journeys, ordered multi-intent execution, privacy-bounded customer memory, pre-send response auditing, grounded sales, product and agricultural decisions",
+  "description": "MIG FARM V28 Enterprise Autonomous Intelligence Platform: multi-agent supervision, protected administration dashboard, hybrid vector/local retrieval, persistent privacy-safe telemetry, live quality gates, grounded product and agricultural decisions",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
     "knowledge:build": "node tools/build_v27_customer_brain_knowledge.mjs",
     "knowledge:validate": "node tools/validate_v27_customer_brain_knowledge.mjs",
-    "release:check": "npm run knowledge:validate && npm run validate && npm test"
+    "enterprise:manifest": "node tools/build_v28_enterprise_manifest.mjs",
+    "enterprise:eval": "node tools/run_v28_evals.mjs",
+    "enterprise:sync": "node tools/sync_v28_vector_store.mjs",
+    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run validate && npm test"
   }
 }

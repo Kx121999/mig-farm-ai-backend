@@ -1,14 +1,5 @@
 # MIG FARM AI V27
 
-## إصلاح Vercel Production
-
-- فصل حزم المعرفة 400MB عن حزمة Node.js Function.
-- تضمين manifest.json وrouter.json فقط داخل Vercel.
-- تحميل حزمة واحدة عن بعد حسب السؤال مع فحص الحجم وSHA-256.
-- كاش LRU لحزمة واحدة ومنع التنزيل المتزامن المكرر.
-- دعم MIG_V27_KNOWLEDGE_BASE_URL للنقل لاحقًا إلى Vercel Blob أو S3 بدون تعديل الكود.
-- إضافة .vercelignore وتصحيح includeFiles إلى صيغة نصية متوافقة مع Vercel.
-
 ## Customer Brain & Decision OS
 
 - 400MB معرفة مجزأة في 23 حزمة مناسبة للرفع.
@@ -34,3 +25,4 @@
 - تصحيح الردود الخاطئة: 37.25MB
 - سياسات الأمان: 14.69MB
 - حقائق النشاط: 7.23MB
+
