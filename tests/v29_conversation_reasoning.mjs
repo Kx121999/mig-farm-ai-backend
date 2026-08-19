@@ -57,8 +57,8 @@ assert.equal((natural.reply.match(/متوفر عندنا/g)||[]).length,1);
 assert.equal(natural.natural_response_v29.version,"29.0");
 assert.equal(conversationReasoningHealthV29().ready,true);
 
-const ui=readFileSync(new URL("../ODOO_CHAT_UI_V30_NEURAL_AUTONOMOUS_CUSTOMER_OS.txt",import.meta.url),"utf8");
-for(const marker of ["UI_VERSION='30.0.0'","mig_ai_session_id_v30","function appendSafeInline","white-space:nowrap"])assert.ok(ui.includes(marker),marker);
+const ui=readFileSync(new URL("../ODOO_CHAT_UI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR.txt",import.meta.url),"utf8");
+for(const marker of ["UI_VERSION='31.0.0'","mig_ai_session_id_v31","function appendSafeInline","white-space:nowrap"])assert.ok(ui.includes(marker),marker);
 const uiScript=ui.match(/<!\[CDATA\[([\s\S]*?)\]\]>/)?.[1];assert.ok(uiScript);new Function(uiScript);
 
 process.env.MIG_V27_KNOWLEDGE_TRANSPORT="local";
@@ -73,8 +73,8 @@ async function ask(body){
   assert.equal(response.status,200);return response.json();
 }
 const first=await ask({message:"وين مكانكم"});
-assert.equal(first.version,"30.0.0");
-assert.equal(first.mode,"neural_autonomous_customer_os_v30");
+assert.equal(first.version,"31.0.0");
+assert.equal(first.mode,"llm_first_semantic_orchestrator_v31");
 assert.equal(first.conversation_state.dialogue_v29.expected.field,"branch");
 const second=await ask({message:"3ain",conversation_state:first.conversation_state,history:[{role:"user",content:"وين مكانكم"},{role:"assistant",content:first.reply}]});
 assert.match(second.reply,/\+971 58 176 8215/);

@@ -66,9 +66,9 @@ async function ask(body){
   assert.equal(response.status,200);return response.json();
 }
 const first=await ask({message:"وين مكانكم؟"});
-assert.equal(first.version,"30.0.0");
-assert.equal(first.mode,"neural_autonomous_customer_os_v30");
-assert.equal(first.conversation_state.v,30);
+assert.equal(first.version,"31.0.0");
+assert.equal(first.mode,"llm_first_semantic_orchestrator_v31");
+assert.equal(first.conversation_state.v,31);
 assert.equal(first.autonomous_customer_os.version,"30.0");
 assert.equal(first.confidence_gateway.version,"30.0");
 assert.equal(first.customer_digital_twin.version,"30.0");
