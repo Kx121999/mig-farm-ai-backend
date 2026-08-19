@@ -1,0 +1,455 @@
+{
+  "version": "28.0",
+  "generated_at": "2026-08-19T09:02:33.951Z",
+  "status": "pass",
+  "passed": 24,
+  "total": 24,
+  "results": [
+    {
+      "id": "business_branch_egyptian",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "branches"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "business_branch_arabizi",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "branches"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "identity",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "identity"
+      ],
+      "agents": [
+        "conversation",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "social",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "social"
+      ],
+      "agents": [
+        "conversation",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "shipping",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "shipping"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "payment",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "payment"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "returns",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "returns"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "order_status",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "order_status"
+      ],
+      "agents": [
+        "odoo_operations",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "product_price",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "price"
+      ],
+      "agents": [
+        "product_truth",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "product_availability",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "availability"
+      ],
+      "agents": [
+        "product_truth",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "product_details",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "product_search",
+        "product_details"
+      ],
+      "agents": [
+        "sales_advisor",
+        "product_intelligence",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "product_search",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "product_search"
+      ],
+      "agents": [
+        "sales_advisor",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "purchase",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "purchase",
+        "product_search"
+      ],
+      "agents": [
+        "commerce_orchestrator",
+        "sales_advisor",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "comparison",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "comparison"
+      ],
+      "agents": [
+        "product_intelligence",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "agriculture",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "agriculture_diagnosis"
+      ],
+      "agents": [
+        "senior_agronomist",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "dosage_guard",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true,
+        "response": true,
+        "dosage_safe": true
+      },
+      "intents": [
+        "dosage"
+      ],
+      "agents": [
+        "agricultural_safety",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "dosage_label_safe",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true,
+        "response": true,
+        "dosage_safe": true
+      },
+      "intents": [
+        "dosage"
+      ],
+      "agents": [
+        "agricultural_safety",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "compound_business",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "branches",
+        "shipping",
+        "payment"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "compound_product",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "availability",
+        "price",
+        "product_details"
+      ],
+      "agents": [
+        "product_truth",
+        "product_intelligence",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "stale_context_quarantine",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "identity"
+      ],
+      "agents": [
+        "conversation",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "vision",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "availability"
+      ],
+      "agents": [
+        "vision_specialist",
+        "product_truth",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "english",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "branches"
+      ],
+      "agents": [
+        "business_facts",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "arabizi_price",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "price"
+      ],
+      "agents": [
+        "product_truth",
+        "quality_critic"
+      ]
+    },
+    {
+      "id": "thanks",
+      "passed": true,
+      "checks": {
+        "intents": true,
+        "forbidden_intents": true,
+        "agents": true,
+        "question_budget": true,
+        "context": true
+      },
+      "intents": [
+        "thanks"
+      ],
+      "agents": [
+        "conversation",
+        "quality_critic"
+      ]
+    }
+  ]
+}
