@@ -119,6 +119,10 @@ import {
   allowLegacyRouteV31, allowLegacyCompoundV31, auditMeaningAlignmentV31,
   enforceMeaningAlignmentV31, meaningFrameClientV31, llmFirstHealthV31
 } from "../lib/llm_first_orchestrator_v31.js";
+import {
+  createFinalTurnContract, finalizeProductionResponse,
+  finalProductionHealth, finalProductionSnapshot
+} from "../lib/final_production_os.js";
 
 const VERSION="31.0.0";
 const MODE="llm_first_semantic_orchestrator_v31";
@@ -285,9 +289,16 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   payload=enforceConfidenceGatewayV30({payload,assessment:confidenceAssessment,reasoning:conversationalReasoning});
   const meaningAlignment=auditMeaningAlignmentV31({message,frame:meaningFrameV31,payload,source});
   payload=enforceMeaningAlignmentV31({payload,frame:meaningFrameV31,audit:meaningAlignment});
+  const finalReview=await finalizeProductionResponse({
+    message,payload,meaningFrame:meaningFrameV31||{},analysis,state,results,evidence,source,
+    hasImages:Boolean(state?.__current_vision_frame?.has_visual_context),
+    startedAt:Number(state?.__v28_request_started_at)||Date.now()
+  });
+  payload=finalReview.payload;
 
   const next=updateState(state,analysis,message,source,results,payload);
   next.v=31;
+  next.final_release="FINAL_PRODUCTION_OS";
   next.dialogue_v29=updateDialogueStateV29({previous:state,next,analysis,message,source,payload,reasoning:conversationalReasoning});
   delete next.__v28_request_started_at;
   next.customer_brain_memory=mergeCustomerMemoryV27(state?.customer_brain_memory||{},customerFrame,next.turn);
@@ -366,7 +377,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   if(selfLearning.gap_fingerprint){try{await recordKnowledgeGaps([selfLearning.gap_fingerprint]);}catch{}}
   const autonomousMission=buildCommerceMission({message,analysis,cognition:frame,state:next,profile:nextProfile,locale});
   const autonomousMeta=autonomousCommerceMeta({mission:autonomousMission});
-  const enterpriseEvent=buildEnterpriseTurnEventV28({sessionId,message,analysis,frame:customerFrame,source,audit:enterpriseReview,selfLearning,leadTemperature:lead.temperature,startedAt:Number(state?.__v28_request_started_at)||Date.now()});
+  const enterpriseEvent=buildEnterpriseTurnEventV28({sessionId,message,analysis,frame:customerFrame,source,audit:{...enterpriseReview,score:finalReview.audit.score,quality_score:finalReview.audit.score,flags:[...new Set([...(enterpriseReview.flags||[]),...(finalReview.audit.flags||[])])]},selfLearning,leadTemperature:lead.temperature,startedAt:Number(state?.__v28_request_started_at)||Date.now()});
   let enterpriseTelemetry={recorded:false,mode:"disabled",reason:"not_attempted"};
   try{enterpriseTelemetry=await recordEnterpriseTurnV28(enterpriseEvent);}catch(error){enterpriseTelemetry={recorded:false,mode:"memory",reason:String(error?.message||"telemetry_failed").slice(0,120)};}
   trackConversationReasoningV29(conversationalReasoning,source);
@@ -409,6 +420,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       enterprise_telemetry:enterpriseTelemetryHealthV28(),
       conversation_reasoning:conversationReasoningHealthV29(),
       llm_first_orchestrator:llmFirstHealthV31(),
+      final_production_os:finalProductionHealth(),
       autonomous_customer_os:autonomousCustomerOSHealthV30(),
       customer_digital_twin:customerDigitalTwinHealthV30(),
       confidence_gateway:confidenceGatewayHealthV30(),
@@ -429,7 +441,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
-    enterprise_platform:{version:"31.0",llm_first_orchestrator:llmFirstHealthV31(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    enterprise_platform:{version:"31.0",release:"FINAL_PRODUCTION_OS",final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    final_production:{...finalProductionHealth(),current:{contract:finalReview.contract,truth:finalReview.truth,audit:finalReview.audit,critic:finalReview.critic,latency_ms:finalReview.latency_ms},snapshot:finalProductionSnapshot()},
     llm_first_orchestrator:{...llmFirstHealthV31(),current:meaningFrameClientV31(meaningFrameV31||{})},
     meaning_alignment:{...meaningAlignment},
     conversation_reasoning:{...conversationReasoningHealthV29(),current:conversationalReasoning},
@@ -746,7 +759,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{semantic_frame:semanticFrame,llm_first_meaning_v31:meaningFrameV31,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      context:{final_production_contract:state?.__final_turn_contract||null,semantic_frame:semanticFrame,llm_first_meaning_v31:meaningFrameV31,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
       toolHandlers,images,allowedTools:constrainToolsWithPlanV30(humanTurn?.tool_policy?.allowed,autonomousPlanV30||{})
     });
     if(!result?.handled||!result.reply) return null;
@@ -1153,6 +1166,7 @@ export async function POST(request){
   state.__semantic_frame=semanticFrame;
   state.__conversation_reasoning_v29=conversationalReasoning;
   state.__llm_first_meaning_v31=meaningFrameV31;
+  state.__final_turn_contract=createFinalTurnContract({message,meaningFrame:meaningFrameV31,analysis,state,hasImages:images.length>0});
   const customerFrame=buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
   state.__customer_brain_v27=customerFrame;
   const signals=extractCustomerSignals(message,analysis,state);
@@ -1171,6 +1185,7 @@ export async function POST(request){
   turnState.__conversation_reasoning_v29=conversationalReasoning;
   turnState.__autonomous_customer_os_v30=autonomousPlanV30;
   turnState.__llm_first_meaning_v31=meaningFrameV31;
+  turnState.__final_turn_contract=state.__final_turn_contract;
   turnState.__persistent_snapshot=state.__persistent_snapshot;
   turnState.__persistent_read=state.__persistent_read;
   turnState.__v28_request_started_at=state.__v28_request_started_at;
@@ -1387,7 +1402,7 @@ export async function POST(request){
 
   const currentProduct=await resolveCurrentProduct(pageUrl,productContext);
   const current=currentProductReply(message,currentProduct,locale);
-  if(current) return await makeResponse({payload:{reply:current,suggested_actions:pageUrl?[{type:"page",label:"افتح المنتج",url:pageUrl}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"current_product",locale});
+  if(current) return await makeResponse({payload:{reply:current,suggested_actions:pageUrl?[{type:"page",label:"افتح المنتج",url:pageUrl}]:[]},cors,sessionId,state,analysis,signals,profile,message,source:"current_product",results:currentProduct?[currentProduct]:[],locale});
 
   const contextual=ambiguousContextReply(message,turnState,analysis);
   if(contextual) return await makeResponse({payload:{reply:contextual.reply,quick_replies:contextual.quick_replies||[]},cors,sessionId,state,analysis,signals,profile,message,source:contextual.source,locale});
