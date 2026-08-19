@@ -105,9 +105,14 @@ import { customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
 import { createSupervisorPlanV28, superviseResponseV28, enterpriseSupervisorHealthV28 } from "../lib/supervisor_v28.js";
 import { retrieveEnterpriseKnowledgeV28, enterpriseRetrievalHealthV28 } from "../lib/enterprise_retrieval_v28.js";
 import { buildEnterpriseTurnEventV28, recordEnterpriseTurnV28, enterpriseTelemetryHealthV28 } from "../lib/enterprise_telemetry_v28.js";
+import {
+  reasonConversationTurnV29, applyConversationReasoningV29, updateDialogueStateV29,
+  composeNaturalResponseV29, contextualClarificationV29, trackConversationReasoningV29,
+  conversationReasoningHealthV29
+} from "../lib/conversation_reasoning_v29.js";
 
-const VERSION="28.0.0";
-const MODE="enterprise_autonomous_intelligence_platform_v28";
+const VERSION="29.0.0";
+const MODE="conversational_reasoning_natural_language_os_v29";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -244,8 +249,10 @@ function sourceNeedsLearning(source=""){
 
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
   const semanticFrame=state?.__semantic_frame||null;
+  const conversationalReasoning=state?.__conversation_reasoning_v29||analysis?.__conversation_reasoning_v29||null;
   const customerFrame=state?.__customer_brain_v27||buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
   const enterprisePlan=createSupervisorPlanV28({message,frame:customerFrame,analysis,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
+  payload=composeNaturalResponseV29({payload,reasoning:conversationalReasoning,source});
   payload=enforceResponseQuality(payload);
   const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
   const executionPlan=plan||buildHybridPlan({message,analysis,cognition:frame,state,profile});
@@ -265,7 +272,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   const enterpriseReview={...supervision.review,quality_score:customerAudit.score,passed:Boolean(supervision.review?.passed&&customerAudit.passed),missing_tasks:customerAudit.missing_tasks||[],flags:[...new Set([...(supervision.review?.flags||[]),...(customerAudit.dose_claim_risk?["unsafe_dosage_claim"]:[]),...(customerAudit.stale_context_risk?["stale_context"]:[])])]};
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=28;
+  next.v=29;
+  next.dialogue_v29=updateDialogueStateV29({previous:state,next,analysis,message,source,payload,reasoning:conversationalReasoning});
   delete next.__v28_request_started_at;
   next.customer_brain_memory=mergeCustomerMemoryV27(state?.customer_brain_memory||{},customerFrame,next.turn);
   delete next.__customer_brain_v27;
@@ -345,6 +353,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   const enterpriseEvent=buildEnterpriseTurnEventV28({sessionId,message,analysis,frame:customerFrame,source,audit:enterpriseReview,selfLearning,leadTemperature:lead.temperature,startedAt:Number(state?.__v28_request_started_at)||Date.now()});
   let enterpriseTelemetry={recorded:false,mode:"disabled",reason:"not_attempted"};
   try{enterpriseTelemetry=await recordEnterpriseTurnV28(enterpriseEvent);}catch(error){enterpriseTelemetry={recorded:false,mode:"memory",reason:String(error?.message||"telemetry_failed").slice(0,120)};}
+  trackConversationReasoningV29(conversationalReasoning,source);
 
   await writeServerSession(sessionId,{
     conversation_state:next,
@@ -381,6 +390,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       enterprise_supervisor:enterpriseSupervisorHealthV28(),
       enterprise_retrieval:enterpriseRetrievalHealthV28(),
       enterprise_telemetry:enterpriseTelemetryHealthV28(),
+      conversation_reasoning:conversationReasoningHealthV29(),
       autonomous_actions:autonomousActionHealth(),
       self_learning:selfLearningHealth(),
       vision_intelligence:visionHealth(),
@@ -397,7 +407,8 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
-    enterprise_platform:{version:"28.0",supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    enterprise_platform:{version:"29.0",conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    conversation_reasoning:{...conversationReasoningHealthV29(),current:conversationalReasoning},
     cognitive,
     evidence,
     hybrid_brain:hybrid,
@@ -1096,9 +1107,20 @@ export async function POST(request){
   const persistentProfile=hydrateProfileFromPersistent(mergedIncomingProfile,persistentRead.snapshot);
   const existingProfile=sanitizeCustomerProfile(persistentProfile);
   const analysis=analyzeTurn(message,state,history,locale);
-  const semanticFrame=buildSemanticFrame({message,analysis,state,history,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts});
+  let semanticFrame=buildSemanticFrame({message,analysis,state,history,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts});
   enrichAnalysisWithSemanticFrame(analysis,semanticFrame);
+  const conversationalReasoning=reasonConversationTurnV29({message,state,history,analysis,semanticFrame});
+  applyConversationReasoningV29(analysis,conversationalReasoning);
+  Object.defineProperty(analysis,"__conversation_reasoning_v29",{value:conversationalReasoning,enumerable:false,configurable:true});
+  semanticFrame=buildSemanticFrame({message,analysis,state,history,selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts});
+  enrichAnalysisWithSemanticFrame(analysis,semanticFrame);
+  if(conversationalReasoning?.resolution?.resolved&&analysis.intent){
+    semanticFrame.contextual_resolution_v29={kind:conversationalReasoning.resolution.kind,field:conversationalReasoning.resolution.field,confidence:conversationalReasoning.resolution.confidence};
+    semanticFrame.primary_intent=analysis.intent;
+    if(!semanticFrame.intents?.some(item=>item.name===analysis.intent))semanticFrame.intents=[{name:analysis.intent,confidence:conversationalReasoning.resolution.confidence,evidence:"v29_context_resolution"},...(semanticFrame.intents||[])];
+  }
   state.__semantic_frame=semanticFrame;
+  state.__conversation_reasoning_v29=conversationalReasoning;
   const customerFrame=buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
   state.__customer_brain_v27=customerFrame;
   const signals=extractCustomerSignals(message,analysis,state);
@@ -1110,6 +1132,11 @@ export async function POST(request){
   const humanTurn=mergeHumanTurnWithSemanticFrame(legacyHumanTurn,semanticFrame);
   const turnState=isolateStateForCurrentTurn(state,humanTurn);
   turnState.__customer_brain_v27=customerFrame;
+  turnState.__semantic_frame=semanticFrame;
+  turnState.__conversation_reasoning_v29=conversationalReasoning;
+  turnState.__persistent_snapshot=state.__persistent_snapshot;
+  turnState.__persistent_read=state.__persistent_read;
+  turnState.__v28_request_started_at=state.__v28_request_started_at;
   const salesTurn=analyzeSalesConversation(message,{analysis,state:turnState,profile,history,agriculturalContext,humanTurn});
   const conversionDecision=buildConversionDecision({message,analysis,profile,state:turnState,history,humanTurn,salesTurn,agriculturalContext});
   salesTurn.conversion_decision=conversionDecision;
@@ -1147,6 +1174,14 @@ export async function POST(request){
     const protectedDirect=directReply(analysis,turnState,message,sessionId);
     if(protectedDirect)return await makeResponse({payload:{reply:protectedDirect.reply,quick_replies:protectedDirect.quick_replies||[],suggested_actions:protectedDirect.actions||[],escalation:protectedDirect.escalation,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:protectedDirect.source,locale,cognition});
   }
+
+  // V29: when a short or referential answer is genuinely ambiguous, ask the
+  // exact missing question once instead of falling back to generic categories.
+  const v29Clarification=contextualClarificationV29(conversationalReasoning);
+  if(v29Clarification)return await makeResponse({
+    payload:{reply:v29Clarification.reply,display_reply:v29Clarification.display_reply,quick_replies:v29Clarification.quick_replies||[],conversation_reasoning:v29Clarification},
+    cors,sessionId,state:turnState,analysis,signals,profile,message,source:v29Clarification.source,locale,cognition
+  });
 
   // V23 Product Context Intelligence: the server resolves card selection, persisted focus,
   // explicit product mentions, visible ordinals and multi-product comparisons before any agronomy/RAG route.

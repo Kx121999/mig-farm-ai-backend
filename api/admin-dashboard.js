@@ -5,6 +5,7 @@ import { authenticateAdminV28, adminSecurityHeadersV28, adminAuthHealthV28 } fro
 import { enterpriseTelemetrySnapshotV28, enterpriseTelemetryHealthV28 } from "../lib/enterprise_telemetry_v28.js";
 import { enterpriseRetrievalHealthV28 } from "../lib/enterprise_retrieval_v28.js";
 import { enterpriseSupervisorHealthV28 } from "../lib/supervisor_v28.js";
+import { conversationReasoningHealthV29 } from "../lib/conversation_reasoning_v29.js";
 import { customerKnowledgeHealthV27 } from "../lib/customer_knowledge_v27.js";
 import { persistentStoreHealth } from "../lib/persistent_store.js";
 import { autonomousActionHealth } from "../lib/autonomous_action_os.js";
@@ -26,14 +27,15 @@ export async function GET(request){
     {key:"memory",label:"الذاكرة الدائمة",ready:enterpriseTelemetryHealthV28().persistent,detail:enterpriseTelemetryHealthV28().persistent?"Upstash Redis متصل":"وضع الذاكرة المؤقتة"},
     {key:"odoo",label:"Odoo Actions",ready:/^(1|true|yes|on)$/i.test(String(process.env.ODOO_ACTIONS_ENABLED||"false"))&&["ODOO_ACTION_URL","ODOO_DB","ODOO_USERNAME","ODOO_API_KEY"].every(configured),detail:/^(1|true|yes|on)$/i.test(String(process.env.ODOO_ACTIONS_ENABLED||"false"))?"مفعّل":"مؤجل حسب قرارك"},
     {key:"vector",label:"Vector Knowledge",ready:enterpriseRetrievalHealthV28().external_configured,detail:enterpriseRetrievalHealthV28().external_configured?"متصل":"المعرفة المحلية فعالة"},
-    {key:"admin",label:"حماية اللوحة",ready:adminAuthHealthV28().configured,detail:"جلسة مشفرة HttpOnly"}
+    {key:"admin",label:"حماية اللوحة",ready:adminAuthHealthV28().configured,detail:"جلسة مشفرة HttpOnly"},
+    {key:"conversation",label:"الفهم الحواري V29",ready:conversationReasoningHealthV29().ready,detail:"يفهم الردود القصيرة والسياق"}
   ];
   return json({
-    ok:true,version:"28.0.0",mode:"enterprise_autonomous_intelligence_platform_v28",generated_at:new Date().toISOString(),
+    ok:true,version:"29.0.0",mode:"conversational_reasoning_natural_language_os_v29",generated_at:new Date().toISOString(),
     telemetry,
     knowledge:{local:knowledge,enterprise_manifest:enterpriseManifest,retrieval:enterpriseRetrievalHealthV28()},
     quality:{evaluation:evalReport(),self_learning:selfLearningHealth()},
-    platform:{supervisor:enterpriseSupervisorHealthV28(),telemetry:enterpriseTelemetryHealthV28(),persistence:persistentStoreHealth(),actions:autonomousActionHealth(),auth:adminAuthHealthV28(),services},
+    platform:{conversation_reasoning:conversationReasoningHealthV29(),supervisor:enterpriseSupervisorHealthV28(),telemetry:enterpriseTelemetryHealthV28(),persistence:persistentStoreHealth(),actions:autonomousActionHealth(),auth:adminAuthHealthV28(),services},
     security:{secrets_returned:false,raw_transcripts_returned:false,admin_session:auth.method,cache:"no-store"}
   });
 }
