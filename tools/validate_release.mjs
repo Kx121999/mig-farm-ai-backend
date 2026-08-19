@@ -29,6 +29,7 @@ const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
 if(health.mode!=="llm_first_semantic_orchestrator_v31")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.release!=="FINAL_PRODUCTION_OS"||health.final_production_os?.ready!==true)throw new Error("FINAL_PRODUCTION_OS missing");
 if(health.llm_first_orchestrator?.version!=="31.0"||health.llm_first_orchestrator?.ready!==true)throw new Error("V31 LLM-first semantic orchestrator missing");
 if(health.autonomous_customer_os?.version!=="30.0"||health.autonomous_customer_os?.ready!==true)throw new Error("V30 autonomous customer OS missing");
 if(health.customer_digital_twin?.version!=="30.0"||health.customer_digital_twin?.ready!==true)throw new Error("V30 customer digital twin missing");
@@ -48,7 +49,7 @@ if(health.enterprise_telemetry?.version!=="28.0")throw new Error("V28 enterprise
 if(health.admin_auth?.version!=="28.0")throw new Error("V28 admin auth missing");
 
 const ui=readFileSync(join(root,"ODOO_CHAT_UI_V31_LLM_FIRST_SEMANTIC_ORCHESTRATOR.txt"),"utf8");
-for(const marker of ["UI_VERSION='31.0.0'","mig_ai_session_id_v31","mig_ai_conversation_state_v31","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply","function appendSafeInline"]){
+for(const marker of ["UI_VERSION='31.0.0'","STREAM_API=","readBackendResponse","mig_ai_session_id_v31","mig_ai_conversation_state_v31","selected_product_contexts:selectedComparisonProducts","autonomous_action_request:opts.actionRequest||null","addAutonomousAction","renderAssistantText","var visibleReply=reply","function appendSafeInline"]){
   if(!ui.includes(marker))throw new Error(`UI contract missing: ${marker}`);
 }
 if((ui.match(/<!\[CDATA\[/g)||[]).length!==(ui.match(/\]\]>/g)||[]).length)throw new Error("Odoo UI CDATA is unbalanced");
@@ -66,5 +67,9 @@ const autonomousEvalReport=JSON.parse(readFileSync(join(root,"evals","v30_eval_r
 if(autonomousEvalReport.status!=="pass"||autonomousEvalReport.passed!==autonomousEvalReport.total)throw new Error("V30 autonomous customer OS eval report is not passing");
 const meaningEvalReport=JSON.parse(readFileSync(join(root,"evals","v31_eval_report.json"),"utf8"));
 if(meaningEvalReport.status!=="pass"||meaningEvalReport.passed!==meaningEvalReport.total)throw new Error("V31 LLM-first meaning eval report is not passing");
+const finalEvalReport=JSON.parse(readFileSync(join(root,"evals","final_eval_report.json"),"utf8"));
+if(finalEvalReport.status!=="pass"||finalEvalReport.passed!==finalEvalReport.total||finalEvalReport.total<1000)throw new Error("FINAL_PRODUCTION_OS eval report is not passing 1000+ scenarios");
+const vercelIgnore=readFileSync(join(root,".vercelignore"),"utf8");
+if(!vercelIgnore.includes("knowledge_v27/packs/**"))throw new Error("400 MB packs must remain outside Vercel function bundles");
 
-console.log(`MIG FARM release validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, V${health.version}`);
+console.log(`MIG FARM FINAL_PRODUCTION_OS validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, ${finalEvalReport.passed}/${finalEvalReport.total} final evals, V${health.version}`);
