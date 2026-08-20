@@ -1,0 +1,48 @@
+{
+  "release": "V31.2_UNIVERSAL_AGRICULTURAL_PROBLEM_ENGINE",
+  "api_compatibility": "31.0.0",
+  "date": "2026-08-20",
+  "status": "PASS",
+  "scope": {
+    "fixed_crop_dependency_removed": true,
+    "arbitrary_crop_extraction": true,
+    "universal_symptom_taxonomy": true,
+    "affected_zone_extraction": true,
+    "spread_and_onset_extraction": true,
+    "multi_turn_diagnostic_memory": true,
+    "diagnostic_context_ttl_turns": 6,
+    "order_complaint_isolation": true,
+    "knowledge_route_hijack_blocked": true,
+    "safe_deterministic_fallback": true,
+    "single_discriminating_question": true
+  },
+  "validation": {
+    "universal_problem_test": "PASS",
+    "v31_orchestrator_test": "PASS",
+    "v31_primary_api_test": "PASS",
+    "v29_conversation_reasoning_test": "PASS",
+    "release_validator": "PASS",
+    "javascript_files": 156,
+    "json_files": 33,
+    "knowledge_records": 200025,
+    "final_evals_passed": 1320,
+    "final_evals_total": 1320
+  },
+  "verified_examples": [
+    "tomato_spreading_brown_spots",
+    "date_palm_insects_and_honeydew",
+    "cucumber_black_soft_roots",
+    "mango_leaf_curl_and_stunting",
+    "unknown_crop_kaka_leaf_spots",
+    "lemon_yellowing_multi_turn_followup",
+    "order_delay_and_broken_package_non_hijack"
+  ],
+  "changed_files": [
+    "api/chat.js",
+    "api/health.js",
+    "lib/llm_first_orchestrator_v31.js",
+    "lib/dialogue.js",
+    "lib/agricultural_engineer.js",
+    "tests/v31_2_universal_problem_engine.mjs"
+  ]
+}
