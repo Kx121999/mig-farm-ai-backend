@@ -3,7 +3,7 @@
   "version": "31.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM AI FINAL_PRODUCTION_OS on V31: whole-utterance understanding, grounded natural generation, context quarantine, truth freshness, adaptive pre-send review, safety guards, observability, progressive SSE and 400 MB GitHub knowledge",
+  "description": "MIG FARM AI with the V32 natural-conversation layer: whole-utterance understanding, grounded generation, help and frustration speech acts, false product-memory guards, truth safety and 400 MB GitHub knowledge",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",

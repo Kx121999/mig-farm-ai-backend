@@ -1,0 +1,38 @@
+{
+  "release": "V32_NATURAL_UNDERSTANDING_ENGINE",
+  "public_api_contract": "31.0.0",
+  "internal_engine": "32.0.0",
+  "status": "PASS",
+  "problem_fixed": "whole_utterance_was_reduced_to_keyword_or_canned_fallback",
+  "root_causes": [
+    "generic_help_and_frustration_were_not_first_class_intents",
+    "semantic_frame_was_discarded_by_deterministic_fallback",
+    "unverified_message_fragments_could_poison_product_memory",
+    "stale_product_context_could_hijack_the_current_turn"
+  ],
+  "capabilities": [
+    "whole_utterance_classification",
+    "natural_help_request_handling",
+    "frustration_recovery",
+    "multi_intent_order_preservation",
+    "stale_context_quarantine",
+    "false_product_memory_guard",
+    "grounded_business_answers",
+    "provider_independent_safe_fallback"
+  ],
+  "original_case": {
+    "input": "محتاجه مساعده",
+    "intent": "help_request",
+    "source": "natural_help_request_v32",
+    "provider": "deterministic_guard",
+    "false_product_reference": false
+  },
+  "verification": {
+    "full_test_suites_passed": 70,
+    "full_test_suites_total": 70,
+    "api_regression": "PASS",
+    "memory_regression": "PASS",
+    "multi_intent_regression": "PASS",
+    "release_validation": "PASS"
+  }
+}
