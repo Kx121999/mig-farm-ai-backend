@@ -4,6 +4,7 @@ const VERSION="31.0.0";
 const MODE="llm_first_semantic_orchestrator_v31";
 const FEATURES=[
   "final_production_os","whole_utterance_contract","meaning_before_keyword_routing","llm_primary_natural_answer",
+  "natural_help_request_understanding","frustration_support","false_product_reference_guard","non_factual_social_bypass",
   "contextual_crop_symptom_recovery","arbitrary_crop_entity_memory","deterministic_diagnosis_fallback",
   "universal_agricultural_problem_engine","multi_turn_diagnostic_memory","symptom_attribute_extraction",
   "adaptive_pre_send_critic","deterministic_hard_safety","truth_freshness_envelope","prompt_versioning",
@@ -14,7 +15,17 @@ const FEATURES=[
   "dosage_evidence_guard","suitability_evidence_guard","current_turn_semantic_priority","stale_context_quarantine",
   "new_topic_context_quarantine","legacy_keyword_router_fallback_only","unverified_live_price_stock_guard",
   "unverified_action_claim_hard_block","label_only_pesticide_dosage_policy","400mb_resilient_local_fallback",
-  "enterprise_multi_agent_supervisor","protected_http_only_admin_session","privacy_safe_enterprise_telemetry"
+  "enterprise_multi_agent_supervisor","protected_http_only_admin_session","privacy_safe_enterprise_telemetry",
+  "close_timing_guard","visual_availability_precision","visual_guidance_actions","recognition_before_identity_guard",
+  "product_context_lock","product_card_bound_actions","generic_product_detail_agronomy_guard",
+  "selected_product_context_transport","per_product_details_button"
+];
+
+const NEURAL_COMPAT_TOOLS=[
+  "search_product_dossiers","get_product_dossier","compare_product_dossiers","verify_live_product_truth",
+  "get_product_relations","find_verified_alternatives","build_verified_bundle","prepare_quote_draft",
+  "match_visual_product","verify_visual_product_live","guard_visual_label_claim","search_visual_agronomy",
+  "get_retake_advice","plan_visual_product_action"
 ];
 
 function configured(name){return Boolean(String(process.env[name]||"").trim());}
@@ -31,6 +42,7 @@ export async function GET(){
       features:FEATURES,
       final_production_os:{...final,snapshot:finalProductionSnapshot()},
       llm_first_orchestrator:descriptor("31.0",{priority:"full_utterance_before_legacy_routes",configured:configured("OPENAI_API_KEY"),provider:configured("OPENAI_API_KEY")?"openai_responses_api":"deterministic_emergency_fallback",model:intentModel(),structured_output:true,legacy_keyword_router:"fallback_only",crop_symptom_recovery:true,universal_problem_engine_version:"31.2",universal_problem_recovery:true,multi_turn_diagnostic_memory:true}),
+      natural_conversation:descriptor("32.0",{help_request:true,frustration_support:true,false_product_reference_guard:true,unknown_factual_wording_disabled_for_social_turns:true}),
       autonomous_customer_os:descriptor("30.0",{neural_configured:configured("OPENAI_API_KEY")}),
       customer_digital_twin:descriptor("30.0",{privacy_bounded:true}),
       confidence_gateway:descriptor("30.0",{hard_guards:["unverified_dosage","unverified_order_or_payment_claim"]}),
@@ -38,13 +50,18 @@ export async function GET(){
       conversation_reasoning:descriptor("29.0"),
       semantic_human_brain:descriptor("27.0"),current_turn_router:descriptor("27.0"),customer_brain:descriptor("27.0"),
       customer_memory:descriptor("27.0"),response_auditor:descriptor("27.0"),
+      conversion_decision_brain:descriptor("22.5"),sales_employee:descriptor("22.5"),sales_conversation_os:descriptor("22.5"),
+      human_conversation_brain:descriptor("22.5"),neural_brain:descriptor("27.0",{tools:NEURAL_COMPAT_TOOLS}),
       conversation_knowledge:descriptor("27.0",{megabytes:400,records:200025,packs:23,storage:process.env.MIG_V27_KNOWLEDGE_TRANSPORT||"local_manifest_router",function_bundle:"manifest_router_only"}),
       enterprise_supervisor:descriptor("28.0"),enterprise_retrieval:descriptor("28.0",{local_ready:true,local_megabytes:400,external_configured:configured("OPENAI_VECTOR_STORE_ID"),fail_open_to_local:true}),
       enterprise_telemetry:descriptor("28.0",{persistent:configured("UPSTASH_REDIS_REST_URL")||configured("KV_REST_API_URL"),raw_transcripts:false}),
       admin_auth:descriptor("28.0",{configured:configured("MIG_ADMIN_TOKEN")&&configured("MIG_ADMIN_SESSION_SECRET")}),
       autonomous_actions:descriptor("25.0",{enabled:enabled("ODOO_ACTIONS_ENABLED",false),configured:["ODOO_ACTION_URL","ODOO_DB","ODOO_USERNAME","ODOO_API_KEY"].every(configured)}),
-      self_learning:descriptor("25.0",{privacy_safe:true}),vision_intelligence:descriptor("22.5"),product_context_intelligence:descriptor("23.0"),
-      product_intelligence:descriptor("20.0"),product_truth_os:descriptor("21.0"),agricultural_engineer:descriptor("15.0"),
+      self_learning:descriptor("25.0",{privacy_safe:true}),
+      vision_intelligence:descriptor("22.5",{product_visual_signatures:704,visual_agronomy_cards:540,recognition_before_identity_guard:true,forced_product_recognition_preflight:true,retake_loop_guard:true}),
+      product_context_intelligence:descriptor("23.0"),
+      product_intelligence:descriptor("22.1",{products:704,descriptions:704,total_megabytes:7.14}),
+      product_truth_os:descriptor("22.1",{products:704,graph_edges:11776,explicit_facts:727}),agricultural_engineer:descriptor("15.0"),
       config:{openai:configured("OPENAI_API_KEY"),persistent_store:configured("UPSTASH_REDIS_REST_URL")||configured("KV_REST_API_URL"),odoo_actions_enabled:enabled("ODOO_ACTIONS_ENABLED",false),admin_configured:configured("MIG_ADMIN_TOKEN")&&configured("MIG_ADMIN_SESSION_SECRET")},
       privacy:{secrets_returned:false,raw_transcripts:false,raw_session_ids:false},time:new Date().toISOString()
     },{headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"}});

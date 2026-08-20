@@ -112,6 +112,7 @@ import {
 } from "../lib/conversation_reasoning_v29.js";
 import { buildAutonomousCustomerPlanV30, constrainToolsWithPlanV30, autonomousCustomerOSHealthV30 } from "../lib/autonomous_customer_os_v30.js";
 import { mergeCustomerDigitalTwinV30, customerDigitalTwinClientV30, customerDigitalTwinHealthV30 } from "../lib/customer_digital_twin_v30.js";
+import { naturalConversationHealthV32 } from "../lib/natural_conversation_v32.js";
 import { evaluateConfidenceGatewayV30, enforceConfidenceGatewayV30, confidenceGatewayHealthV30 } from "../lib/confidence_gateway_v30.js";
 import { recordClosedLoopOutcomeV30, closedLoopLearningSnapshotV30, closedLoopLearningHealthV30 } from "../lib/closed_loop_learning_v30.js";
 import {
@@ -420,6 +421,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       enterprise_telemetry:enterpriseTelemetryHealthV28(),
       conversation_reasoning:conversationReasoningHealthV29(),
       llm_first_orchestrator:llmFirstHealthV31(),
+      natural_conversation:naturalConversationHealthV32(),
       final_production_os:finalProductionHealth(),
       autonomous_customer_os:autonomousCustomerOSHealthV30(),
       customer_digital_twin:customerDigitalTwinHealthV30(),
@@ -441,7 +443,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
-    enterprise_platform:{version:"31.0",release:"FINAL_PRODUCTION_OS",final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    enterprise_platform:{version:"31.0",release:"FINAL_PRODUCTION_OS",final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),natural_conversation:naturalConversationHealthV32(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
     final_production:{...finalProductionHealth(),current:{contract:finalReview.contract,truth:finalReview.truth,audit:finalReview.audit,critic:finalReview.critic,latency_ms:finalReview.latency_ms},snapshot:finalProductionSnapshot()},
     llm_first_orchestrator:{...llmFirstHealthV31(),current:meaningFrameClientV31(meaningFrameV31||{})},
     meaning_alignment:{...meaningAlignment},
@@ -1231,7 +1233,7 @@ export async function POST(request){
 
   // V25: short human/social questions are deterministic and current-turn only.
   // They must never enter neural/agronomy routing with an old product or dose context.
-  if(["greeting","wellbeing","thanks","goodbye","acknowledgment","negative_ack","identity","human"].includes(analysis.intent)&&allowLegacyRouteV31(analysis.intent,meaningFrameV31)){
+  if(["greeting","wellbeing","thanks","goodbye","acknowledgment","negative_ack","identity","human","help_request","frustration","general_conversation"].includes(analysis.intent)&&allowLegacyRouteV31(analysis.intent,meaningFrameV31)){
     const protectedDirect=directReply(analysis,turnState,message,sessionId);
     if(protectedDirect)return await makeResponse({payload:{reply:protectedDirect.reply,quick_replies:protectedDirect.quick_replies||[],suggested_actions:protectedDirect.actions||[],escalation:protectedDirect.escalation,human_conversation:humanTurn,sales_conversation:{human_turn:humanTurn}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:protectedDirect.source,locale,cognition});
   }
