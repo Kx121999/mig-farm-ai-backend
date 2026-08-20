@@ -117,7 +117,7 @@ import { recordClosedLoopOutcomeV30, closedLoopLearningSnapshotV30, closedLoopLe
 import {
   understandTurnV31, applyMeaningFrameV31, shouldQuarantineContextV31,
   allowLegacyRouteV31, allowLegacyCompoundV31, auditMeaningAlignmentV31,
-  enforceMeaningAlignmentV31, meaningFrameClientV31, llmFirstHealthV31
+  enforceMeaningAlignmentV31, meaningFrameClientV31, llmFirstHealthV31, parseAgriculturalProblemV31
 } from "../lib/llm_first_orchestrator_v31.js";
 import {
   createFinalTurnContract, finalizeProductionResponse,
@@ -1313,7 +1313,7 @@ export async function POST(request){
 
   // V8 Phase 3 GitHub Edition: repository-managed verified knowledge can override generic rules.
   // It is deliberately checked after core request validation/rate limiting and before static FAQ routing.
-  try{
+  if(analysis.v31_primary_intent!=="diagnosis"&&analysis.intent!=="diagnosis")try{
     const managed=answerGitHubKnowledge(message,{locale,analysis,state,profile});
     if(managed){
       return await makeResponse({
@@ -1334,7 +1334,7 @@ export async function POST(request){
 
   // V14 UAE Agriculture Intelligence: deterministic, source-stamped answer layer for UAE agronomy and regulations.
   // Regulatory answers are intentionally checked before generic FAQ/human-knowledge routing to avoid stale or invented legal claims.
-  try{
+  if(analysis.v31_primary_intent!=="diagnosis"&&analysis.intent!=="diagnosis")try{
     const uaeKnowledge=answerUaeAgricultureKnowledge(message,locale);
     if(uaeKnowledge){
       return await makeResponse({
@@ -1428,13 +1428,15 @@ export async function POST(request){
   // V15 deterministic expert fallback: if the neural provider is unavailable/timeout, never route a crop symptom into a product dump.
   if(agriculturalContext?.is_agricultural && agriculturalContext.intent==="diagnosis"){
     try{
-      const diag=diagnoseAgriculturalProblem(message,{analysis,state,profile});
+      const problem=parseAgriculturalProblemV31(message,state),stored=state?.diagnostic_context_v31||{};
+      const cropLabel=cleanText(analysis.crop?.labelAr||problem.crop||stored.crop_label||"",80);
+      const symptoms=[...new Set([...(Array.isArray(stored.symptoms)?stored.symptoms:[]),...(Array.isArray(analysis.symptoms)?analysis.symptoms:[]),...problem.symptoms].map(x=>cleanText(String(x),80)).filter(Boolean))].slice(0,8);
+      const diagnosticMessage=[cropLabel?`المحصول ${cropLabel}`:"",symptoms.length?`الأعراض ${symptoms.join("، ")}`:"",message].filter(Boolean).join(" — ");
+      const diag=diagnoseAgriculturalProblem(diagnosticMessage,{analysis,state,profile});
       if(diag?.handled){
         const hypotheses=(diag.hypotheses||[]).slice(0,4).map((x,i)=>`${i+1}. ${x.hypothesis}`).join("\n");
         const checks=(diag.first_steps||[]).slice(0,3).map(x=>`• ${x}`).join("\n");
-        const question=(diag.clarification_questions||[])[0];
-        const cropLabel=cleanText(analysis.crop?.labelAr||"",80);
-        const symptoms=Array.isArray(analysis.symptoms)?analysis.symptoms.map(x=>cleanText(String(x),80)).filter(Boolean).slice(0,3):[];
+        const question=cleanText(analysis.diagnosticQuestion||meaningFrameV31?.ambiguity?.question||(diag.clarification_questions||[])[0]||problem.question||"",300);
         const acknowledgment=cropLabel?`فهمت إن عندك ${cropLabel}${symptoms.length?` وفيه ${symptoms.join(" و")}`:" وفيه مشكلة نباتية"}. `:"";
         const reply=`${acknowledgment}من الوصف وحده ما ينفعش أقفل التشخيص على سبب واحد. أقرب الاحتمالات:
 ${hypotheses||"محتاج تفاصيل أكثر قبل ترتيب الاحتمالات."}${checks?`
