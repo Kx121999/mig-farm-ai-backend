@@ -13,7 +13,7 @@
 7) اترك ODOO_ACTIONS_ENABLED=false حاليًا كما اتفقنا.
 8) في Vercel يكفي OPENAI_API_KEY. إعدادات FINAL الاختيارية لها قيم افتراضية آمنة:
    FINAL_CRITIC_ENABLED=true
-   OPENAI_CRITIC_MODEL=gpt-5.6
+   OPENAI_CRITIC_MODEL=gpt-5-mini
    FINAL_CRITIC_TIMEOUT_MS=5200
 9) انتظر نجاح Deployment ثم افتح /api/health وتأكد من:
    ok=true
