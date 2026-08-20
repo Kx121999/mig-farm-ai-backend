@@ -4,6 +4,7 @@ import {
   allowLegacyRouteV31, allowLegacyCompoundV31, auditMeaningAlignmentV31,
   enforceMeaningAlignmentV31, llmFirstHealthV31
 } from "../lib/llm_first_orchestrator_v31.js";
+import { analyzeTurn, directReply } from "../lib/dialogue.js";
 
 function structured(overrides={}){
   const primary=overrides.primary_intent||"identity";
@@ -52,6 +53,28 @@ assert.equal(audit.passed,false);
 fixed=enforceMeaningAlignmentV31({payload:{reply:"الجرعة لازم من الملصق."},frame,audit});
 assert.match(fixed.reply,/الشارقة والعين/);
 
+frame=await understandTurnV31({message:"عندي شجرة الزيتون الورق لونه اصفرار",state:{},legacyAnalysis:{intent:"plant_problem"}});
+assert.equal(frame.provider,"deterministic_guard");
+assert.equal(frame.authoritative,true);
+assert.equal(frame.primary_intent,"diagnosis");
+assert.equal(frame.domain,"agriculture");
+assert.equal(frame.entities.crop,"زيتون");
+assert.ok(frame.entities.symptoms.includes("اصفرار الأوراق"));
+assert.match(frame.ambiguity.question,/الجديدة ولا القديمة/);
+const oliveAnalysis={intent:"plant_problem"},oliveSemantic={intents:[]};
+applyMeaningFrameV31(oliveAnalysis,oliveSemantic,frame);
+assert.equal(oliveAnalysis.intent,"diagnosis");
+assert.equal(oliveAnalysis.crop.labelAr,"زيتون");
+assert.equal(oliveAnalysis.crop.custom,true);
+assert.ok(oliveAnalysis.symptoms.includes("اصفرار الأوراق"));
+
+const legacyOliveAnalysis=analyzeTurn("عندي شجرة الزيتون الورق لونه اصفرار",{},[],"ar");
+const legacyOliveReply=directReply(legacyOliveAnalysis,{},"عندي شجرة الزيتون الورق لونه اصفرار","olive-context-test");
+assert.equal(legacyOliveReply.source,"plant_diagnosis_contextual");
+assert.match(legacyOliveReply.reply,/زيتون/);
+assert.match(legacyOliveReply.reply,/اصفرار/);
+assert.equal(/اكتب اسم المحصول|عطِني اسم المحصول/.test(legacyOliveReply.reply),false);
+
 const originalFetch=globalThis.fetch;
 process.env.OPENAI_API_KEY="test-v31-key";
 globalThis.fetch=async (_url,options)=>{
@@ -72,6 +95,9 @@ process.env.OPENAI_API_KEY="";
 
 assert.equal(llmFirstHealthV31().version,"31.0");
 assert.equal(llmFirstHealthV31().priority,"full_utterance_before_legacy_routes");
+process.env.OPENAI_MODEL="gpt-5.6";
+assert.equal(llmFirstHealthV31().model,"gpt-5-mini");
+delete process.env.OPENAI_MODEL;
 
 process.env.MIG_V27_KNOWLEDGE_TRANSPORT="local";
 process.env.MIG_ENTERPRISE_RETRIEVAL_ENABLED="false";
