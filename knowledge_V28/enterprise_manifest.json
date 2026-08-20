@@ -1,8 +1,8 @@
 {
   "version": "28.0",
-  "release_version": "28.0.0",
+  "release_version": "31.0.0",
   "name": "MIG FARM Enterprise Autonomous Intelligence Knowledge Plane",
-  "generated_at": "2026-08-19T09:02:33.931Z",
+  "generated_at": "2026-08-20T13:32:13.342Z",
   "architecture": "hybrid_local_vector_data_plane",
   "local_fallback": {
     "version": "27.0",
