@@ -1,0 +1,37 @@
+{
+  "release": "V31.1_CONTEXT_UNDERSTANDING_HOTFIX",
+  "api_compatibility_version": "31.0.0",
+  "status": "pass",
+  "fixes": {
+    "supported_default_model": "gpt-5-mini",
+    "legacy_gpt_5_6_alias_recovered": true,
+    "whole_sentence_crop_extraction": true,
+    "whole_sentence_symptom_extraction": true,
+    "arbitrary_crop_entities": true,
+    "deterministic_diagnosis_on_provider_failure": true,
+    "contextual_legacy_diagnosis": true,
+    "verified_shipping_amount_guard": true,
+    "health_exposes_active_model": true
+  },
+  "acceptance_case": {
+    "input": "عندي شجرة الزيتون الورق لونه اصفرار",
+    "intent": "diagnosis",
+    "domain": "agriculture",
+    "crop": "زيتون",
+    "symptoms": [
+      "اصفرار الأوراق"
+    ],
+    "provider_without_openai": "deterministic_guard",
+    "authoritative": true,
+    "asks_for_crop_again": false
+  },
+  "validation": {
+    "javascript_syntax": "pass",
+    "targeted_suites": "pass",
+    "release_validator": "pass",
+    "scripts": 155,
+    "json_files": 32,
+    "knowledge_records": 200025,
+    "final_evals": "1320/1320"
+  }
+}
