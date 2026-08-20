@@ -1433,7 +1433,10 @@ export async function POST(request){
         const hypotheses=(diag.hypotheses||[]).slice(0,4).map((x,i)=>`${i+1}. ${x.hypothesis}`).join("\n");
         const checks=(diag.first_steps||[]).slice(0,3).map(x=>`• ${x}`).join("\n");
         const question=(diag.clarification_questions||[])[0];
-        const reply=`من الوصف وحده ما ينفعش أقفل التشخيص على سبب واحد. أقرب الاحتمالات:
+        const cropLabel=cleanText(analysis.crop?.labelAr||"",80);
+        const symptoms=Array.isArray(analysis.symptoms)?analysis.symptoms.map(x=>cleanText(String(x),80)).filter(Boolean).slice(0,3):[];
+        const acknowledgment=cropLabel?`فهمت إن عندك ${cropLabel}${symptoms.length?` وفيه ${symptoms.join(" و")}`:" وفيه مشكلة نباتية"}. `:"";
+        const reply=`${acknowledgment}من الوصف وحده ما ينفعش أقفل التشخيص على سبب واحد. أقرب الاحتمالات:
 ${hypotheses||"محتاج تفاصيل أكثر قبل ترتيب الاحتمالات."}${checks?`
 
 أول فحوص آمنة:

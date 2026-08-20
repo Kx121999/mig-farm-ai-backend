@@ -4,6 +4,7 @@ const VERSION="31.0.0";
 const MODE="llm_first_semantic_orchestrator_v31";
 const FEATURES=[
   "final_production_os","whole_utterance_contract","meaning_before_keyword_routing","llm_primary_natural_answer",
+  "contextual_crop_symptom_recovery","arbitrary_crop_entity_memory","deterministic_diagnosis_fallback",
   "adaptive_pre_send_critic","deterministic_hard_safety","truth_freshness_envelope","prompt_versioning",
   "provider_circuit_breaker","privacy_safe_failure_learning","progressive_sse_transport","lightweight_crash_safe_health",
   "semantic_human_brain","arabizi_normalization","multi_intent_decomposition","multi_intent_answer_completion",
@@ -18,6 +19,7 @@ const FEATURES=[
 function configured(name){return Boolean(String(process.env[name]||"").trim());}
 function enabled(name,def=false){const value=process.env[name];return value===undefined?def:/^(1|true|yes|on)$/i.test(String(value));}
 function descriptor(version,extra={}){return {version,ready:true,...extra};}
+function intentModel(){const requested=String(process.env.OPENAI_INTENT_MODEL||process.env.OPENAI_MODEL||"gpt-5-mini").trim();return /^gpt-5\.6$/i.test(requested)?"gpt-5-mini":requested;}
 
 export async function GET(){
   try{
@@ -27,7 +29,7 @@ export async function GET(){
       release:"FINAL_PRODUCTION_OS",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
       features:FEATURES,
       final_production_os:{...final,snapshot:finalProductionSnapshot()},
-      llm_first_orchestrator:descriptor("31.0",{priority:"full_utterance_before_legacy_routes",configured:configured("OPENAI_API_KEY"),provider:configured("OPENAI_API_KEY")?"openai_responses_api":"deterministic_emergency_fallback",structured_output:true,legacy_keyword_router:"fallback_only"}),
+      llm_first_orchestrator:descriptor("31.0",{priority:"full_utterance_before_legacy_routes",configured:configured("OPENAI_API_KEY"),provider:configured("OPENAI_API_KEY")?"openai_responses_api":"deterministic_emergency_fallback",model:intentModel(),structured_output:true,legacy_keyword_router:"fallback_only",crop_symptom_recovery:true}),
       autonomous_customer_os:descriptor("30.0",{neural_configured:configured("OPENAI_API_KEY")}),
       customer_digital_twin:descriptor("30.0",{privacy_bounded:true}),
       confidence_gateway:descriptor("30.0",{hard_guards:["unverified_dosage","unverified_order_or_payment_claim"]}),
