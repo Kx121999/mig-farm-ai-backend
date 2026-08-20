@@ -31,6 +31,7 @@ if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg
 if(health.mode!=="llm_first_semantic_orchestrator_v31")throw new Error(`Unexpected mode: ${health.mode}`);
 if(health.release!=="FINAL_PRODUCTION_OS"||health.final_production_os?.ready!==true)throw new Error("FINAL_PRODUCTION_OS missing");
 if(health.llm_first_orchestrator?.version!=="31.0"||health.llm_first_orchestrator?.ready!==true)throw new Error("V31 LLM-first semantic orchestrator missing");
+if(health.natural_conversation?.version!=="32.0"||health.natural_conversation?.ready!==true)throw new Error("V32 natural conversation layer missing");
 if(health.autonomous_customer_os?.version!=="30.0"||health.autonomous_customer_os?.ready!==true)throw new Error("V30 autonomous customer OS missing");
 if(health.customer_digital_twin?.version!=="30.0"||health.customer_digital_twin?.ready!==true)throw new Error("V30 customer digital twin missing");
 if(health.confidence_gateway?.version!=="30.0"||health.confidence_gateway?.ready!==true)throw new Error("V30 confidence gateway missing");
