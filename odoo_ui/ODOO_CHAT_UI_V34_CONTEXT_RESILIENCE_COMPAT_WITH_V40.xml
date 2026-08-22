@@ -1,0 +1,1215 @@
+<xpath expr="//body" position="inside">
+    <style>
+        #mig-ai-chat-root{
+            --mig-green-950:#063b25;
+            --mig-green-900:#07482c;
+            --mig-green-800:#0b5b35;
+            --mig-green-700:#137443;
+            --mig-green-100:#eaf6ed;
+            --mig-green-50:#f5faf6;
+            --mig-gold:#f6c63d;
+            --mig-text:#163b29;
+            --mig-muted:#63786b;
+            --mig-line:#dce9df;
+            position:fixed;right:22px;bottom:22px;z-index:2147483000;
+            font-family:inherit;direction:rtl;color:var(--mig-text)
+        }
+        #mig-ai-chat-root *{box-sizing:border-box}
+        #mig-ai-chat-root button,#mig-ai-chat-root textarea,#mig-ai-chat-root input{font-family:inherit}
+        .mig-ai-launcher{
+            position:relative;z-index:1;width:64px;height:64px;border:1px solid rgba(255,255,255,.34);border-radius:22px;
+            background:linear-gradient(145deg,var(--mig-green-700),var(--mig-green-950));color:#fff;
+            display:flex;align-items:center;justify-content:center;cursor:pointer;
+            box-shadow:0 15px 38px rgba(6,59,37,.30),inset 0 1px 0 rgba(255,255,255,.18);
+            font-size:26px;transition:transform .22s ease,box-shadow .22s ease
+        }
+        .mig-ai-launcher:hover{transform:translateY(-3px);box-shadow:0 19px 44px rgba(6,59,37,.35)}
+        .mig-ai-launcher:focus-visible,.mig-ai-header-btn:focus-visible,.mig-ai-chip:focus-visible,.mig-ai-tool-btn:focus-visible,.mig-ai-send:focus-visible{outline:3px solid rgba(246,198,61,.65);outline-offset:2px}
+        .mig-ai-launcher-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:11px;background:rgba(255,255,255,.11);font-weight:900}
+        .mig-ai-launcher-dot{position:absolute;right:-1px;top:-1px;width:14px;height:14px;border-radius:50%;background:#64dc8b;border:3px solid #fff}
+        .mig-ai-unread{display:none;position:absolute;left:-7px;top:-8px;min-width:23px;height:23px;padding:0 6px;border-radius:999px;background:var(--mig-gold);color:var(--mig-green-950);border:2px solid #fff;font-size:11px;font-weight:900;align-items:center;justify-content:center}
+        .mig-ai-unread.is-visible{display:flex}
+        .mig-ai-panel{
+            position:absolute;z-index:2;right:0;bottom:78px;width:426px;height:min(700px,calc(100vh - 112px));
+            background:#fff;border:1px solid rgba(11,91,53,.16);border-radius:24px;
+            box-shadow:0 28px 85px rgba(6,47,30,.25),0 4px 16px rgba(6,47,30,.10);overflow:hidden;
+            display:flex;flex-direction:column;opacity:0;visibility:hidden;pointer-events:none;
+            transform:translateY(14px) scale(.98);transform-origin:bottom right;
+            transition:opacity .22s ease,transform .22s ease,visibility .22s ease
+        }
+        .mig-ai-panel.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
+        .mig-ai-header{
+            position:relative;overflow:hidden;background:linear-gradient(135deg,var(--mig-green-950),var(--mig-green-800));
+            color:#fff;padding:15px 14px;display:flex;align-items:center;gap:10px;direction:rtl;min-height:76px
+        }
+        .mig-ai-header:after{content:"";position:absolute;left:-30px;top:-60px;width:160px;height:160px;border-radius:50%;background:rgba(246,198,61,.09);pointer-events:none}
+        .mig-ai-avatar{
+            position:relative;z-index:1;width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,#ffdb68,var(--mig-gold));color:var(--mig-green-950);
+            display:flex;align-items:center;justify-content:center;font-weight:950;font-size:17px;flex:0 0 auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 5px 14px rgba(0,0,0,.12)
+        }
+        .mig-ai-header-text{position:relative;z-index:1;flex:1;min-width:0;text-align:right;direction:rtl}
+        .mig-ai-header-title{font-size:16px;font-weight:900;margin:0;letter-spacing:.1px}
+        .mig-ai-header-subtitle{margin-top:5px;font-size:11.5px;color:rgba(255,255,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .mig-ai-online{display:inline-flex;align-items:center;gap:6px}
+        .mig-ai-online:before{content:"";width:8px;height:8px;border-radius:50%;background:#6ae290;box-shadow:0 0 0 3px rgba(106,226,144,.13);display:inline-block;transition:.2s ease}
+        .mig-ai-online.is-busy:before{background:var(--mig-gold);animation:migPulse 1.2s infinite}
+        .mig-ai-online.is-offline:before{background:#ffb45a;box-shadow:0 0 0 3px rgba(255,180,90,.13)}
+        @keyframes migPulse{50%{opacity:.45;transform:scale(.82)}}
+        .mig-ai-header-btn{
+            position:relative;z-index:1;border:0;background:rgba(255,255,255,.11);color:#fff;width:36px;height:36px;
+            border-radius:12px;cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center;transition:background .18s ease,transform .18s ease;flex:0 0 auto
+        }
+        .mig-ai-header-btn:hover{background:rgba(255,255,255,.19);transform:translateY(-1px)}
+        .mig-ai-basket-btn{font-size:17px}
+        .mig-ai-basket-count{position:absolute;top:-5px;left:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--mig-gold);color:var(--mig-green-950);border:2px solid var(--mig-green-900);display:none;align-items:center;justify-content:center;font-size:9px;font-weight:950}
+        .mig-ai-basket-count.is-visible{display:flex}
+        .mig-ai-messages{
+            flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px;background:
+            radial-gradient(circle at 14% 6%,rgba(246,198,61,.09),transparent 24%),linear-gradient(180deg,#f8fbf8 0%,#f4f8f5 100%);
+            scrollbar-width:thin;scrollbar-color:#b9cfbe transparent
+        }
+        .mig-ai-messages::-webkit-scrollbar{width:6px}.mig-ai-messages::-webkit-scrollbar-thumb{background:#b9cfbe;border-radius:99px}
+        .mig-ai-welcome{
+            width:100%;padding:15px;border-radius:18px;background:linear-gradient(145deg,#fff,#fbfdfb);
+            border:1px solid var(--mig-line);box-shadow:0 8px 24px rgba(6,59,37,.06);white-space:normal
+        }
+        .mig-ai-welcome-title{display:flex;align-items:center;gap:8px;color:var(--mig-green-800);font-size:15px;font-weight:950;margin-bottom:7px}
+        .mig-ai-welcome-title span{display:grid;place-items:center;width:29px;height:29px;border-radius:10px;background:var(--mig-green-100)}
+        .mig-ai-welcome-copy{color:#466251;font-size:13px;line-height:1.72}
+        .mig-ai-trust{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:9px;border-top:1px solid #edf3ee;color:#728278;font-size:10.5px;line-height:1.5}
+        .mig-ai-section-title{margin:13px 2px 8px;color:#5e7466;font-size:11px;font-weight:850}
+        .mig-ai-message.assistant{
+            max-width:92%;padding:12px 13px;border-radius:17px 17px 17px 6px;background:#fff;
+            border:1px solid #dfeae1;color:#244c37;font-size:13.5px;line-height:1.72;
+            box-shadow:0 5px 16px rgba(10,55,34,.05);white-space:pre-wrap;word-break:break-word
+        }
+        .mig-ai-message{max-width:88%;padding:11px 13px;margin:0 0 10px;border-radius:17px;font-size:13.5px;line-height:1.72;white-space:pre-wrap;word-break:break-word;animation:migMessageIn .2s ease both}
+        @keyframes migMessageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+        .mig-ai-message.user{margin-left:0;margin-right:auto;background:linear-gradient(145deg,var(--mig-green-700),var(--mig-green-800));color:#fff;border-radius:17px 17px 6px 17px;direction:rtl;box-shadow:0 6px 17px rgba(11,91,53,.15)}
+        .mig-ai-message.assistant{margin-right:0}
+        .mig-ai-message.assistant:before{content:"MIG FARM";display:block;margin-bottom:5px;color:var(--mig-green-700);font-size:9.5px;font-weight:950;letter-spacing:.35px;direction:ltr;text-align:left}
+        .mig-ai-message.assistant.is-structured{white-space:normal;padding:13px 14px}
+        .mig-ai-message.assistant .mig-ai-msg-line{margin:0 0 7px;white-space:pre-wrap;unicode-bidi:plaintext;text-align:start}
+        .mig-ai-message.assistant .mig-ai-msg-line:last-child{margin-bottom:0}
+        .mig-ai-message.assistant .mig-ai-msg-heading{margin:10px 0 6px;color:#0b5b35;font-weight:900;font-size:13px;border-bottom:1px solid #e7efe8;padding-bottom:4px}
+        .mig-ai-message.assistant .mig-ai-msg-heading:first-child{margin-top:0}
+        .mig-ai-message.assistant .mig-ai-msg-list{margin:3px 0 9px;padding:0 20px 0 0}
+        .mig-ai-message.assistant .mig-ai-msg-list li{margin:3px 0;unicode-bidi:plaintext;text-align:start}
+        .mig-ai-message.assistant .mig-ai-msg-code{direction:ltr;text-align:left;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;background:#f4f7f4;border-radius:8px;padding:6px 8px}
+        .mig-ai-message-source{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:7px;border-top:1px solid #edf3ee;color:#6b7e72;font-size:9.5px;white-space:normal}
+        .mig-ai-message-source:before{content:"✓";display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#e9f5eb;color:#0b6a3d;font-weight:950}
+        .mig-ai-message-tools{display:flex;align-items:center;gap:4px;margin-top:7px;direction:rtl}
+        .mig-ai-msg-tool{border:1px solid #dfe9e1;background:#f8fbf8;color:#607267;border-radius:8px;min-width:27px;height:27px;padding:0 7px;cursor:pointer;font-size:10.5px;display:inline-flex;align-items:center;justify-content:center}
+        .mig-ai-msg-tool:hover,.mig-ai-msg-tool.is-active{background:#eaf5ec;color:#0b5b35;border-color:#c8ddcc}
+        .mig-ai-inline-ltr{direction:ltr;unicode-bidi:isolate;display:inline-block;white-space:nowrap}
+        a.mig-ai-inline-ltr{color:inherit;text-decoration:underline;text-underline-offset:2px;font-weight:700}
+        .mig-ai-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+        .mig-ai-chip{
+            min-width:0;border:1px solid #d7e7da;background:#fff;color:var(--mig-green-800);border-radius:14px;
+            padding:10px 11px;font-size:11.5px;font-weight:850;line-height:1.45;cursor:pointer;text-align:right;
+            box-shadow:0 3px 10px rgba(6,59,37,.03);transition:background .18s ease,border-color .18s ease,transform .18s ease
+        }
+        .mig-ai-chip:hover{background:var(--mig-green-50);border-color:#bdd8c3;transform:translateY(-1px)}
+        .mig-ai-chip-icon{display:inline-grid;place-items:center;width:24px;height:24px;margin-left:5px;border-radius:8px;background:var(--mig-green-100);font-size:13px;vertical-align:middle}
+        .mig-ai-quick.mig-ai-dynamic{display:flex;flex-wrap:wrap;gap:7px;margin:3px 0 12px}
+        .mig-ai-quick.mig-ai-dynamic .mig-ai-chip{width:auto;border-radius:999px;padding:8px 11px;text-align:center}
+        .mig-ai-connection-card{max-width:100%;margin:4px 0 12px;padding:12px;border:1px solid #f1d8a8;border-radius:16px;background:#fffaf0;color:#604a22;box-shadow:0 5px 16px rgba(95,68,18,.05);animation:migMessageIn .2s ease both}
+        .mig-ai-connection-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:900;color:#73571d}
+        .mig-ai-connection-copy{margin-top:5px;font-size:11.5px;line-height:1.65;color:#796840}
+        .mig-ai-connection-actions{display:flex;gap:7px;margin-top:9px}
+        .mig-ai-retry,.mig-ai-whatsapp{flex:1;min-height:35px;border-radius:10px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none!important}
+        .mig-ai-retry{border:0;background:var(--mig-green-800);color:#fff}.mig-ai-whatsapp{border:1px solid #cfe1d2;background:#fff;color:var(--mig-green-800)!important}
+        .mig-ai-visual-actions{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 13px}
+        .mig-ai-visual-action{border:1px solid #cfe2d2;background:#f5faf6;color:#0b5b35;border-radius:11px;padding:8px 11px;font-size:11.5px;font-weight:800;cursor:pointer}
+        .mig-ai-visual-action:hover{background:#eaf5ec}
+        .mig-ai-typing{display:none;margin:0 0 10px;width:max-content;padding:10px 12px;border-radius:14px 14px 14px 5px;background:#fff;border:1px solid #e1ebe2;color:#52705e;font-size:11.5px}
+        .mig-ai-typing.is-visible{display:flex;align-items:center;gap:8px}
+        .mig-ai-typing-label{font-style:normal}.mig-ai-typing-dots{display:flex;gap:4px;direction:ltr}
+        .mig-ai-typing-dots span{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.35;animation:migDot 1s infinite ease-in-out}
+        .mig-ai-typing-dots span:nth-child(2){animation-delay:.12s}.mig-ai-typing-dots span:nth-child(3){animation-delay:.24s}
+        @keyframes migDot{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-4px);opacity:.8}}
+        .mig-ai-actions{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 12px}
+        .mig-ai-action{
+            display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 12px;
+            border-radius:11px;text-decoration:none!important;background:#eef7ef;color:#0b5b35!important;
+            border:1px solid #d5e7d8;font-size:12px;font-weight:700
+        }
+        .mig-ai-products{display:grid;gap:8px;margin:6px 0 13px}
+        .mig-ai-product{
+            display:block;text-decoration:none!important;background:#fff;border:1px solid #e0ebe2;
+            border-radius:14px;padding:11px 12px;color:#244c37!important;box-shadow:0 4px 14px rgba(10,55,34,.04)
+        }
+        .mig-ai-product-head{display:grid;grid-template-columns:68px minmax(0,1fr);gap:10px;align-items:start}
+        .mig-ai-product-image{width:68px;height:68px;border-radius:12px;object-fit:cover;background:#edf5ee;border:1px solid #dce9df;display:block}
+        .mig-ai-product-image-placeholder{width:68px;height:68px;border-radius:12px;background:linear-gradient(145deg,#edf7ef,#f8fbf8);border:1px solid #dce9df;display:grid;place-items:center;font-size:25px}
+        .mig-ai-product-copy{min-width:0}
+        .mig-ai-product-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+        .mig-ai-product-badge{display:inline-flex;align-items:center;gap:3px;border-radius:999px;background:#eaf5ec;color:#0b6a3d;padding:3px 7px;font-size:9px;font-weight:850}
+        .mig-ai-product-badge.is-neutral{background:#f1f3f1;color:#66766b}
+        .mig-ai-product-name{font-weight:800;font-size:12.5px;line-height:1.55;unicode-bidi:plaintext;text-align:start;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .mig-ai-product-meta{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:6px;font-size:11.5px}
+        .mig-ai-product-price{color:#0b5b35;font-weight:900}
+        .mig-ai-product-stock{color:#5d7164}
+        .mig-ai-product-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;direction:rtl}
+        .mig-ai-product-detail-btn{flex:1;border:1px solid #cfe2d2;background:#f4faf5;color:#0b5b35;border-radius:10px;padding:7px 8px;font-size:11px;font-weight:800;cursor:pointer}
+        .mig-ai-product-detail-btn{order:1}
+        .mig-ai-product-detail-btn:hover{background:#eaf5ec}
+        .mig-ai-product-compare-btn{order:2;flex:1;border:1px solid #d9e0da;background:#fff;color:#52675a;border-radius:10px;padding:7px 8px;font-size:11px;font-weight:800;cursor:pointer}
+        .mig-ai-product-compare-btn:hover,.mig-ai-product-compare-btn.is-selected{background:#0b5b35;color:#fff;border-color:#0b5b35}
+        .mig-ai-product-request-btn{order:3;grid-column:1/-1;border:0;background:linear-gradient(145deg,#fbd65d,var(--mig-gold));color:#123e28;border-radius:10px;padding:8px;font-size:11px;font-weight:950;cursor:pointer}
+        .mig-ai-product-request-btn.is-added{background:#e9f5eb;color:#0b5b35}
+        .mig-ai-product-link{color:inherit!important;text-decoration:none!important;display:block}
+        .mig-ai-result-note{
+            margin:-4px 2px 12px;color:#718377;font-size:11px;text-align:center
+        }
+        .mig-ai-action-card{max-width:100%;margin:7px 0 14px;padding:13px;background:#fff;border:1px solid #cfe2d2;border-radius:16px;box-shadow:0 6px 18px rgba(10,55,34,.06)}
+        .mig-ai-action-card-title{font-weight:900;color:#0b5b35;font-size:14px;margin-bottom:5px}
+        .mig-ai-action-card-summary{font-size:11.5px;line-height:1.6;color:#536b5c;margin-bottom:10px;unicode-bidi:plaintext}
+        .mig-ai-action-lines{display:grid;gap:6px;margin:7px 0 10px}
+        .mig-ai-action-line{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:7px;align-items:center;font-size:11.5px;color:#244c37}
+        .mig-ai-action-line-name{unicode-bidi:plaintext;text-align:start;overflow:hidden;text-overflow:ellipsis}
+        .mig-ai-action-card input[type="text"],.mig-ai-action-card input[type="tel"],.mig-ai-action-card input[type="email"],.mig-ai-action-card input[type="number"]{width:100%;border:1px solid #d7e4d9;border-radius:10px;padding:9px 10px;font:inherit;font-size:12px;outline:none;background:#fbfdfb}
+        .mig-ai-action-card input:focus{border-color:#2c8a51;box-shadow:0 0 0 2px rgba(44,138,81,.10)}
+        .mig-ai-action-fields{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}
+        .mig-ai-action-field-wide{grid-column:1/-1}
+        .mig-ai-action-consent{display:flex;align-items:flex-start;gap:7px;font-size:10.5px;line-height:1.5;color:#52675a;margin:9px 0}
+        .mig-ai-action-consent input{margin-top:3px;flex:0 0 auto}
+        .mig-ai-action-buttons{display:flex;gap:7px}
+        .mig-ai-action-confirm,.mig-ai-action-cancel{flex:1;border:0;border-radius:10px;padding:9px;font-size:11.5px;font-weight:900;cursor:pointer}
+        .mig-ai-action-confirm{background:#0b5b35;color:#fff}.mig-ai-action-confirm:disabled{opacity:.5;cursor:not-allowed}
+        .mig-ai-action-cancel{background:#f2f5f2;color:#52675a;border:1px solid #dbe5dc}
+        .mig-ai-action-result{font-size:12px;color:#244c37;background:#f1f8f2;border-radius:10px;padding:9px;unicode-bidi:plaintext}
+        .mig-ai-compare-card,.mig-ai-guide-card,.mig-ai-scan-card{max-width:100%;margin:6px 0 13px;padding:13px;background:#fff;border:1px solid #d8e7db;border-radius:17px;box-shadow:0 7px 20px rgba(10,55,34,.06);animation:migMessageIn .2s ease both}
+        .mig-ai-card-kicker{color:#718277;font-size:9.5px;font-weight:850;margin-bottom:3px}
+        .mig-ai-card-title{color:#0b5b35;font-size:14px;font-weight:950;line-height:1.45}
+        .mig-ai-card-copy{margin-top:5px;color:#5c7163;font-size:11px;line-height:1.6}
+        .mig-ai-compare-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px;table-layout:fixed;font-size:10.5px;overflow:hidden;border:1px solid #e1ebe2;border-radius:12px}
+        .mig-ai-compare-table th,.mig-ai-compare-table td{padding:8px 7px;border-bottom:1px solid #e7eee8;vertical-align:top;unicode-bidi:plaintext;text-align:start;word-break:break-word}
+        .mig-ai-compare-table tr:last-child th,.mig-ai-compare-table tr:last-child td{border-bottom:0}.mig-ai-compare-table th{width:23%;background:#f4f8f4;color:#67796d;font-weight:850}.mig-ai-compare-table td{background:#fff;color:#244c37}
+        .mig-ai-card-primary{width:100%;border:0;border-radius:11px;background:#0b5b35;color:#fff;padding:10px 12px;margin-top:10px;font-size:11.5px;font-weight:900;cursor:pointer}
+        .mig-ai-guide-progress{height:5px;border-radius:99px;background:#e5eee6;margin:10px 0;overflow:hidden}.mig-ai-guide-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1b8450,var(--mig-gold));transition:width .2s ease}
+        .mig-ai-guide-options{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+        .mig-ai-guide-option{border:1px solid #d7e6da;background:#f8fbf8;color:#17482f;border-radius:11px;padding:9px 8px;min-height:42px;font-size:11px;font-weight:800;cursor:pointer;line-height:1.4}
+        .mig-ai-guide-option:hover{background:#eaf5ec;border-color:#bdd6c1}
+        .mig-ai-guide-back{border:0;background:transparent;color:#6a7c70;font-size:10px;text-decoration:underline;cursor:pointer;margin-top:8px}
+        .mig-ai-scan-head{display:flex;align-items:center;gap:9px}.mig-ai-scan-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#e9f5eb;font-size:17px;animation:migPulse 1.25s infinite}.mig-ai-scan-steps{display:grid;gap:5px;margin-top:10px}.mig-ai-scan-step{display:flex;align-items:center;gap:7px;color:#7a8b80;font-size:10.5px}.mig-ai-scan-step:before{content:"";width:7px;height:7px;border-radius:50%;background:#d3ded5}.mig-ai-scan-step.is-active{color:#0b5b35;font-weight:850}.mig-ai-scan-step.is-active:before{background:var(--mig-gold);box-shadow:0 0 0 3px rgba(246,198,61,.16)}.mig-ai-scan-step.is-done:before{background:#55c477}
+        .mig-ai-drawer{position:absolute;z-index:7;inset:76px 0 0;background:#f7faf7;display:flex;flex-direction:column;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(10px);transition:.18s ease}
+        .mig-ai-drawer.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+        .mig-ai-drawer-head{display:flex;align-items:center;gap:9px;padding:13px 14px;background:#fff;border-bottom:1px solid #dfe9e1}.mig-ai-drawer-title{flex:1;font-size:14px;font-weight:950;color:#0b5b35}.mig-ai-drawer-close{width:32px;height:32px;border:1px solid #dce7de;background:#f6f9f6;color:#385643;border-radius:10px;cursor:pointer;font-size:17px}
+        .mig-ai-drawer-body{flex:1;min-height:0;overflow-y:auto;padding:12px}.mig-ai-basket-empty{height:100%;display:grid;place-content:center;text-align:center;color:#718277;font-size:12px;line-height:1.7;padding:25px}.mig-ai-basket-empty span{font-size:38px;margin-bottom:8px}
+        .mig-ai-basket-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:11px;margin-bottom:8px;background:#fff;border:1px solid #dfe9e1;border-radius:13px}.mig-ai-basket-name{font-size:11.5px;font-weight:850;line-height:1.45;unicode-bidi:plaintext}.mig-ai-basket-price{margin-top:4px;color:#0b6a3d;font-size:10px;font-weight:850;direction:ltr;text-align:right}.mig-ai-basket-controls{display:flex;align-items:center;gap:5px;direction:ltr}.mig-ai-basket-controls button{width:25px;height:25px;border:1px solid #d7e4d9;background:#f7faf7;color:#1c5336;border-radius:8px;cursor:pointer}.mig-ai-basket-controls strong{min-width:19px;text-align:center;font-size:11px}.mig-ai-basket-remove{grid-column:1/-1;border:0;background:transparent;color:#a05858;font-size:9.5px;text-align:right;cursor:pointer;padding:0}
+        .mig-ai-drawer-footer{padding:11px 12px;background:#fff;border-top:1px solid #dfe9e1}.mig-ai-basket-total{display:flex;justify-content:space-between;gap:9px;margin-bottom:9px;color:#244c37;font-size:11.5px;font-weight:850}.mig-ai-basket-note{color:#78897e;font-size:9.5px;line-height:1.5;margin-bottom:8px}.mig-ai-basket-send{display:flex;align-items:center;justify-content:center;width:100%;min-height:42px;border:0;border-radius:12px;background:#168548;color:#fff!important;text-decoration:none!important;font-size:11.5px;font-weight:950}.mig-ai-basket-clear{width:100%;margin-top:7px;border:0;background:transparent;color:#8a5c5c;font-size:10px;cursor:pointer}
+        .mig-ai-image-preview{display:none;gap:7px;padding:8px 11px 0;background:#fff;overflow-x:auto;direction:ltr}
+        .mig-ai-image-preview.has-images{display:flex}
+        .mig-ai-image-thumb{position:relative;width:58px;height:58px;border-radius:11px;overflow:hidden;border:1px solid #d7e4d9;background:#f4f7f4;flex:0 0 auto}
+        .mig-ai-image-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+        .mig-ai-image-remove{position:absolute;right:3px;top:3px;width:19px;height:19px;border:0;border-radius:50%;background:rgba(0,0,0,.68);color:#fff;font-size:13px;line-height:19px;padding:0;cursor:pointer}
+        .mig-ai-input-wrap{padding:9px 11px 8px;border-top:1px solid #e3ece4;background:#fff}
+        .mig-ai-composer{display:flex;align-items:flex-end;gap:7px;direction:ltr}
+        .mig-ai-tool-btn{width:40px;height:44px;border:1px solid #d7e4d9;border-radius:13px;background:#f7faf7;color:var(--mig-green-800);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:.18s ease}
+        .mig-ai-tool-btn:hover{background:var(--mig-green-100);border-color:#c1d9c6}.mig-ai-tool-btn.is-listening{background:#fff2e9;color:#b84d23;border-color:#f1c6b4;animation:migPulse 1.1s infinite}
+        .mig-ai-tool-btn:disabled{opacity:.45;cursor:not-allowed}
+        .mig-ai-input{flex:1;min-width:0;min-height:44px;max-height:112px;resize:none;overflow-y:auto;border:1px solid #d7e4d9;border-radius:14px;padding:11px 13px;outline:none;font:inherit;font-size:13px;line-height:1.55;background:#fbfdfb;direction:rtl;color:var(--mig-text)}
+        .mig-ai-input::placeholder{color:#8a9a90}.mig-ai-input:focus{border-color:#2c8a51;box-shadow:0 0 0 3px rgba(44,138,81,.10);background:#fff}
+        .mig-ai-send{width:44px;height:44px;border:0;border-radius:14px;background:linear-gradient(145deg,var(--mig-green-700),var(--mig-green-900));color:#fff;font-size:20px;font-weight:900;cursor:pointer;flex:0 0 auto;box-shadow:0 6px 14px rgba(11,91,53,.18);transition:.18s ease}
+        .mig-ai-send:hover{transform:translateY(-1px);box-shadow:0 8px 17px rgba(11,91,53,.23)}
+        .mig-ai-send:disabled,.mig-ai-input:disabled{opacity:.5;cursor:not-allowed;transform:none}
+        .mig-ai-input-hint{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;padding:0 3px;color:#8a998f;font-size:9.5px;line-height:1.4}
+        .mig-ai-input-hint strong{color:#718277;font-weight:800}
+        .mig-ai-human{border:0;background:transparent;color:#0b6a3d;font-size:9.5px;font-weight:900;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+        @media(max-width:640px){
+            body.mig-ai-chat-open{overflow:hidden}
+            #mig-ai-chat-root{right:12px;bottom:12px}
+            .mig-ai-panel{position:fixed;inset:0;width:auto;height:100vh;height:100dvh;max-height:none;border:0;border-radius:0;transform:translateY(22px);transform-origin:center}
+            .mig-ai-panel.is-open{transform:translateY(0)}
+            .mig-ai-header{padding:12px 11px;min-height:70px}.mig-ai-avatar{width:42px;height:42px;border-radius:14px}.mig-ai-header-subtitle{max-width:180px}
+            .mig-ai-messages{padding:12px}.mig-ai-quick{gap:7px}.mig-ai-chip{padding:9px 8px;font-size:11px}
+            .mig-ai-launcher{width:58px;height:58px;border-radius:20px}
+            .mig-ai-action-fields{grid-template-columns:1fr}.mig-ai-action-field-wide{grid-column:auto}
+            .mig-ai-drawer{position:fixed;inset:70px 0 0}.mig-ai-guide-options{grid-template-columns:1fr 1fr}
+            .mig-ai-input-wrap{padding-bottom:max(8px,env(safe-area-inset-bottom))}.mig-ai-input-hint span:last-child{display:none}
+        }
+        @media(max-width:360px){.mig-ai-quick{grid-template-columns:1fr}.mig-ai-header-subtitle{max-width:130px}.mig-ai-tool-btn{width:37px}}
+        @media(prefers-reduced-motion:reduce){#mig-ai-chat-root *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+    </style>
+
+    <div id="mig-ai-chat-root">
+        <div class="mig-ai-panel" id="mig-ai-panel" role="dialog" aria-label="MIG FARM AI" aria-hidden="true">
+            <div class="mig-ai-header">
+                <div class="mig-ai-avatar">AI</div>
+                <div class="mig-ai-header-text">
+                    <div class="mig-ai-header-title">MIG FARM AI</div>
+                    <div class="mig-ai-header-subtitle"><span class="mig-ai-online" id="mig-ai-status">متصل • جاهز أساعدك</span></div>
+                </div>
+                <button type="button" class="mig-ai-header-btn mig-ai-basket-btn" id="mig-ai-basket" aria-label="فتح طلباتي" title="طلباتي">🧺<span class="mig-ai-basket-count" id="mig-ai-basket-count">0</span></button>
+                <button type="button" class="mig-ai-header-btn" id="mig-ai-clear" aria-label="بدء محادثة جديدة" title="محادثة جديدة">↻</button>
+                <button type="button" class="mig-ai-header-btn" id="mig-ai-close" aria-label="إغلاق المحادثة" title="إغلاق">×</button>
+            </div>
+
+            <div class="mig-ai-messages" id="mig-ai-messages" aria-live="polite">
+                <div class="mig-ai-welcome">
+                    <div class="mig-ai-welcome-title"><span>🌱</span> هلا بك في MIG FARM</div>
+                    <div class="mig-ai-welcome-copy">كلّمني بطريقتك، وأنا أفهم طلبك كاملًا وأساعدك تختار وتقارن وتجهّز طلب استفسار. تقدر كمان ترسل صورة المنتج أو النبتة.</div>
+                    <div class="mig-ai-trust">✓ يفصل بين بيانات المنتج المباشرة والإرشاد العام، ولا يعتبر «طلباتي» شراء أو دفع.</div>
+                </div>
+                <div class="mig-ai-section-title" id="mig-ai-section-title">كيف أقدر أساعدك اليوم؟</div>
+                <div class="mig-ai-quick" id="mig-ai-quick">
+                    <button type="button" class="mig-ai-chip" data-flow="guided"><span class="mig-ai-chip-icon">🧭</span>اختيار موجّه</button>
+                    <button type="button" class="mig-ai-chip" data-flow="image"><span class="mig-ai-chip-icon">📷</span>تحليل صورة</button>
+                    <button type="button" class="mig-ai-chip" data-message="أبغي مساعدة في أنظمة الري أو الأدوات الزراعية"><span class="mig-ai-chip-icon">💧</span>الري والأدوات</button>
+                    <button type="button" class="mig-ai-chip" data-message="أبغي أعرف توفر منتج والشحن وأقرب فرع"><span class="mig-ai-chip-icon">📦</span>التوفر والشحن</button>
+                </div>
+                <div class="mig-ai-typing" id="mig-ai-typing" aria-label="MIG FARM AI يكتب">
+                    <em class="mig-ai-typing-label">أفهم طلبك وأجهّز الرد</em>
+                    <span class="mig-ai-typing-dots"><span></span><span></span><span></span></span>
+                </div>
+            </div>
+
+            <div class="mig-ai-drawer" id="mig-ai-drawer" aria-hidden="true">
+                <div class="mig-ai-drawer-head"><div class="mig-ai-drawer-title">🧺 طلباتي</div><button type="button" class="mig-ai-drawer-close" id="mig-ai-drawer-close" aria-label="إغلاق طلباتي">×</button></div>
+                <div class="mig-ai-drawer-body" id="mig-ai-drawer-body"></div>
+                <div class="mig-ai-drawer-footer" id="mig-ai-drawer-footer"></div>
+            </div>
+
+            <div class="mig-ai-image-preview" id="mig-ai-image-preview"></div>
+            <div class="mig-ai-input-wrap">
+                <input id="mig-ai-file" type="file" accept="image/png,image/jpeg,image/webp" multiple="multiple" style="display:none"/>
+                <div class="mig-ai-composer">
+                    <button type="button" class="mig-ai-tool-btn mig-ai-attach" id="mig-ai-attach" aria-label="إرفاق صورة" title="إرفاق صورة">📷</button>
+                    <button type="button" class="mig-ai-tool-btn mig-ai-voice" id="mig-ai-voice" aria-label="اكتب بالصوت" title="اكتب بالصوت">🎙</button>
+                    <textarea id="mig-ai-input" class="mig-ai-input" rows="1" maxlength="1800" placeholder="اكتب سؤالك بطريقتك..." autocomplete="off"></textarea>
+                    <button type="button" class="mig-ai-send" id="mig-ai-send" aria-label="إرسال" title="إرسال">↑</button>
+                </div>
+                <div class="mig-ai-input-hint"><span><strong>Enter</strong> للإرسال • <strong>Shift + Enter</strong> لسطر جديد</span><button type="button" class="mig-ai-human" id="mig-ai-human">تحدث مع موظف</button></div>
+            </div>
+        </div>
+
+        <button type="button" class="mig-ai-launcher" id="mig-ai-launcher" aria-label="فتح مساعد MIG FARM" aria-expanded="false">
+            <span class="mig-ai-launcher-icon">✦</span><span class="mig-ai-launcher-dot"></span><span class="mig-ai-unread" id="mig-ai-unread">1</span>
+        </button>
+    </div>
+
+    <script type="text/javascript"><![CDATA[
+        (function(){
+            'use strict';
+
+            var API='https://mig-farm-ai-backend.vercel.app/api/chat';
+            var STREAM_API='https://mig-farm-ai-backend.vercel.app/api/chat-stream';
+            var UI_VERSION='34.0.0';
+            var UI_VERSION_KEY='mig_ai_ui_version';
+            var HISTORY_KEY='mig_ai_history_v33';
+            var SESSION_KEY='mig_ai_session_id_v33';
+            var STATE_KEY='mig_ai_conversation_state_v33';
+            var BASKET_KEY='mig_ai_inquiry_basket_v33';
+            var FEEDBACK_KEY='mig_ai_feedback_v33';
+            var MAX_LOCAL_HISTORY_MESSAGES=32;
+            var MAX_REQUEST_HISTORY_MESSAGES=22;
+            var MAX_REQUEST_HISTORY_CHARS=20000;
+            var MAX_HISTORY_MESSAGE_CHARS=4000;
+            var ALLOW_AUTONOMOUS_ACTIONS=false;
+
+            function init(){
+                var launcher=document.getElementById('mig-ai-launcher');
+                var panel=document.getElementById('mig-ai-panel');
+                var closeBtn=document.getElementById('mig-ai-close');
+                var clearBtn=document.getElementById('mig-ai-clear');
+                var input=document.getElementById('mig-ai-input');
+                var sendBtn=document.getElementById('mig-ai-send');
+                var messages=document.getElementById('mig-ai-messages');
+                var typing=document.getElementById('mig-ai-typing');
+                var quick=document.getElementById('mig-ai-quick');
+                var sectionTitle=document.getElementById('mig-ai-section-title');
+                var attachBtn=document.getElementById('mig-ai-attach');
+                var voiceBtn=document.getElementById('mig-ai-voice');
+                var fileInput=document.getElementById('mig-ai-file');
+                var imagePreview=document.getElementById('mig-ai-image-preview');
+                var status=document.getElementById('mig-ai-status');
+                var unread=document.getElementById('mig-ai-unread');
+                var basketBtn=document.getElementById('mig-ai-basket');
+                var basketCount=document.getElementById('mig-ai-basket-count');
+                var drawer=document.getElementById('mig-ai-drawer');
+                var drawerClose=document.getElementById('mig-ai-drawer-close');
+                var drawerBody=document.getElementById('mig-ai-drawer-body');
+                var drawerFooter=document.getElementById('mig-ai-drawer-footer');
+                var humanBtn=document.getElementById('mig-ai-human');
+                var pendingImages=[];
+                var activeImages=[];
+                var activeImageTurns=0;
+                var pendingCaptureTarget='';
+                var lastResultItems=[];
+                var activeChatProduct=null;
+                var comparisonSelection=[];
+
+                if(!launcher||!panel||!closeBtn||!clearBtn||!input||!sendBtn||!messages||!typing||!attachBtn||!fileInput||!imagePreview||!status||!basketBtn||!basketCount||!drawer||!drawerClose||!drawerBody||!drawerFooter||!humanBtn) return;
+
+                // v34 context-resilience rule:
+                // A UI deployment must never erase the user's conversation merely because the
+                // presentation-layer version changed. Conversation/session/state are semantic
+                // continuity data and are cleared only by an explicit user reset or invalid data.
+                try{
+                    if(localStorage.getItem(UI_VERSION_KEY)!==UI_VERSION){
+                        localStorage.setItem(UI_VERSION_KEY,UI_VERSION);
+                    }
+                }catch(e){}
+
+                function clean(v){return String(v||'').replace(/\s+/g,' ').trim()}
+                function setStatus(mode,text){
+                    status.classList.remove('is-busy','is-offline');
+                    if(mode==='busy')status.classList.add('is-busy');
+                    if(mode==='offline')status.classList.add('is-offline');
+                    status.textContent=text||(mode==='busy'?'أفهم طلبك وأجهّز الرد':mode==='offline'?'الاتصال غير مستقر':'متصل • جاهز أساعدك');
+                }
+                function autoGrow(){
+                    input.style.height='auto';
+                    input.style.height=Math.min(112,Math.max(44,input.scrollHeight))+'px';
+                }
+                function setPanelOpen(open){
+                    panel.classList.toggle('is-open',!!open);
+                    panel.setAttribute('aria-hidden',open?'false':'true');
+                    launcher.setAttribute('aria-expanded',open?'true':'false');
+                    if(document.body)document.body.classList.toggle('mig-ai-chat-open',!!open&&window.innerWidth<=640);
+                    if(open){
+                        if(unread)unread.classList.remove('is-visible');
+                        setTimeout(function(){input.focus();scrollBottom()},120);
+                    }
+                }
+                function markUnread(){
+                    if(panel.classList.contains('is-open')||!unread)return;
+                    unread.textContent='1';unread.classList.add('is-visible');
+                }
+                function clearConnectionCards(){
+                    messages.querySelectorAll('.mig-ai-connection-card').forEach(function(el){el.remove()});
+                }
+                function addConnectionNotice(copy,retry){
+                    clearConnectionCards();
+                    var card=document.createElement('div');card.className='mig-ai-connection-card';card.setAttribute('role','status');
+                    var title=document.createElement('div');title.className='mig-ai-connection-title';title.textContent='⏳ لحظة ونكمّل معك';card.appendChild(title);
+                    var body=document.createElement('div');body.className='mig-ai-connection-copy';body.textContent=copy;card.appendChild(body);
+                    var actions=document.createElement('div');actions.className='mig-ai-connection-actions';
+                    var retryBtn=document.createElement('button');retryBtn.type='button';retryBtn.className='mig-ai-retry';retryBtn.textContent='إعادة المحاولة';
+                    retryBtn.addEventListener('click',function(){card.remove();if(typeof retry==='function')retry()});
+                    var whatsapp=document.createElement('a');whatsapp.className='mig-ai-whatsapp';whatsapp.href='https://wa.me/971581768215?text='+encodeURIComponent('مرحبًا MIG FARM، محتاج مساعدة من فريق المبيعات.');whatsapp.target='_blank';whatsapp.rel='noopener noreferrer';whatsapp.textContent='واتساب مباشر';
+                    actions.appendChild(retryBtn);actions.appendChild(whatsapp);card.appendChild(actions);
+                    messages.insertBefore(card,typing);scrollBottom();markUnread();
+                }
+                function setupVoice(){
+                    if(!voiceBtn)return;
+                    var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+                    if(!SpeechRecognition){voiceBtn.style.display='none';return}
+                    var recognition=new SpeechRecognition();var listening=false;
+                    recognition.lang=locale()==='en'?'en-US':'ar-AE';recognition.interimResults=true;recognition.continuous=false;
+                    recognition.onstart=function(){listening=true;voiceBtn.classList.add('is-listening');voiceBtn.textContent='■';setStatus('busy','أسمعك... تكلّم بطريقتك')};
+                    recognition.onresult=function(event){
+                        var transcript='';for(var i=event.resultIndex;i<event.results.length;i++)transcript+=event.results[i][0].transcript;
+                        input.value=clean((input.value?input.value+' ':'')+transcript);autoGrow();
+                    };
+                    recognition.onerror=function(){setStatus('offline','تعذّر تشغيل الصوت • اكتب رسالتك')};
+                    recognition.onend=function(){listening=false;voiceBtn.classList.remove('is-listening');voiceBtn.textContent='🎙';if(navigator.onLine)setStatus('ready');input.focus();autoGrow()};
+                    voiceBtn.addEventListener('click',function(){try{if(listening)recognition.stop();else recognition.start()}catch(e){console.warn('MIG voice:',e)}});
+                }
+                function normalizeProductRef(p){
+                    if(!p||!p.name)return null;
+                    return {
+                        name:clean(p.name),sku:clean(p.sku||''),external_id:clean(p.external_id||p.product_dossier?.external_id||''),
+                        product_id:Number(p.product_id)||null,product_template_id:Number(p.product_template_id)||null,
+                        price:p.price==null?'':String(p.price),currency:clean(p.currency||'AED'),availability:clean(p.availability||''),url:clean(p.url||''),
+                        image:clean(p.image||''),truth:{current:Boolean(p.truth&&p.truth.current),source:clean(p.truth&&p.truth.source||'')}
+                    };
+                }
+                function sameProductRef(a,b){
+                    var x=normalizeProductRef(a),y=normalizeProductRef(b);if(!x||!y)return false;
+                    if(x.external_id&&y.external_id)return x.external_id===y.external_id;
+                    if(x.sku&&y.sku)return clean(x.sku).toLowerCase()===clean(y.sku).toLowerCase();
+                    return clean(x.name).toLowerCase()===clean(y.name).toLowerCase();
+                }
+                function isGenericProductDetailLabel(value){
+                    var t=clean(value).toLowerCase();
+                    return /تفاصيل المنتج|استخدامه|استخدامها|product details|details and use/.test(t);
+                }
+                function matchingResultForLabel(label){
+                    var t=clean(label).toLowerCase();
+                    var matches=lastResultItems.filter(function(p){return p&&p.name&&t.indexOf(clean(p.name).toLowerCase())>=0});
+                    return matches.length===1?matches[0]:null;
+                }
+                // v34 semantic-boundary rule:
+                // The browser must never infer user intent, topic switches, reference targets,
+                // or attachment relevance from user wording. The backend conversation_state
+                // is authoritative for semantic context. UI code only transports explicit
+                // selections/files and renders server decisions.
+                function serverVisualContextActive(){
+                    var state=conversationState();
+                    var visual=state&&state.active_visual_context;
+                    return Boolean(visual&&visual.active===true);
+                }
+                function locale(){
+                    var lang=(document.documentElement.getAttribute('lang')||'').toLowerCase();
+                    return lang.indexOf('en')===0?'en':'ar';
+                }
+                function session(){
+                    var id=localStorage.getItem(SESSION_KEY);
+                    if(!id){
+                        id='mig-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
+                        localStorage.setItem(SESSION_KEY,id);
+                    }
+                    return id;
+                }
+                function history(){
+                    try{
+                        var raw=localStorage.getItem(HISTORY_KEY);
+                        var parsed=raw?JSON.parse(raw):[];
+                        if(!Array.isArray(parsed))return [];
+                        return parsed.filter(function(item){
+                            return item&&(/^(user|assistant)$/).test(String(item.role||''))&&clean(item.content);
+                        }).slice(-MAX_LOCAL_HISTORY_MESSAGES);
+                    }catch(e){return []}
+                }
+                function saveHistory(items){
+                    try{localStorage.setItem(HISTORY_KEY,JSON.stringify((Array.isArray(items)?items:[]).slice(-MAX_LOCAL_HISTORY_MESSAGES)))}catch(e){}
+                }
+                function historyForRequest(items){
+                    var source=Array.isArray(items)?items:history();
+                    var selected=[],totalChars=0;
+                    for(var i=source.length-1;i>=0&&selected.length<MAX_REQUEST_HISTORY_MESSAGES;i--){
+                        var item=source[i];
+                        if(!item||!(/^(user|assistant)$/).test(String(item.role||'')))continue;
+                        var content=String(item.content||'').trim().slice(0,MAX_HISTORY_MESSAGE_CHARS);
+                        if(!content)continue;
+                        if(selected.length&&totalChars+content.length>MAX_REQUEST_HISTORY_CHARS)break;
+                        totalChars+=content.length;
+                        selected.push({role:String(item.role),content:content});
+                    }
+                    return selected.reverse();
+                }
+                function conversationState(){
+                    try{
+                        var raw=localStorage.getItem(STATE_KEY);
+                        var parsed=raw?JSON.parse(raw):{};
+                        return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{};
+                    }catch(e){return {}}
+                }
+                function saveConversationState(value){
+                    try{
+                        if(value&&typeof value==='object') localStorage.setItem(STATE_KEY,JSON.stringify(value));
+                    }catch(e){}
+                }
+                var restoredProductContext=conversationState().active_product_context;
+                if(restoredProductContext&&restoredProductContext.active&&restoredProductContext.product){
+                    activeChatProduct=normalizeProductRef(restoredProductContext.product);
+                }
+                function pushHistory(role,content){
+                    var items=history();
+                    items.push({role:role,content:String(content||'').slice(0,MAX_HISTORY_MESSAGE_CHARS)});
+                    saveHistory(items);
+                }
+                function resetConversation(){
+                    localStorage.removeItem(HISTORY_KEY);
+                    localStorage.removeItem(SESSION_KEY);
+                    localStorage.removeItem(STATE_KEY);
+                    activeImages=[];activeImageTurns=0;
+                    window.location.reload();
+                }
+                function safeImageUrl(value){
+                    var raw=clean(value);if(!raw)return '';
+                    try{
+                        var parsed=new URL(raw,window.location.origin);
+                        if(parsed.protocol!=='http:'&&parsed.protocol!=='https:')return '';
+                        return parsed.href;
+                    }catch(e){return ''}
+                }
+                function safeActionUrl(value){
+                    var raw=clean(value);if(!raw)return '';
+                    if(/^(tel:|mailto:)/i.test(raw))return raw;
+                    return safeImageUrl(raw);
+                }
+                function productKey(product){
+                    var p=normalizeProductRef(product);if(!p)return '';
+                    return p.external_id||p.sku||String(p.product_id||p.product_template_id||'')||p.name.toLowerCase();
+                }
+                function inquiryItems(){
+                    try{
+                        var raw=localStorage.getItem(BASKET_KEY);var parsed=raw?JSON.parse(raw):[];
+                        return Array.isArray(parsed)?parsed.filter(function(item){return item&&item.product&&item.product.name}).slice(0,20):[];
+                    }catch(e){return []}
+                }
+                function saveInquiryItems(items){
+                    var cleanItems=(Array.isArray(items)?items:[]).slice(0,20);
+                    try{localStorage.setItem(BASKET_KEY,JSON.stringify(cleanItems))}catch(e){}
+                    updateBasketCount();if(drawer.classList.contains('is-open'))renderInquiryDrawer();
+                }
+                function priceNumber(value){
+                    var raw=String(value==null?'':value).replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);
+                    var number=raw?Number(raw[0]):NaN;return Number.isFinite(number)&&number>=0?number:null;
+                }
+                function money(value,currency){
+                    var number=priceNumber(value);if(number===null)return 'السعر غير ظاهر';
+                    return (clean(currency||'AED')+' '+number.toFixed(number%1?2:0));
+                }
+                function updateBasketCount(){
+                    var count=inquiryItems().reduce(function(total,item){return total+Math.max(1,Number(item.qty)||1)},0);
+                    basketCount.textContent=String(count);basketCount.classList.toggle('is-visible',count>0);
+                    basketBtn.setAttribute('aria-label','فتح طلباتي'+(count?'، '+count+' منتجات':''));
+                }
+                function addInquiryProduct(product){
+                    var ref=normalizeProductRef(product);if(!ref)return false;
+                    var items=inquiryItems(),key=productKey(ref),found=false;
+                    items.forEach(function(item){if(productKey(item.product)===key)found=true});
+                    if(!found)items.push({product:ref,qty:1});
+                    saveInquiryItems(items);return !found;
+                }
+                function basketSummary(includeConversation){
+                    var items=inquiryItems();var lines=['مرحبًا MIG FARM، أحتاج مساعدة من فريق المبيعات.'];
+                    if(items.length){
+                        lines.push('','المنتجات التي أستفسر عنها:');
+                        items.slice(0,8).forEach(function(item,index){
+                            var p=item.product;lines.push((index+1)+'. '+p.name+' × '+Math.max(1,Number(item.qty)||1)+(p.sku?' — SKU: '+p.sku:'')+(priceNumber(p.price)!==null?' — '+money(p.price,p.currency):''));
+                            if(p.url)lines.push('   '+p.url);
+                        });
+                        if(items.length>8)lines.push('وباقي القائمة موجود داخل «طلباتي» في الشات.');
+                    }
+                    if(includeConversation){
+                        var recent=history().slice(-4);if(recent.length){lines.push('','آخر تفاصيل المحادثة:');recent.forEach(function(item){lines.push((item.role==='user'?'العميل: ':'المساعد: ')+clean(item.content).slice(0,260))});}
+                    }
+                    lines.push('','هذا طلب استفسار وليس تأكيد شراء أو دفع.');return lines.join('\n');
+                }
+                function whatsappUrl(text){return 'https://wa.me/971581768215?text='+encodeURIComponent(text)}
+                function renderInquiryDrawer(){
+                    var items=inquiryItems();drawerBody.innerHTML='';drawerFooter.innerHTML='';
+                    if(!items.length){
+                        var empty=document.createElement('div');empty.className='mig-ai-basket-empty';
+                        var icon=document.createElement('span');icon.textContent='🧺';empty.appendChild(icon);empty.appendChild(document.createTextNode('لسه ما ضفتش منتجات. اختار «أضف لطلباتي» من أي بطاقة منتج.'));drawerBody.appendChild(empty);return;
+                    }
+                    items.forEach(function(item,index){
+                        var p=item.product;var card=document.createElement('div');card.className='mig-ai-basket-item';
+                        var info=document.createElement('div');var name=document.createElement('div');name.className='mig-ai-basket-name';name.textContent=p.name;name.dir='auto';info.appendChild(name);
+                        var price=document.createElement('div');price.className='mig-ai-basket-price';price.textContent=money(p.price,p.currency);info.appendChild(price);card.appendChild(info);
+                        var controls=document.createElement('div');controls.className='mig-ai-basket-controls';
+                        var minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.setAttribute('aria-label','تقليل الكمية');
+                        var qty=document.createElement('strong');qty.textContent=String(Math.max(1,Number(item.qty)||1));
+                        var plus=document.createElement('button');plus.type='button';plus.textContent='+';plus.setAttribute('aria-label','زيادة الكمية');
+                        minus.addEventListener('click',function(){var all=inquiryItems();all[index].qty=Math.max(1,(Number(all[index].qty)||1)-1);saveInquiryItems(all)});
+                        plus.addEventListener('click',function(){var all=inquiryItems();all[index].qty=Math.min(999,(Number(all[index].qty)||1)+1);saveInquiryItems(all)});
+                        controls.appendChild(minus);controls.appendChild(qty);controls.appendChild(plus);card.appendChild(controls);
+                        var remove=document.createElement('button');remove.type='button';remove.className='mig-ai-basket-remove';remove.textContent='إزالة من طلباتي';remove.addEventListener('click',function(){var all=inquiryItems();all.splice(index,1);saveInquiryItems(all)});card.appendChild(remove);drawerBody.appendChild(card);
+                    });
+                    var knownTotal=0,knownCount=0,currencies={};
+                    items.forEach(function(item){var n=priceNumber(item.product.price);if(n!==null){knownTotal+=n*Math.max(1,Number(item.qty)||1);knownCount+=1;currencies[clean(item.product.currency||'AED')]=true}});
+                    var total=document.createElement('div');total.className='mig-ai-basket-total';
+                    var totalLabel=document.createElement('span');totalLabel.textContent='الإجمالي الظاهر';var totalValue=document.createElement('span');totalValue.dir='ltr';var currencyList=Object.keys(currencies);totalValue.textContent=knownCount&&currencyList.length===1?(currencyList[0]+' '+knownTotal.toFixed(2)):'يؤكده الفريق';total.appendChild(totalLabel);total.appendChild(totalValue);drawerFooter.appendChild(total);
+                    var note=document.createElement('div');note.className='mig-ai-basket-note';note.textContent='القائمة للاستفسار وتجهيز الطلب فقط؛ لا تعتبر شراء أو حجزًا أو دفعًا.';drawerFooter.appendChild(note);
+                    var send=document.createElement('a');send.className='mig-ai-basket-send';send.href=whatsappUrl(basketSummary(false));send.target='_blank';send.rel='noopener noreferrer';send.textContent='إرسال الاستفسار على واتساب';drawerFooter.appendChild(send);
+                    var clear=document.createElement('button');clear.type='button';clear.className='mig-ai-basket-clear';clear.textContent='مسح القائمة';clear.addEventListener('click',function(){saveInquiryItems([])});drawerFooter.appendChild(clear);
+                }
+                function setDrawerOpen(open){
+                    drawer.classList.toggle('is-open',!!open);drawer.setAttribute('aria-hidden',open?'false':'true');
+                    if(open){renderInquiryDrawer();drawerClose.focus()}else input.focus();
+                }
+                function addGuidedSelector(){
+                    messages.querySelectorAll('.mig-ai-guide-card').forEach(function(el){el.remove()});
+                    if(quick)quick.style.display='none';if(sectionTitle)sectionTitle.style.display='none';
+                    var card=document.createElement('div');card.className='mig-ai-guide-card';var state={};var index=0;
+                    var steps=[
+                        {key:'category',title:'تدور على إيه؟',options:function(){return ['بذور','أسمدة ومغذيات','مبيدات وحماية','ري وأدوات']}},
+                        {key:'need',title:'حدد المحصول أو الاحتياج',options:function(){
+                            if(state.category==='بذور')return ['طماطم','خيار','فلفل','محصول آخر'];
+                            if(state.category==='أسمدة ومغذيات')return ['نمو خضري','تزهير وإثمار','نقص عناصر','مشكلة بالنبات'];
+                            if(state.category==='مبيدات وحماية')return ['حشرات','فطريات','أعشاب','مشكلة غير واضحة'];
+                            return ['تنقيط','تايمر تحكم','مضخة','أدوات زراعية'];
+                        }},
+                        {key:'cultivation',title:'نظام الزراعة عندك؟',options:function(){return ['أرض مكشوفة','بيت محمي','زراعة مائية','غير متأكد']}},
+                        {key:'emirate',title:'أنت في أي منطقة؟',options:function(){return ['الشارقة','العين','دبي','أبوظبي','إمارة أخرى']}},
+                        {key:'scale',title:'الحجم المطلوب تقريبًا؟',options:function(){return ['تجربة صغيرة','مزرعة','مشروع','غير محدد']}}
+                    ];
+                    function finish(){
+                        card.remove();var prompt='أحتاج ترشيحًا موجهًا بناءً على احتياجي الكامل. القسم: '+state.category+'، المحصول أو المشكلة: '+state.need+'، نظام الزراعة: '+state.cultivation+'، المنطقة: '+state.emirate+'، الحجم: '+state.scale+'. افهم المعلومات معًا واسألني فقط عن معلومة ضرورية ناقصة قبل الترشيح.';sendText(prompt);
+                    }
+                    function render(){
+                        card.innerHTML='';var step=steps[index];
+                        var kicker=document.createElement('div');kicker.className='mig-ai-card-kicker';kicker.textContent='اختيار موجّه • خطوة '+(index+1)+' من '+steps.length;card.appendChild(kicker);
+                        var title=document.createElement('div');title.className='mig-ai-card-title';title.textContent=step.title;card.appendChild(title);
+                        var progress=document.createElement('div');progress.className='mig-ai-guide-progress';var bar=document.createElement('span');bar.style.width=(((index+1)/steps.length)*100)+'%';progress.appendChild(bar);card.appendChild(progress);
+                        var options=document.createElement('div');options.className='mig-ai-guide-options';step.options().forEach(function(label){
+                            var button=document.createElement('button');button.type='button';button.className='mig-ai-guide-option';button.textContent=label;
+                            button.addEventListener('click',function(){state[step.key]=label;if(index===steps.length-1)finish();else{index+=1;render()}});options.appendChild(button);
+                        });card.appendChild(options);
+                        if(index>0){var back=document.createElement('button');back.type='button';back.className='mig-ai-guide-back';back.textContent='رجوع للخطوة السابقة';back.addEventListener('click',function(){index-=1;render()});card.appendChild(back)}
+                    }
+                    render();messages.insertBefore(card,typing);scrollBottom();
+                }
+                function addLocalComparison(first,second){
+                    var a=normalizeProductRef(first),b=normalizeProductRef(second);if(!a||!b)return;
+                    var card=document.createElement('div');card.className='mig-ai-compare-card';
+                    var kicker=document.createElement('div');kicker.className='mig-ai-card-kicker';kicker.textContent='مقارنة مباشرة من البيانات الظاهرة';card.appendChild(kicker);
+                    var title=document.createElement('div');title.className='mig-ai-card-title';title.textContent='مقارنة سريعة بين المنتجين';card.appendChild(title);
+                    var table=document.createElement('table');table.className='mig-ai-compare-table';var body=document.createElement('tbody');
+                    [['المنتج',a.name,b.name],['السعر',money(a.price,a.currency),money(b.price,b.currency)],['التوفر',a.availability||'غير ظاهر',b.availability||'غير ظاهر'],['SKU',a.sku||'غير ظاهر',b.sku||'غير ظاهر']].forEach(function(row){
+                        var tr=document.createElement('tr');row.forEach(function(value,i){var cell=document.createElement(i===0?'th':'td');cell.textContent=value;cell.dir=i===0?'rtl':'auto';tr.appendChild(cell)});body.appendChild(tr);
+                    });table.appendChild(body);card.appendChild(table);
+                    var copy=document.createElement('div');copy.className='mig-ai-card-copy';copy.textContent='المقارنة تعرض حقولًا مؤكدة فقط. اضغط أدناه لتحليل الفرق والاستخدام الأنسب حسب احتياجك.';card.appendChild(copy);
+                    var ask=document.createElement('button');ask.type='button';ask.className='mig-ai-card-primary';ask.textContent='اسأل الذكاء عن الفرق الأنسب لي';ask.addEventListener('click',function(){sendText('قارن المنتجين حسب استخدامي، ووضح الفرق المؤكد وما الذي تحتاج أن تسألني عنه قبل الترشيح.',{productRefs:[a,b]})});card.appendChild(ask);
+                    messages.insertBefore(card,typing);scrollBottom();
+                }
+                function addVisualScanProgress(){
+                    var card=document.createElement('div');card.className='mig-ai-scan-card';
+                    var head=document.createElement('div');head.className='mig-ai-scan-head';var icon=document.createElement('div');icon.className='mig-ai-scan-icon';icon.textContent='🔎';var copy=document.createElement('div');var title=document.createElement('div');title.className='mig-ai-card-title';title.textContent='أفحص الصورة بعناية';var sub=document.createElement('div');sub.className='mig-ai-card-copy';sub.textContent='أستخرج الظاهر أولًا ثم أربطه بسؤالك من غير تخمين.';copy.appendChild(title);copy.appendChild(sub);head.appendChild(icon);head.appendChild(copy);card.appendChild(head);
+                    var steps=document.createElement('div');steps.className='mig-ai-scan-steps';['قراءة العناصر الظاهرة','مطابقة المنتج أو المشكلة','تجهيز رد واضح وآمن'].forEach(function(label,i){var item=document.createElement('div');item.className='mig-ai-scan-step'+(i===0?' is-active':'');item.textContent=label;steps.appendChild(item)});card.appendChild(steps);messages.insertBefore(card,typing);scrollBottom();
+                    card._migTimers=[setTimeout(function(){var list=card.querySelectorAll('.mig-ai-scan-step');if(list[0])list[0].className='mig-ai-scan-step is-done';if(list[1])list[1].className='mig-ai-scan-step is-active'},1100),setTimeout(function(){var list=card.querySelectorAll('.mig-ai-scan-step');if(list[1])list[1].className='mig-ai-scan-step is-done';if(list[2])list[2].className='mig-ai-scan-step is-active'},2600)];return card;
+                }
+                function removeVisualScanProgress(card){if(!card)return;(card._migTimers||[]).forEach(function(timer){clearTimeout(timer)});card.remove()}
+                function firstText(selectors){
+                    for(var i=0;i<selectors.length;i++){
+                        var el=document.querySelector(selectors[i]);
+                        if(el){
+                            var value=clean(el.textContent);
+                            if(value) return value;
+                        }
+                    }
+                    return '';
+                }
+                function productContext(){
+                    var path=window.location.pathname||'';
+                    if(path.indexOf('/shop/')!==0||path.indexOf('/shop/category/')===0) return null;
+                    return {
+                        name:firstText(['#product_detail h1','.oe_website_sale h1','main h1','h1']),
+                        price:firstText(['#product_detail .oe_price','.oe_website_sale .oe_price','.product_price','[itemprop="price"]']),
+                        sku:firstText(['.product_default_code','[data-product-default-code]']),
+                        availability:firstText(['.availability_messages','.o_wsale_product_information_text']),
+                        description:firstText(['#product_full_description','.oe_website_sale .oe_structure']),
+                        url:window.location.href
+                    };
+                }
+                function renderPendingImages(){
+                    imagePreview.innerHTML='';
+                    pendingImages.forEach(function(item,index){
+                        var wrap=document.createElement('div');wrap.className='mig-ai-image-thumb';
+                        var img=document.createElement('img');img.src=item.image_url;img.alt='صورة مرفقة';wrap.appendChild(img);
+                        var remove=document.createElement('button');remove.type='button';remove.className='mig-ai-image-remove';remove.textContent='×';
+                        remove.addEventListener('click',function(){pendingImages.splice(index,1);renderPendingImages()});wrap.appendChild(remove);imagePreview.appendChild(wrap);
+                    });
+                    imagePreview.classList.toggle('has-images',pendingImages.length>0);
+                }
+                function simpleImageHash(value){
+                    var str=String(value||''),h1=2166136261>>>0;
+                    var step=Math.max(1,Math.floor(str.length/2048));
+                    for(var i=0;i<str.length;i+=step){h1^=str.charCodeAt(i);h1=Math.imul(h1,16777619)>>>0;}
+                    return h1.toString(36)+'-'+str.length.toString(36);
+                }
+                function imageToDataUrl(file,captureTarget){
+                    return new Promise(function(resolve,reject){
+                        var reader=new FileReader();
+                        reader.onerror=function(){reject(new Error('image_read_failed'))};
+                        reader.onload=function(){
+                            var img=new Image();
+                            img.onerror=function(){reject(new Error('image_decode_failed'))};
+                            img.onload=function(){
+                                var max=1280,scale=Math.min(1,max/Math.max(img.width,img.height));
+                                var canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+                                var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+                                var quality=0.84,data=canvas.toDataURL('image/jpeg',quality);
+                                while(data.length>900000&&quality>0.58){quality-=0.07;data=canvas.toDataURL('image/jpeg',quality)}
+                                if(data.length>900000&&Math.max(canvas.width,canvas.height)>1050){
+                                    var shrink=1050/Math.max(canvas.width,canvas.height),small=document.createElement('canvas');
+                                    small.width=Math.max(1,Math.round(canvas.width*shrink));small.height=Math.max(1,Math.round(canvas.height*shrink));
+                                    small.getContext('2d').drawImage(canvas,0,0,small.width,small.height);data=small.toDataURL('image/jpeg',0.68);
+                                }
+                                resolve({type:'input_image',image_url:data,detail:'high',client_image_id:'img-'+simpleImageHash(data),capture_target:clean(captureTarget||''),width:canvas.width,height:canvas.height});
+                            };img.src=String(reader.result||'');
+                        };reader.readAsDataURL(file);
+                    });
+                }
+                async function addSelectedImages(files){
+                    var list=Array.prototype.slice.call(files||[]).slice(0,Math.max(0,4-pendingImages.length));
+                    var captureTarget=pendingCaptureTarget;pendingCaptureTarget='';
+                    for(var i=0;i<list.length;i++){
+                        if(!/^image\/(png|jpeg|webp)$/i.test(list[i].type||'')) continue;
+                        try{pendingImages.push(await imageToDataUrl(list[i],captureTarget))}catch(e){console.warn('MIG image:',e)}
+                    }
+                    renderPendingImages();fileInput.value='';input.focus();
+                }
+                function addUserImageMessage(images){
+                    if(!images||!images.length)return;
+                    var wrap=document.createElement('div');wrap.className='mig-ai-quick';wrap.style.direction='ltr';
+                    images.forEach(function(item){var im=document.createElement('img');im.src=item.image_url;im.alt='صورة المستخدم';im.style.cssText='width:74px;height:74px;object-fit:cover;border-radius:12px;border:1px solid #d7e4d9';wrap.appendChild(im)});
+                    messages.insertBefore(wrap,typing);scrollBottom();
+                }
+                function scrollBottom(){messages.scrollTop=messages.scrollHeight}
+                function appendSafeInline(target,value){
+                    var text=String(value||'');
+                    var pattern=/(\+?\d(?:[\s().-]*\d){6,}|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi;
+                    var last=0,match;
+                    while((match=pattern.exec(text))){
+                        if(match.index>last)target.appendChild(document.createTextNode(text.slice(last,match.index)));
+                        var raw=match[0];
+                        var isPhone=/^\+?\d(?:[\s().-]*\d){6,}$/.test(raw);
+                        var token=document.createElement(isPhone?'a':'span');
+                        token.className='mig-ai-inline-ltr';token.dir='ltr';token.textContent=raw;
+                        if(isPhone){token.href='tel:'+raw.replace(/(?!^)\+|[^\d+]/g,'');token.setAttribute('aria-label','اتصال على '+raw)}
+                        target.appendChild(token);last=pattern.lastIndex;
+                    }
+                    if(last<text.length)target.appendChild(document.createTextNode(text.slice(last)));
+                }
+                function renderAssistantText(bubble,text){
+                    var raw=String(text||'');var lines=raw.split(/\r?\n/);
+                    if(lines.length<2){appendSafeInline(bubble,raw);return}
+                    bubble.classList.add('is-structured');var list=null;
+                    lines.forEach(function(source){
+                        var line=String(source||'').trim();if(!line){list=null;return}
+                        var bullet=line.match(/^[•\-]\s*(.+)$/);
+                        if(bullet){
+                            if(!list){list=document.createElement('ul');list.className='mig-ai-msg-list';bubble.appendChild(list)}
+                            var li=document.createElement('li');appendSafeInline(li,bullet[1]);li.dir='auto';list.appendChild(li);return;
+                        }
+                        list=null;var el=document.createElement('div');
+                        var heading=/^(المهم بسرعة|الاستخدام والوصف|مقارنة موثقة وسريعة|المواصفات المؤكدة من بيانات المنتج|بيانات الجرعة المكتوبة صراحة في ملف المنتج|أول فحوص آمنة|أهم سؤال يفرق بين الاحتمالات):?$/.test(line);
+                        el.className=heading?'mig-ai-msg-heading':/^SKU\s*:/i.test(line)?'mig-ai-msg-line mig-ai-msg-code':'mig-ai-msg-line';
+                        appendSafeInline(el,line);el.dir=/^SKU\s*:/i.test(line)?'ltr':'auto';bubble.appendChild(el);
+                    });
+                }
+                function responseMeta(data,results){
+                    var items=Array.isArray(results)?results:[];
+                    if(items.some(function(item){return item&&item.truth&&item.truth.current}))return {sourceLabel:'بيانات منتجات مباشرة ومحدّثة'};
+                    if(data&&(data.vision||data.visual_evidence))return {sourceLabel:'تحليل الصورة مع سياق سؤالك'};
+                    if(data&&data.agricultural_diagnosis)return {sourceLabel:'إرشاد تشخيصي أولي — يحتاج تفاصيل كافية'};
+                    return {sourceLabel:'مساعد MIG FARM — يوضح غير المؤكد'};
+                }
+                function saveFeedback(value,text){
+                    try{
+                        var raw=localStorage.getItem(FEEDBACK_KEY),items=raw?JSON.parse(raw):[];if(!Array.isArray(items))items=[];
+                        items.push({value:value,at:new Date().toISOString(),message:clean(text).slice(0,320),session_id:session()});localStorage.setItem(FEEDBACK_KEY,JSON.stringify(items.slice(-30)));
+                    }catch(e){}
+                    try{window.dispatchEvent(new CustomEvent('mig-ai-feedback',{detail:{value:value,session_id:session(),ui_version:UI_VERSION}}))}catch(e){}
+                }
+                function addMessage(role,text,meta){
+                    var bubble=document.createElement('div');
+                    bubble.className='mig-ai-message '+role;
+                    if(role==='assistant')renderAssistantText(bubble,text);else bubble.textContent=text;
+                    if(role==='assistant'){
+                        var source=document.createElement('div');source.className='mig-ai-message-source';source.textContent=(meta&&meta.sourceLabel)||'مساعد MIG FARM';bubble.appendChild(source);
+                        var tools=document.createElement('div');tools.className='mig-ai-message-tools';
+                        var copy=document.createElement('button');copy.type='button';copy.className='mig-ai-msg-tool';copy.textContent='نسخ';copy.setAttribute('aria-label','نسخ الرد');
+                        copy.addEventListener('click',function(){
+                            var done=function(){copy.textContent='تم النسخ';setTimeout(function(){copy.textContent='نسخ'},1300)};
+                            if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(String(text||'')).then(done).catch(function(){});else{var area=document.createElement('textarea');area.value=String(text||'');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();try{document.execCommand('copy');done()}catch(e){}area.remove();}
+                        });tools.appendChild(copy);
+                        [['مفيد','up','👍'],['غير مفيد','down','👎']].forEach(function(item){
+                            var button=document.createElement('button');button.type='button';button.className='mig-ai-msg-tool';button.textContent=item[2];button.setAttribute('aria-label',item[0]);
+                            button.addEventListener('click',function(){tools.querySelectorAll('.mig-ai-msg-tool').forEach(function(el){if(el!==copy)el.classList.remove('is-active')});button.classList.add('is-active');saveFeedback(item[1],text)});tools.appendChild(button);
+                        });bubble.appendChild(tools);
+                    }
+                    messages.insertBefore(bubble,typing);
+                    scrollBottom();
+                    if(role==='assistant')markUnread();
+                    return bubble;
+                }
+                function addActions(actions){
+                    if(!Array.isArray(actions)||!actions.length) return;
+                    var wrap=document.createElement('div');
+                    wrap.className='mig-ai-actions';
+                    actions.forEach(function(action){
+                        if(!action||!action.url||!action.label) return;
+                        var safeUrl=safeActionUrl(action.url);if(!safeUrl)return;
+                        var a=document.createElement('a');
+                        a.className='mig-ai-action';
+                        a.href=safeUrl;
+                        a.textContent=action.label;
+                        if(action.type==='whatsapp'){a.target='_blank';a.rel='noopener noreferrer'}
+                        wrap.appendChild(a);
+                    });
+                    if(wrap.children.length){messages.insertBefore(wrap,typing);scrollBottom()}
+                }
+                function addAutonomousAction(action){
+                    if(!ALLOW_AUTONOMOUS_ACTIONS||!action||!action.action_id)return;
+                    messages.querySelectorAll('.mig-ai-action-card').forEach(function(el){if(el.getAttribute('data-action-id')===String(action.action_id))el.remove()});
+                    var card=document.createElement('div');card.className='mig-ai-action-card';card.setAttribute('data-action-id',action.action_id);
+                    var title=document.createElement('div');title.className='mig-ai-action-card-title';title.textContent=action.title||'إجراء آمن';card.appendChild(title);
+                    if(action.summary){var summary=document.createElement('div');summary.className='mig-ai-action-card-summary';summary.textContent=action.summary;summary.dir='auto';card.appendChild(summary)}
+                    if(action.status!=='awaiting_confirmation'){
+                        var done=document.createElement('div');done.className='mig-ai-action-result';
+                        done.textContent=action.status==='executed'?('تم التنفيذ'+(action.result&&action.result.reference?' — '+action.result.reference:'')):action.status==='cancelled'?'تم إلغاء الإجراء بدون إرسال بيانات.':'لم يتم التنفيذ، ولم يتم تأكيد طلب أو دفع.';
+                        card.appendChild(done);messages.insertBefore(card,typing);scrollBottom();return;
+                    }
+                    var lineInputs=[];
+                    if(Array.isArray(action.lines)&&action.lines.length){
+                        var lines=document.createElement('div');lines.className='mig-ai-action-lines';
+                        action.lines.forEach(function(item){
+                            var row=document.createElement('label');row.className='mig-ai-action-line';
+                            var name=document.createElement('span');name.className='mig-ai-action-line-name';name.textContent=item.name+(item.sku?' — '+item.sku:'');name.dir='auto';
+                            var qty=document.createElement('input');qty.type='number';qty.min='1';qty.max='999';qty.step='1';qty.value=Math.max(1,Number(item.quantity)||1);qty.setAttribute('aria-label','الكمية');
+                            row.appendChild(name);row.appendChild(qty);lines.appendChild(row);lineInputs.push({key:item.key,field:qty});
+                        });card.appendChild(lines);
+                    }
+                    var fields=document.createElement('div');fields.className='mig-ai-action-fields';var inputs={};
+                    function addField(key,label,type,wide,required){
+                        var field=document.createElement('input');field.type=type||'text';field.placeholder=label+(required?' *':'');field.setAttribute('aria-label',label);field.autocomplete=key==='name'?'name':key==='phone'?'tel':key==='email'?'email':'off';if(wide)field.className='mig-ai-action-field-wide';if(required)field.required=true;inputs[key]=field;fields.appendChild(field);
+                    }
+                    var required=Array.isArray(action.required_fields)?action.required_fields:[];
+                    if(required.indexOf('name')>=0)addField('name','الاسم','text',true,true);
+                    if(required.indexOf('order_ref')>=0)addField('order_ref','رقم الطلب','text',true,true);
+                    if(required.indexOf('phone')>=0)addField('phone','رقم الهاتف','tel',false,true);
+                    if(action.kind!=='order_status')addField('email','البريد الإلكتروني (اختياري)','email',false,false);
+                    card.appendChild(fields);
+                    var consentLabel=document.createElement('label');consentLabel.className='mig-ai-action-consent';var consent=document.createElement('input');consent.type='checkbox';var consentText=document.createElement('span');consentText.textContent=action.consent_text||'أوافق على تنفيذ الإجراء الموضح.';consentLabel.appendChild(consent);consentLabel.appendChild(consentText);card.appendChild(consentLabel);
+                    var validation=document.createElement('div');validation.className='mig-ai-action-card-summary';validation.style.display='none';validation.style.color='#9a5b05';card.appendChild(validation);
+                    var buttons=document.createElement('div');buttons.className='mig-ai-action-buttons';
+                    var confirm=document.createElement('button');confirm.type='button';confirm.className='mig-ai-action-confirm';confirm.textContent='تأكيد التنفيذ';
+                    var cancel=document.createElement('button');cancel.type='button';cancel.className='mig-ai-action-cancel';cancel.textContent='إلغاء';
+                    confirm.addEventListener('click',function(){
+                        var customer={};Object.keys(inputs).forEach(function(key){customer[key]=clean(inputs[key].value)});
+                        var missing=required.some(function(key){return !clean(customer[key])});
+                        if(missing||!consent.checked){validation.textContent='كمّل البيانات المطلوبة وفعّل الموافقة قبل التنفيذ.';validation.style.display='block';return}
+                        confirm.disabled=true;cancel.disabled=true;
+                        sendText('تأكيد تنفيذ الإجراء',{actionRequest:{action_id:action.action_id,confirm:true,consent:true,customer:customer,lines:lineInputs.map(function(item){return {key:item.key,quantity:Math.max(1,Math.min(999,Number(item.field.value)||1))}})}});
+                    });
+                    cancel.addEventListener('click',function(){confirm.disabled=true;cancel.disabled=true;sendText('إلغاء الإجراء',{actionRequest:{action_id:action.action_id,cancel:true}})});
+                    buttons.appendChild(confirm);buttons.appendChild(cancel);card.appendChild(buttons);messages.insertBefore(card,typing);scrollBottom();
+                }
+                function clearDynamicQuickReplies(){
+                    var old=messages.querySelectorAll('.mig-ai-quick.mig-ai-dynamic');
+                    old.forEach(function(el){el.remove()});
+                }
+                function addQuickReplies(items){
+                    clearDynamicQuickReplies();
+                    if(!Array.isArray(items)||!items.length) return;
+                    var wrap=document.createElement('div');
+                    wrap.className='mig-ai-quick mig-ai-dynamic';
+                    items.slice(0,6).forEach(function(item){
+                        var label=clean(typeof item==='string'?item:(item&&item.label));
+                        if(!label) return;
+                        // Never show one ambiguous "product details" button for multiple products.
+                        if(isGenericProductDetailLabel(label)&&lastResultItems.length>1)return;
+                        var bound=(item&&typeof item==='object'&&item.product)?item.product:matchingResultForLabel(label);
+                        if(!bound&&isGenericProductDetailLabel(label)&&lastResultItems.length===1)bound=lastResultItems[0];
+                        var button=document.createElement('button');
+                        button.type='button';
+                        button.className='mig-ai-chip';
+                        button.textContent=label;
+                        button.addEventListener('click',function(){sendText((item&&item.message)||label,bound?{productRef:bound}:undefined)});
+                        wrap.appendChild(button);
+                    });
+                    if(wrap.children.length){messages.insertBefore(wrap,typing);scrollBottom()}
+                }
+                function addVisualGuidance(guidance){
+                    var old=messages.querySelectorAll('.mig-ai-visual-actions');old.forEach(function(el){el.remove()});
+                    if(!guidance||!Array.isArray(guidance.actions)||!guidance.actions.length)return;
+                    var wrap=document.createElement('div');wrap.className='mig-ai-visual-actions';
+                    guidance.actions.slice(0,3).forEach(function(action){
+                        if(!action||!action.label)return;
+                        var button=document.createElement('button');button.type='button';button.className='mig-ai-visual-action';button.textContent=action.label;
+                        button.addEventListener('click',function(){
+                            if(action.type==='camera'){pendingCaptureTarget=clean(action.target||'');if(!attachBtn.disabled)fileInput.click();return;}
+                            if(action.type==='message'){sendText(action.message||action.label);return;}
+                        });
+                        wrap.appendChild(button);
+                    });
+                    if(wrap.children.length){messages.insertBefore(wrap,typing);scrollBottom()}
+                }
+
+                function normalizeResults(results){
+                    if(!Array.isArray(results)) return [];
+                    var seen={};
+                    var out=[];
+                    results.forEach(function(p){
+                        if(!p||!p.name) return;
+                        var key=clean(p.url||'') || (clean(p.name).toLowerCase()+'|'+clean(p.price||''));
+                        if(seen[key]) return;
+                        seen[key]=true;
+                        out.push(p);
+                    });
+                    return out;
+                }
+                function compactProductReply(results){
+                    var items=normalizeResults(results);
+                    if(!items.length) return '';
+                    var count=items.length;
+                    return locale()==='en'
+                        ?('I found '+count+' matching product'+(count===1?'':'s')+'. Here are the clearest options:')
+                        :('حصلت لك '+count+' '+(count===1?'منتج مناسب':'منتجات مناسبة')+' 👇');
+                }
+                function addProducts(results){
+                    if(!Array.isArray(results)||!results.length) return;
+                    var wrap=document.createElement('div');
+                    wrap.className='mig-ai-products';
+                    var cleanResults=normalizeResults(results);
+                    lastResultItems=cleanResults.slice();
+                    if(cleanResults.length===1)activeChatProduct=normalizeProductRef(cleanResults[0]);
+                    comparisonSelection=[];
+                    cleanResults.slice(0,4).forEach(function(p){
+                        if(!p||!p.name) return;
+                        var card=document.createElement('div');
+                        card.className='mig-ai-product';
+                        var head=document.createElement('div');head.className='mig-ai-product-head';
+                        var imageUrl=safeImageUrl(p.image||'');
+                        if(imageUrl){var image=document.createElement('img');image.className='mig-ai-product-image';image.src=imageUrl;image.alt=p.name;image.loading='lazy';head.appendChild(image)}
+                        else{var placeholder=document.createElement('div');placeholder.className='mig-ai-product-image-placeholder';placeholder.textContent='🌿';head.appendChild(placeholder)}
+                        var copy=document.createElement('div');copy.className='mig-ai-product-copy';
+                        var productUrl=safeImageUrl(p.url||'');
+                        var nameWrap=productUrl?document.createElement('a'):document.createElement('div');
+                        nameWrap.className='mig-ai-product-link';
+                        if(productUrl){nameWrap.href=productUrl;nameWrap.target='_self'}
+                        var name=document.createElement('div');
+                        name.className='mig-ai-product-name';
+                        name.textContent=p.name;name.title=p.name;name.dir='auto';
+                        nameWrap.appendChild(name);
+                        copy.appendChild(nameWrap);
+
+                        var meta=document.createElement('div');
+                        meta.className='mig-ai-product-meta';
+                        var price=document.createElement('span');
+                        price.className='mig-ai-product-price';
+                        price.dir='ltr';price.textContent=money(p.price,p.currency);
+                        var stock=document.createElement('span');
+                        stock.className='mig-ai-product-stock';
+                        stock.textContent=p.availability||'التوفر غير ظاهر';
+                        meta.appendChild(price);meta.appendChild(stock);copy.appendChild(meta);
+                        var badges=document.createElement('div');badges.className='mig-ai-product-badges';
+                        var truthBadge=document.createElement('span');truthBadge.className='mig-ai-product-badge'+(p.truth&&p.truth.current?'':' is-neutral');truthBadge.textContent=p.truth&&p.truth.current?'✓ بيانات مباشرة':'بيانات ظاهرة فقط';badges.appendChild(truthBadge);
+                        if(p.sku){var skuBadge=document.createElement('span');skuBadge.className='mig-ai-product-badge is-neutral';skuBadge.textContent='SKU '+p.sku;skuBadge.dir='ltr';badges.appendChild(skuBadge)}
+                        copy.appendChild(badges);head.appendChild(copy);card.appendChild(head);
+
+                        var actions=document.createElement('div');actions.className='mig-ai-product-actions';
+                        var details=document.createElement('button');details.type='button';details.className='mig-ai-product-detail-btn';details.textContent=locale()==='en'?'Details & use':'التفاصيل والاستخدام';
+                        details.addEventListener('click',function(event){event.preventDefault();event.stopPropagation();activeChatProduct=normalizeProductRef(p);sendText(locale()==='en'?'Product details and use':'تفاصيل المنتج واستخدامه',{productRef:p})});
+                        actions.appendChild(details);
+                        var request=document.createElement('button');request.type='button';request.className='mig-ai-product-request-btn';request.textContent='＋ أضف لطلباتي';
+                        request.addEventListener('click',function(event){event.preventDefault();event.stopPropagation();var added=addInquiryProduct(p);request.classList.add('is-added');request.textContent=added?'✓ اتضاف لطلباتي':'✓ موجود في طلباتي'});actions.appendChild(request);
+                        if(cleanResults.length>1){
+                            var compare=document.createElement('button');compare.type='button';compare.className='mig-ai-product-compare-btn';compare.textContent=locale()==='en'?'Select to compare':'اختيار للمقارنة';
+                            compare.addEventListener('click',function(event){
+                                event.preventDefault();event.stopPropagation();
+                                var ref=normalizeProductRef(p);if(!ref)return;
+                                var existing=-1;for(var ci=0;ci<comparisonSelection.length;ci++){if(sameProductRef(comparisonSelection[ci],ref)){existing=ci;break}}
+                                if(existing>=0){comparisonSelection.splice(existing,1);compare.classList.remove('is-selected');compare.textContent=locale()==='en'?'Select to compare':'اختيار للمقارنة';return;}
+                                comparisonSelection.push(ref);compare.classList.add('is-selected');compare.textContent=locale()==='en'?'Selected':'تم الاختيار';
+                                if(comparisonSelection.length===2){
+                                    var pair=comparisonSelection.slice(0,2);comparisonSelection=[];
+                                    wrap.querySelectorAll('.mig-ai-product-compare-btn').forEach(function(button){button.classList.remove('is-selected');button.textContent=locale()==='en'?'Select to compare':'اختيار للمقارنة'});
+                                    addLocalComparison(pair[0],pair[1]);
+                                }
+                            });
+                            actions.appendChild(compare);
+                        }
+                        card.appendChild(actions);
+                        wrap.appendChild(card);
+                    });
+                    if(wrap.children.length){
+                        messages.insertBefore(wrap,typing);
+                        if(cleanResults.length>4){
+                            var note=document.createElement('div');note.className='mig-ai-result-note';
+                            note.textContent=locale()==='en'?('Showing 4 of '+cleanResults.length+' results'):('بعرض لك أفضل 4 من '+cleanResults.length+' نتائج');
+                            messages.insertBefore(note,typing);
+                        }
+                        scrollBottom();
+                    }
+                }
+                function busy(on){
+                    input.disabled=on;
+                    sendBtn.disabled=on;
+                    attachBtn.disabled=on;
+                    if(voiceBtn)voiceBtn.disabled=on;
+                    typing.classList.toggle('is-visible',on);
+                    if(on)setStatus('busy','أفهم طلبك وأجهّز الرد');
+                    else if(navigator.onLine)setStatus('ready');
+                    scrollBottom();
+                }
+                async function readBackendResponse(response){
+                    var contentType=String(response.headers.get('content-type')||'').toLowerCase();
+                    if(contentType.indexOf('text/event-stream')===-1||!response.body||!response.body.getReader){
+                        try{return await response.json()}catch(e){return {error:'invalid_response'}}
+                    }
+                    var reader=response.body.getReader(),decoder=new TextDecoder('utf-8'),buffer='',result=null,streamError=null;
+                    function consume(block){
+                        if(!block)return;
+                        var eventName='message',dataLines=[];
+                        block.split(/\r?\n/).forEach(function(line){
+                            if(line.indexOf('event:')===0)eventName=line.slice(6).trim();
+                            if(line.indexOf('data:')===0)dataLines.push(line.slice(5).trim());
+                        });
+                        if(!dataLines.length)return;
+                        var value={};try{value=JSON.parse(dataLines.join('\n'))}catch(e){return;}
+                        if(eventName==='result')result=value;
+                        if(eventName==='error')streamError=value;
+                    }
+                    while(true){
+                        var chunk=await reader.read();
+                        if(chunk.done)break;
+                        buffer+=decoder.decode(chunk.value,{stream:true});
+                        var boundary;
+                        while((boundary=buffer.indexOf('\n\n'))!==-1){consume(buffer.slice(0,boundary));buffer=buffer.slice(boundary+2);}
+                    }
+                    consume(buffer);
+                    if(streamError)return Object.assign({__stream_error:true},streamError);
+                    return result||{error:'empty_stream_response'};
+                }
+                async function sendText(text,options){
+                    var opts=options||{};
+                    var scanCard=null;
+                    var message=clean(typeof text==='string'?text:input.value);
+                    var retrySilent=opts.retrySilent===true;
+                    var retryImages=Array.isArray(opts.retryImages)?opts.retryImages.slice(0,4):[];
+                    var selectedComparisonProducts=Array.isArray(opts.productRefs)?opts.productRefs.map(normalizeProductRef).filter(Boolean).slice(0,4):[];
+                    if(selectedComparisonProducts.length>=2)activeChatProduct=null;
+                    if(opts.productRef)activeChatProduct=normalizeProductRef(opts.productRef)||activeChatProduct;
+                    // Never clear or switch semantic product context from message keywords here.
+                    // The previous server-confirmed product context is sent as evidence only;
+                    // the backend decides whether the current message keeps, corrects, or replaces it.
+                    if((!message&&!pendingImages.length&&!retryImages.length)||sendBtn.disabled) return;
+                    var reusedActiveImages=false;
+                    var imagesToSend=retryImages.length?retryImages:pendingImages.slice(0,4);
+                    if(imagesToSend.length){
+                        activeImages=imagesToSend.slice(0,4);
+                        activeImageTurns=0;
+                    }else if(activeImages.length&&serverVisualContextActive()){
+                        // Reuse attachments only when the SERVER says the visual context is active.
+                        // No keyword/regex interpretation of the user's message is performed here.
+                        imagesToSend=activeImages.slice(0,4);
+                        reusedActiveImages=true;
+                        activeImageTurns+=1;
+                    }
+                    pendingImages=[];renderPendingImages();
+
+                    input.value='';autoGrow();
+                    if(quick) quick.style.display='none';
+                    if(sectionTitle)sectionTitle.style.display='none';
+                    if(!retrySilent&&message)addMessage('user',message);
+                    if(!retrySilent&&!reusedActiveImages)addUserImageMessage(imagesToSend);
+                    if(imagesToSend.length&&!reusedActiveImages)scanCard=addVisualScanProgress();
+
+                    var historyBefore=history();
+                    if(retrySilent&&historyBefore.length&&historyBefore[historyBefore.length-1].role==='user'&&clean(historyBefore[historyBefore.length-1].content)===clean(message||'[صورة مرفقة]'))historyBefore.pop();
+                    // Send a bounded recent-context window instead of an arbitrarily tiny history
+                    // or an unbounded transcript. Old turns remain locally available while the
+                    // server receives enough recent conversational evidence for reference resolution.
+                    var requestHistory=historyForRequest(historyBefore);
+                    var payload={
+                        message:message,
+                        session_id:session(),
+                        locale:locale(),
+                        page_url:window.location.href,
+                        page_title:document.title||'',
+                        product_context:productContext(),
+                        selected_product_context:activeChatProduct,
+                        selected_product_contexts:selectedComparisonProducts,
+                        history:requestHistory,
+                        conversation_state:conversationState(),
+                        autonomous_action_request:ALLOW_AUTONOMOUS_ACTIONS?(opts.actionRequest||null):null,
+                        images:imagesToSend,
+                        visual_context_reused:reusedActiveImages
+                    };
+
+                    if(!retrySilent)pushHistory('user',message||'[صورة مرفقة]');
+                    clearConnectionCards();
+                    busy(true);
+
+                    var requestFailed=false;
+                    var requestTimeout=null;
+                    var controller=window.AbortController?new AbortController():null;
+                    try{
+                        var requestOptions={
+                            method:'POST',
+                            headers:{'Content-Type':'application/json'},
+                            body:JSON.stringify(payload)
+                        };
+                        if(controller){requestOptions.signal=controller.signal;requestTimeout=setTimeout(function(){controller.abort()},45000)}
+                        var response=await fetch(STREAM_API,requestOptions);
+                        if(response.status===404||response.status===405)response=await fetch(API,requestOptions);
+                        var data=await readBackendResponse(response);
+
+                        if(!response.ok||data.__stream_error) throw new Error(data.reply||data.error||'request_failed');
+
+                        var reply=clean(data.reply||'');
+                        // A successful transport response without an assistant reply is not a
+                        // conversational answer. Treat it as a recoverable backend failure instead
+                        // of fabricating a generic assistant message in the browser.
+                        if(!reply) throw new Error('empty_backend_reply');
+                        var resultItems=normalizeResults(data.results||[]);
+                        // Keep the answer itself: comparison/price/availability must not be
+                        // replaced by a generic "found N products" sentence.
+                        var visibleReply=reply;
+
+                        addMessage('assistant',visibleReply,responseMeta(data,resultItems));
+                        addAutonomousAction(data.autonomous_action||null);
+
+                        // Keep the full backend reply in hidden conversation history.
+                        // This preserves follow-ups such as "cheapest?", "second one?", etc.
+                        pushHistory('assistant',reply);
+
+                        if(data.conversation_state){
+                            saveConversationState(data.conversation_state);
+                            var serverProductContext=data.conversation_state.active_product_context;
+                            activeChatProduct=serverProductContext&&serverProductContext.active&&serverProductContext.product?normalizeProductRef(serverProductContext.product):null;
+                            if(!data.conversation_state.active_visual_context||data.conversation_state.active_visual_context.active===false){
+                                // Server is authoritative: once it closes visual context, drop local images.
+                                activeImages=[];activeImageTurns=0;
+                            }
+                        }
+
+                        if(resultItems.length){
+                            addProducts(resultItems);
+                            // Product cards already link to products, so avoid a redundant
+                            // "open first product" button when cards are visible.
+                            var filteredActions=(data.suggested_actions||[]).filter(function(action){
+                                return action && action.type!=='page';
+                            });
+                            addActions(filteredActions);
+                        }else{
+                            addActions(data.suggested_actions||[]);
+                        }
+
+                        addVisualGuidance(data.visual_guidance||null);
+                        addQuickReplies(data.quick_replies||[]);
+                    }catch(error){
+                        requestFailed=true;
+                        var retryOptions=Object.assign({},opts,{retrySilent:true,retryImages:imagesToSend});
+                        addConnectionNotice(
+                            navigator.onLine
+                                ?'تعذّر وصول الرد حاليًا. طلبك محفوظ هنا؛ اضغط إعادة المحاولة من غير ما تكتبه مرة ثانية.'
+                                :'الإنترنت غير متصل حاليًا. أول ما يرجع الاتصال اضغط إعادة المحاولة.',
+                            function(){sendText(message,retryOptions)}
+                        );
+                        console.error('MIG FARM AI:',error);
+                    }finally{
+                        if(requestTimeout)clearTimeout(requestTimeout);
+                        removeVisualScanProgress(scanCard);
+                        busy(false);
+                        if(requestFailed)setStatus('offline',navigator.onLine?'تعذّر الاتصال • إعادة المحاولة متاحة':'بانتظار رجوع الإنترنت');
+                        input.focus();
+                    }
+                }
+
+                launcher.addEventListener('click',function(){
+                    setPanelOpen(!panel.classList.contains('is-open'));
+                });
+                closeBtn.addEventListener('click',function(){setPanelOpen(false)});
+                clearBtn.addEventListener('click',resetConversation);
+                basketBtn.addEventListener('click',function(){setDrawerOpen(!drawer.classList.contains('is-open'))});
+                drawerClose.addEventListener('click',function(){setDrawerOpen(false)});
+                humanBtn.addEventListener('click',function(){window.open(whatsappUrl(basketSummary(true)),'_blank','noopener,noreferrer')});
+                attachBtn.addEventListener('click',function(){if(!attachBtn.disabled)fileInput.click()});
+                fileInput.addEventListener('change',function(){addSelectedImages(fileInput.files)});
+                sendBtn.addEventListener('click',function(){sendText()});
+                input.addEventListener('input',autoGrow);
+                input.addEventListener('keydown',function(event){
+                    if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendText()}
+                });
+                document.addEventListener('keydown',function(event){if(event.key==='Escape'&&drawer.classList.contains('is-open'))setDrawerOpen(false);else if(event.key==='Escape'&&panel.classList.contains('is-open'))setPanelOpen(false)});
+                window.addEventListener('online',function(){setStatus('ready','رجع الاتصال • جاهز نكمّل')});
+                window.addEventListener('offline',function(){setStatus('offline','بانتظار رجوع الإنترنت')});
+                window.addEventListener('resize',function(){if(document.body)document.body.classList.toggle('mig-ai-chat-open',panel.classList.contains('is-open')&&window.innerWidth<=640)});
+                if(quick){
+                    quick.addEventListener('click',function(event){
+                        var flowButton=event.target.closest('[data-flow]');
+                        if(flowButton){var flow=flowButton.getAttribute('data-flow');if(flow==='guided')addGuidedSelector();if(flow==='image'&&!attachBtn.disabled)fileInput.click();return;}
+                        var button=event.target.closest('[data-message]');if(button)sendText(button.getAttribute('data-message')||'');
+                    });
+                }
+                setupVoice();autoGrow();updateBasketCount();
+                setStatus(navigator.onLine?'ready':'offline',navigator.onLine?'متصل • جاهز أساعدك':'بانتظار رجوع الإنترنت');
+            }
+
+            if(document.readyState==='loading'){
+                document.addEventListener('DOMContentLoaded',init);
+            }else{
+                init();
+            }
+        })();
+    ]]></script>
+</xpath>
