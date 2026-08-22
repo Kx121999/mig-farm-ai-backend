@@ -75,7 +75,7 @@ import {
 import { buildConversionDecision, evaluateConversionReply } from "../lib/conversion_decision_brain.js";
 import { searchAgriculturalMasterKnowledge, agriculturalMasterHealth } from "../lib/agricultural_master_knowledge.js";
 import {
-  searchProductDossiers, getProductDossier, compareProductDossiers,
+  searchProductDossiers, getProductDossier, compareProductDossiers, resolveProductEntityFuzzy,
   enrichLiveProductsWithDossiers, productIntelligenceHealth
 } from "../lib/product_intelligence.js";
 import {
@@ -127,9 +127,13 @@ import {
 import {
   runUnifiedIntelligenceV33, unifiedIntelligenceHealthV33, isUnifiedIntelligenceEnabledV33, rerankCandidatesV33
 } from "../lib/unified_intelligence_v33.js";
+import {
+  runUnifiedEvolutionV40, unifiedEvolutionHealthV40, isUnifiedEvolutionEnabledV40, rerankCandidatesV40
+} from "../lib/unified_evolution_v40.js";
 
-const VERSION=isUnifiedIntelligenceEnabledV33()?"33.2.0":"31.0.0";
-const MODE=isUnifiedIntelligenceEnabledV33()?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
+const V40_ENABLED=isUnifiedEvolutionEnabledV40();
+const VERSION=V40_ENABLED?"40.0.0":isUnifiedIntelligenceEnabledV33()?"33.2.0":"31.0.0";
+const MODE=V40_ENABLED?"unified_evolution_intelligence_v40":isUnifiedIntelligenceEnabledV33()?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -277,6 +281,7 @@ function fuzzyProductQueryV33(value=""){
 }
 
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
+  const unifiedV40=payload?.__unified_v40===true;
   const unifiedV33=payload?.__unified_v33===true;
   const semanticFrame=state?.__semantic_frame||null;
   const conversationalReasoning=state?.__conversation_reasoning_v29||analysis?.__conversation_reasoning_v29||null;
@@ -448,6 +453,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       conversation_reasoning:conversationReasoningHealthV29(),
       llm_first_orchestrator:llmFirstHealthV31(),
       natural_conversation:naturalConversationHealthV32(),
+      unified_evolution:unifiedEvolutionHealthV40(),
       unified_intelligence:unifiedIntelligenceHealthV33(),
       final_production_os:finalProductionHealth(),
       autonomous_customer_os:autonomousCustomerOSHealthV30(),
@@ -470,7 +476,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
-    enterprise_platform:{version:unifiedV33?"33.0":"31.0",release:unifiedV33?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS",unified_intelligence:unifiedIntelligenceHealthV33(),final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),natural_conversation:naturalConversationHealthV32(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    enterprise_platform:{version:unifiedV40?"40.0":unifiedV33?"33.0":"31.0",release:unifiedV40?"MIG_FARM_AI_V40_UNIFIED_EVOLUTION":unifiedV33?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS",unified_evolution:unifiedEvolutionHealthV40(),unified_intelligence:unifiedIntelligenceHealthV33(),final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),natural_conversation:naturalConversationHealthV32(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
     final_production:{...finalProductionHealth(),current:{contract:finalReview.contract,truth:finalReview.truth,audit:finalReview.audit,critic:finalReview.critic,latency_ms:finalReview.latency_ms},snapshot:finalProductionSnapshot()},
     llm_first_orchestrator:{...llmFirstHealthV31(),current:meaningFrameClientV31(meaningFrameV31||{})},
     meaning_alignment:{...meaningAlignment},
@@ -529,8 +535,43 @@ async function searchCatalog(analysis,state,message,history){
   return {products,categoryKey,query};
 }
 
+function unionProductCandidatesV40(...groups){
+  const out=[],seen=new Set();
+  for(const group of groups){
+    for(const item of Array.isArray(group)?group:[]){
+      if(!item||typeof item!=="object") continue;
+      const key=cleanText(item.external_id||item.sku||normalizeAr(item.name||item.title||""),260);
+      if(!key||seen.has(key)) continue;
+      seen.add(key);out.push(item);
+      if(out.length>=24) return out;
+    }
+  }
+  return out;
+}
+
+function seedCountSignalV40(item){
+  if(!item)return null;
+  const identifier=typeof item==="string"?item:(item.sku||item.external_id||item.name||item.title||"");
+  if(!identifier)return null;
+  try{
+    const facts=getStructuredProductFacts(identifier);
+    const hit=(facts?.explicit_facts||[]).find(x=>String(x?.kind||"").toLowerCase()==="seed_count");
+    const m=String(hit?.value||"").match(/\d+/);
+    return m?Number(m[0]):null;
+  }catch{return null;}
+}
+function applyVariantContinuityV40(candidates=[],priorActive=null){
+  const expected=seedCountSignalV40(priorActive);
+  if(!expected)return Array.isArray(candidates)?candidates:[];
+  return (Array.isArray(candidates)?candidates:[]).map(item=>{
+    const current=seedCountSignalV40(item);
+    return current===expected?{...item,score:(Number(item.score)||0)+180,v40_variant_continuity:true}:item;
+  });
+}
+
 async function groundedUnifiedFallbackV33({context={},analysis={},state={},history=[],locale="ar",visionFrame=null}={}){
-  const route=context?.route||{},activeState=context?.active_state||{},intent=route.primary_intent||"unknown";
+  const route=context?.route||{},activeState=context?.active_state||{},intent=route.primary_intent||"unknown",effectiveIntent=route.corrected_goal_intent||intent;
+  const v40Context=context?.evolution_v40||null;
   const active=(activeState.active_products||[]).find(x=>x.entity_id===activeState.active_product_id)||(activeState.active_products||[])[0]||null;
   const identifier=cleanText(active?.sku||active?.external_id||active?.name||context.rewritten_query||context.current_message,900);
   if(route.kind==="multimodal"){
@@ -538,27 +579,38 @@ async function groundedUnifiedFallbackV33({context={},analysis={},state={},histo
     const reply=guidance?.retake?.ask_one||visualContextFallback({frame:visionFrame,activeContext:state?.active_visual_context||{}});
     return {payload:{reply,display_reply:reply,vision:{...(visionFrame||{}),engine:visionHealth(),fallback:true},visual_guidance:guidance},source:"unified_visual_safe_degradation_v33",results:[],evidence:[]};
   }
-  if(["product_exact","product_discovery","commerce"].includes(route.kind)){
+  const productLikeRoute=["product_exact","product_discovery","commerce"].includes(route.kind)||(route.kind==="multi_source"&&["product_search","product_details","known_product_info","price","availability","suitability","recommendation","compare","purchase","bundle","pack_size","sku"].includes(effectiveIntent));
+  if(productLikeRoute){
     const relationship=cleanText(context.meaning?.topic_relationship||"",40),isCorrection=Boolean(activeState.last_correction)||relationship==="correction"||intent==="correction";
     const uncertainNewTopic=relationship==="new_topic"&&cleanText(context.meaning?.domain||"",40)==="unclear"&&intent==="unknown";
     const categoryContext=cleanText(active?.category||(activeState.visible_products||[])[0]?.category||"",180);
     const semanticQuery=fuzzyProductQueryV33(`${context.rewritten_query||context.current_message||identifier}${categoryContext?` | الفئة النشطة: ${categoryContext}`:""}`);
     const previous=(activeState.visible_products||[]).map(item=>getProductDossier(item.sku||item.external_id||item.name,{includeFull:false,includeHtml:false})).filter(Boolean);
-    const retrieved=searchProductDossiers(semanticQuery,{limit:10,category:analysis?.category?.key||state?.category||""});
+    const retrievedBase=searchProductDossiers(semanticQuery,{limit:10,category:analysis?.category?.key||state?.category||""});
+    const correctionTarget=cleanText(context?.meaning?.entities?.product_name||context?.semantic_core_v35?.active_entity?.name||active?.name||"",300);
+    const priorStateV40=state?.intelligence_v33||{};
+    const priorActiveV40=(priorStateV40.active_products||[]).find(x=>x.entity_id===priorStateV40.active_product_id)||(priorStateV40.active_products||[])[0]||null;
+    const fuzzyRaw=applyVariantContinuityV40(resolveProductEntityFuzzy(correctionTarget||semanticQuery,{limit:8,descriptionChars:2600}),priorActiveV40);
+    const fuzzy=fuzzyRaw.map(x=>({...x,v40_entity_lock_match:Boolean(correctionTarget),score:(Number(x.score)||0)+(correctionTarget?320:0)}));
+    const retrieved=unionProductCandidatesV40(fuzzy,retrievedBase);
     const contextualFollowup=previous.length>0&&(relationship!=="new_topic"||uncertainNewTopic)&&(route.kind==="product_exact"||activeState.last_reference_resolution?.resolved||context.meaning?.reference?.requires_context);
-    const candidates=isCorrection?[...previous.map(x=>({...x,score:100})),...retrieved]:contextualFollowup?previous.map(x=>({...x,score:400})):retrieved;
-    const dossiers=rerankCandidatesV33({query:semanticQuery,candidates,conversationState:activeState,meaningFrame:context.meaning,limit:6});
-    if(route.kind==="product_discovery"&&dossiers.length){
+    const previousScored=previous.map(x=>({...x,score:400}));
+    const candidates=isCorrection?unionProductCandidatesV40(fuzzy,previous.map(x=>({...x,score:120})),retrieved):contextualFollowup?unionProductCandidatesV40(fuzzy,previousScored):retrieved;
+    const dossiers=v40Context?rerankCandidatesV40({query:semanticQuery,candidates,conversationState:activeState,meaningFrame:context.meaning,semanticCore:context.semantic_core_v35||v40Context.semantic_core_v35||{},limit:6}):rerankCandidatesV33({query:semanticQuery,candidates,conversationState:activeState,meaningFrame:context.meaning,limit:6});
+    const discoveryListIntent=["product_search","recommendation","compare","bundle"].includes(effectiveIntent);
+    const resolvedFollowup=Boolean(active||context?.meaning?.reference?.requires_context||activeState?.last_reference_resolution?.resolved);
+    if(route.kind==="product_discovery"&&discoveryListIntent&&!resolvedFollowup&&dossiers.length){
       const rows=dossiers.slice(0,4).map(item=>{const facts=getStructuredProductFacts(item.sku||item.external_id||item.name);return {item,facts,points:conciseVerifiedFacts(facts?.explicit_facts||[]).slice(0,2)};});
       const reply=`أقرب نتائج موثقة لطلبك من بيانات MIG FARM:\n${rows.map(({item,points},index)=>`${index+1}. ${item.name}${points.length?` — ${points.join("، ")}`:""}`).join("\n")}\n\nلو تقصد واحدًا منهم بالاسم، أكمل عليه مباشرة.`;
       const results=rows.map(({item})=>({name:item.name,sku:item.sku,external_id:item.external_id,category:item.category,description:conciseProductDescription(item.sales_description||item.ecommerce_description||""),source:"product_dossier_v20"}));
       return {payload:{reply,display_reply:reply,results},source:"unified_structured_product_degradation_v33",results,evidence:rows.map(({item,facts})=>({source_id:item.external_id,entity_id:item.external_id,entity_name:item.name,facts:facts?.explicit_facts||[],source:"product_dossier_v20"}))};
     }
-    const dossier=contextualFollowup&&dossiers[0]?dossiers[0]:(getProductDossier(identifier,{includeFull:false,includeHtml:false})||dossiers[0]||null);
+    const directDossier=active?.sku||active?.external_id?getProductDossier(active.sku||active.external_id,{includeFull:false,includeHtml:false}):null;
+    const dossier=(isCorrection&&dossiers[0])||(contextualFollowup&&dossiers[0])||directDossier||getProductDossier(identifier,{includeFull:false,includeHtml:false})||dossiers[0]||null;
     if(dossier){
       const facts=getStructuredProductFacts(dossier.sku||dossier.external_id||dossier.name),points=conciseVerifiedFacts(facts?.explicit_facts||[]);
-      if(["price","availability","purchase"].includes(intent))return null;
-      const reply=intent==="dosage"?`${dossier.name}: ما عنديش جرعة موثقة من ملصق مسجل أقدر أقولها بأمان. ابعت صورة واضحة للملصق عشان أراجعها من غير تخمين.`:points.length?`${dossier.name}${dossier.sku?` (${dossier.sku})`:""}\n• ${points.join("\n• ")}`:`لقيت ${dossier.name}، لكن التفصيلة اللي بتسأل عنها مش موجودة بشكل موثّق في بيانات المنتج. مش هخمّنها.`;
+      if(["price","availability","purchase"].includes(effectiveIntent))return null;
+      const reply=effectiveIntent==="dosage"?`${dossier.name}: ما عنديش جرعة موثقة من ملصق مسجل أقدر أقولها بأمان. ابعت صورة واضحة للملصق عشان أراجعها من غير تخمين.`:points.length?`${dossier.name}${dossier.sku?` (${dossier.sku})`:""}\n• ${points.join("\n• ")}`:`لقيت ${dossier.name}، لكن التفصيلة اللي بتسأل عنها مش موجودة بشكل موثّق في بيانات المنتج. مش هخمّنها.`;
       const results=[{name:dossier.name,sku:dossier.sku,external_id:dossier.external_id,category:dossier.category,description:conciseProductDescription(dossier.sales_description||"")}];
       return {payload:{reply,display_reply:reply,results},source:"unified_structured_fact_degradation_v33",results,evidence:[{source_id:dossier.external_id,entity_id:dossier.external_id,entity_name:dossier.name,facts:facts?.explicit_facts||[],source:"product_dossier_v20"}]};
     }
@@ -600,15 +652,23 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       return {query:found.query,category:found.categoryKey,products:enrichLiveProductsWithDossiers(live,{descriptionChars:1000})};
     },
     search_product_dossiers:async args=>{
-      const query=fuzzyProductQueryV33(cleanText(args?.query||unifiedContextV33?.rewritten_query||message,1200));
+      const query=fuzzyProductQueryV33(cleanText(args?.query||unifiedContextV33?.evolution_v40?.retrieval_v36?.query||unifiedContextV33?.rewritten_query||message,1600));
       const limit=Math.max(1,Math.min(10,Number(args?.limit)||6));
       const category=cleanText(args?.category||analysis?.category?.key||state?.category||"",120);
       const prior=(unifiedContextV33?.active_state?.visible_products||[]).map(item=>getProductDossier(item.sku||item.external_id||item.name,{includeFull:false,includeHtml:false})).filter(Boolean);
-      const retrieved=searchProductDossiers(query,{limit:Math.min(12,limit*2),category,descriptionChars:2800});
+      const retrievedBase=searchProductDossiers(query,{limit:Math.min(12,limit*2),category,descriptionChars:2800});
+      const activeStateV40=unifiedContextV33?.active_state||{};
+      const activeV40=(activeStateV40.active_products||[]).find(x=>x.entity_id===activeStateV40.active_product_id)||(activeStateV40.active_products||[])[0]||null;
+      const entityLockQuery=cleanText(unifiedContextV33?.evolution_v40?.semantic_core_v35?.active_entity?.name||activeV40?.name||"",300);
+      const priorStateForVariant=state?.intelligence_v33||{};
+      const priorActiveForVariant=(priorStateForVariant.active_products||[]).find(x=>x.entity_id===priorStateForVariant.active_product_id)||(priorStateForVariant.active_products||[])[0]||null;
+      const fuzzyRaw=applyVariantContinuityV40(resolveProductEntityFuzzy(entityLockQuery||query,{limit:Math.min(8,limit),descriptionChars:2200}),priorActiveForVariant);
+      const fuzzy=fuzzyRaw.map(x=>({...x,v40_entity_lock_match:Boolean(entityLockQuery),score:(Number(x.score)||0)+(entityLockQuery?320:0)}));
+      const retrieved=unionProductCandidatesV40(fuzzy,retrievedBase);
       const relationship=cleanText(unifiedContextV33?.meaning?.topic_relationship||"",40),isCorrection=Boolean(unifiedContextV33?.active_state?.last_correction)||relationship==="correction";
       const contextual=prior.length>0&&relationship!=="new_topic"&&(unifiedContextV33?.meaning?.reference?.requires_context||unifiedContextV33?.route?.kind==="product_exact");
-      const candidates=isCorrection?[...prior.map(x=>({...x,score:100})),...retrieved]:contextual?prior.map(x=>({...x,score:400})):retrieved;
-      const products=rerankCandidatesV33({query,candidates,conversationState:unifiedContextV33?.active_state||{},meaningFrame:unifiedContextV33?.meaning||{},limit});
+      const candidates=isCorrection?unionProductCandidatesV40(fuzzy,prior.map(x=>({...x,score:120})),retrieved):contextual?unionProductCandidatesV40(fuzzy,prior.map(x=>({...x,score:400}))):retrieved;
+      const products=unifiedContextV33?.evolution_v40?rerankCandidatesV40({query,candidates,conversationState:unifiedContextV33?.active_state||{},meaningFrame:unifiedContextV33?.meaning||{},semanticCore:unifiedContextV33?.evolution_v40?.semantic_core_v35||{},limit}):rerankCandidatesV33({query,candidates,conversationState:unifiedContextV33?.active_state||{},meaningFrame:unifiedContextV33?.meaning||{},limit});
       return {query,product_intelligence:productIntelligenceHealth(),products,reranked:true};
     },
     get_product_dossier:async args=>{
@@ -836,7 +896,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{unified_intelligence_v33:unifiedContextV33,validation_repair_v33:validationRepairV33,final_production_contract:state?.__final_turn_contract||null,semantic_frame:semanticFrame,llm_first_meaning_v31:meaningFrameV31,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      context:{unified_evolution_v40:unifiedContextV33?.evolution_v40||null,unified_intelligence_v33:unifiedContextV33,validation_repair_v33:validationRepairV33,final_production_contract:state?.__final_turn_contract||null,semantic_frame:semanticFrame,llm_first_meaning_v31:meaningFrameV31,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
       toolHandlers,images,allowedTools:Array.isArray(allowedToolsV33)?allowedToolsV33:constrainToolsWithPlanV30(humanTurn?.tool_policy?.allowed,autonomousPlanV30||{})
     });
     if(!result?.handled||!result.reply) return null;
@@ -1304,6 +1364,36 @@ export async function POST(request){
       payload:earlyActionOutcome.payload||{},cors,sessionId,state,analysis,signals,profile,message,
       source:earlyActionOutcome.source||"v25_autonomous_action",results:earlyActionOutcome.state?.lines||[],locale,cognition
     });
+  }
+
+  // V40 is the single user-facing evolution pipeline by default. It extends the
+  // proven V33.2 semantic core with V35–V40 capabilities while keeping V33 as
+  // an explicit rollback path when AI_PIPELINE_V40=false.
+  if(isUnifiedEvolutionEnabledV40()){
+    try{
+      const evolutionTurnState={...state};
+      const unified=await runUnifiedEvolutionV40({
+        message,conversationId:sessionId,state:evolutionTurnState,history,meaningFrame:meaningFrameV31,semanticFrame,analysis,
+        selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,visionFrame,
+        salesTurn,conversionDecision,autonomousPlan:autonomousPlanV30,
+        generate:async context=>tryV22NeuralAgent({
+          analysis,state:{...evolutionTurnState,intelligence_v33:context.active_state},message,history,locale,profile,cognition,
+          persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,
+          currentProduct:selectedProductContext||null,sessionId,images,visionFrame,semanticFrame,autonomousPlanV30,meaningFrameV31,
+          force:true,unifiedContextV33:context,allowedToolsV33:[...new Set([...(context.route?.allowed_tools||[]),...(context.diagnostic_v39?.allowed_tools||[])])],validationRepairV33:context.validation_repair
+        }),
+        fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:evolutionTurnState,history,locale,visionFrame})
+      });
+      if(debugAuthorized)unified.payload.ai_debug={version:"40.0.0",trace_id:unified.trace_v40?.trace_id||unified.trace?.trace_id||null,meaning:{provider:meaningFrameV31?.provider||null,primary_intent:meaningFrameV31?.primary_intent||"unknown",intents:meaningFrameV31?.intents||[],domain:meaningFrameV31?.domain||"unclear",topic_relationship:meaningFrameV31?.topic_relationship||"unclear",reference:meaningFrameV31?.reference||null},active_state:unified.conversation_state,route:unified.route,rewritten_query:unified.evolution_v40?.retrieval_v36?.query||unified.rewritten_query,retrieval:{result_count:unified.results?.length||0,evidence_count:unified.evidence?.length||0,assessment:unified.evolution_v40?.evidence_v36||null},validation:unified.validation_v40||unified.validation,layers:unified.evolution_v40||null,source:unified.source};
+      evolutionTurnState.intelligence_v33=unified.conversation_state;
+      evolutionTurnState.intelligence_v40=unified.conversation_state;
+      evolutionTurnState.persistent_memory_v37=unified.conversation_state?.persistent_memory_v37||evolutionTurnState.persistent_memory_v37;
+      return await makeResponse({payload:unified.payload,cors,sessionId,state:evolutionTurnState,analysis,signals,profile,message,source:unified.source,results:unified.results,locale,cognition,retrieval:unified.retrieval,plan:unified.plan});
+    }catch(error){
+      console.error("V40 unified evolution failed",error?.message);
+      const reply=locale==="en"?"I received your message, but the intelligence service is temporarily unavailable. Please retry in a moment.":"وصلتني رسالتك، لكن خدمة الفهم الذكي متوقفة مؤقتًا. جرّب إعادة المحاولة بعد لحظة بدل ما أرد عليك بتخمين.";
+      return await makeResponse({payload:{reply,display_reply:reply,__unified_v40:true,unified_evolution_v40:{version:"40.0.0",route:"safe_failure",validation:{accepted:true,score:100},fallback_reason:"pipeline_exception"}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:"unified_pipeline_safe_failure_v40",locale,cognition});
+    }
   }
 
   // V33 is the only user-facing intelligence pipeline by default. Older V15–V32
