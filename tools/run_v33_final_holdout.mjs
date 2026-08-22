@@ -13,7 +13,7 @@ for(const item of cases){
   if(accepted)passed+=1;else failures.push({expected:item.expected_intent,actual:result.primary_intent,provider:result.provider,classification:result.primary_intent==="unknown"?"intent_understanding_failure":"wrong_tool_routing"});
 }
 const score=Number((passed/Math.max(1,cases.length)*100).toFixed(2));
-const report={version:"33.0",dataset:"final_sealed_holdout_c",sealed_before_execution:true,production_prompt_exposure:false,provider:process.env.OPENAI_API_KEY?"openai":"deterministic_emergency_fallback",total:cases.length,passed,failed:failures.length,score,quality_gate:{target:90,passed:score>=90},failures};
+const report={version:"33.2.0",dataset:"final_sealed_holdout_c",sealed_before_execution:true,production_prompt_exposure:false,provider:process.env.OPENAI_API_KEY?"openai":"deterministic_emergency_fallback",total:cases.length,passed,failed:failures.length,score,quality_gate:{target:90,passed:score>=90},failures};
 writeFileSync(new URL("../V33_FINAL_HOLDOUT_REPORT.json",import.meta.url),JSON.stringify(report,null,2)+"\n");
 console.log(JSON.stringify({...report,failures:failures.slice(0,12)},null,2));
 if(!report.quality_gate.passed)process.exitCode=1;

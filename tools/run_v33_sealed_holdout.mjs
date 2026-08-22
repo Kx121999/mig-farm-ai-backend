@@ -15,7 +15,7 @@ for(const item of cases){
   else failures.push({message:item.message,expected:item.expected_intent,actual:result.primary_intent,provider:result.provider,classification:result.primary_intent==="unknown"?"intent_understanding_failure":"wrong_tool_routing"});
 }
 const score=Number((passed/Math.max(1,cases.length)*100).toFixed(2));
-const report={version:"33.0",dataset:"sealed_post_fix_holdout_b",created_after_mechanism_fix:true,production_prompt_exposure:false,provider:process.env.OPENAI_API_KEY?"openai":"deterministic_emergency_fallback",total:cases.length,passed,failed:failures.length,score,quality_gate:{target:90,passed:score>=90},failures};
+const report={version:"33.2.0",dataset:"sealed_post_fix_holdout_b",created_after_mechanism_fix:true,production_prompt_exposure:false,provider:process.env.OPENAI_API_KEY?"openai":"deterministic_emergency_fallback",total:cases.length,passed,failed:failures.length,score,quality_gate:{target:90,passed:score>=90},failures};
 writeFileSync(new URL("../V33_SEALED_HOLDOUT_REPORT.json",import.meta.url),JSON.stringify(report,null,2)+"\n");
 console.log(JSON.stringify({...report,failures:failures.slice(0,12)},null,2));
 if(!report.quality_gate.passed)process.exitCode=1;
