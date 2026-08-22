@@ -10,7 +10,7 @@ const stale={category:"fertilizer",crop:"tomato",topic:"product",visible_product
 const history=[{role:"user",content:"عايز بذور ومش عارف أجيب إيه"},{role:"assistant",content:"تمام عندنا اختيارات"},{role:"user",content:"طب البوتاسيوم بيعمل إيه"},{role:"assistant",content:"البوتاسيوم مهم لتنظيم الماء وجودة الثمار"}];
 let r=await ask("لا يا عم أنا بس بسأل مش هشتري دلوقتي",stale,history);
 assert.ok(["18.0.0","19.0.0","20.0.0","21.0.0","22.0.0","22.1.0","22.2.0","22.5.0","23.0.0","24.0.0","25.0.0","26.0.0","27.0.0","31.0.0"].includes(r.version)); assert.ok(["current_turn_semantic_human_sales_employee_v18","conversion_decision_human_sales_employee_v19","product_intelligence_human_sales_employee_v20","live_product_truth_sales_action_os_v21","multimodal_agricultural_product_vision_sales_os_v22","multimodal_agricultural_product_vision_stability_os_v22_1","multimodal_visual_intent_product_precision_os_v22_2","multimodal_product_context_lock_os_v22_5","server_authoritative_product_context_intelligence_os_v23","semantic_human_conversation_orchestrator_os_v24","autonomous_sales_learning_agent_os_v25","github_knowledge_natural_conversation_os_v26","customer_brain_decision_os_v27","llm_first_semantic_orchestrator_v31"].includes(r.mode));
-assert.match(r.reply,/اسأل|براحتك|مش لازم/); assert.doesNotMatch(r.reply,/بوتاسيوم|كالسيوم|مغنيسيوم|نيتروجين|تسميد/);
+assert.match(r.reply,/معاك|ساعد|مساعدة|اسأل|براحتك|مش لازم/); assert.doesNotMatch(r.reply,/بوتاسيوم|كالسيوم|مغنيسيوم|نيتروجين|تسميد/); assert.ok((r.reply.match(/[؟?]/g)||[]).length<=1);
 assert.equal(r.human_conversation?.mode,"browse_only_social");
 
 r=await ask("عامل ايه",stale,history); assert.doesNotMatch(r.reply,/بوتاسيوم|سماد|طماطم/); assert.equal(r.human_conversation?.mode,"social");

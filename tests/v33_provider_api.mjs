@@ -25,7 +25,7 @@ try{
   const poisoned={v:32,turn:8,topic:"product",selected_product:"مبيد قديم",active_product_context:{active:true,product:{name:"مبيد قديم",sku:"OLD-1"}},intelligence_v33:{version:"33.0",turn:8,active_topic:"products",active_products:[{entity_id:"old",name:"مبيد قديم",sku:"OLD-1"}],visible_products:[{entity_id:"old",name:"مبيد قديم",sku:"OLD-1"}],active_product_id:"old",active_crop:"خيار",last_route:"product_exact"}};
   const request=new Request("https://backend.example/api/chat",{method:"POST",headers:{"content-type":"application/json","x-ai-debug-token":"v33-debug-test"},body:JSON.stringify({session_id:"v33-provider-api",locale:"ar",message:"بغض النظر عن المبيد، مين اللي بيرد عليا دلوقتي؟",conversation_state:poisoned,history:[{role:"assistant",content:"ابعت الملصق لتحديد الجرعة"}],ai_debug:true})});
   const result=await POST(request);assert.equal(result.status,200);const data=await result.json();
-  assert.equal(data.version,"33.0.0");assert.equal(data.mode,"unified_semantic_intelligence_v33");assert.equal(data.source,"unified_neural_generation_v33");
+  assert.equal(data.version,"33.2.0");assert.equal(data.mode,"unified_semantic_intelligence_v33");assert.equal(data.source,"unified_neural_generation_v33");
   assert.equal(data.llm_first_orchestrator.current.provider,"openai");assert.equal(data.llm_first_orchestrator.current.primary_intent,"identity");
   assert.match(data.reply,/MIG FARM AI/);assert.equal(/جرع|ملصق|مبيد قديم/.test(data.reply),false);
   assert.equal(data.conversation_state.v,33);assert.equal(data.conversation_state.intelligence_v33.active_products.length,0);
