@@ -1,0 +1,20 @@
+ابدأ من هنا — MIG FARM AI V40
+==============================
+
+الملف الرئيسي للرفع هو مشروع الـBackend الموجود في هذه الحزمة.
+
+اقرأ بالترتيب:
+1) DEPLOY_V40_AR.txt
+2) V40_IMPLEMENTATION_REPORT_AR.md
+3) V40_RELEASE_MANIFEST.json
+
+الإصدار:
+40.0.0
+
+المسار الافتراضي:
+unified_evolution_intelligence_v40
+
+المسار القديم V33.2 موجود فقط للـRollback:
+AI_PIPELINE_V40=false
+
+واجهة Odoo المتوافقة مرفقة في مجلد odoo_ui ولا تحتاج استبدالها إذا كانت V34 Context Resilience مثبتة بالفعل.

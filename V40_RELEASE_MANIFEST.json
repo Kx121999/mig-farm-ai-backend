@@ -1,0 +1,93 @@
+{
+  "version": "40.0.0",
+  "mode": "unified_evolution_intelligence_v40",
+  "release": "MIG_FARM_AI_V40_UNIFIED_EVOLUTION",
+  "base": "33.2.0",
+  "layers": {
+    "v35": "semantic_intelligence_core",
+    "v36": "advanced_hybrid_rag_reranking",
+    "v37": "persistent_multi_layer_memory",
+    "v38": "product_intelligence_graph",
+    "v39": "agricultural_diagnostic_engine",
+    "v40": "autonomous_sales_intelligence"
+  },
+  "default_enabled": true,
+  "rollback": {
+    "env": "AI_PIPELINE_V40",
+    "value": "false",
+    "target": "33.2.0"
+  },
+  "tests": {
+    "v40_architecture_cases": 141,
+    "development_generalization": "70/70",
+    "sealed_holdout": "51/51",
+    "sealed_holdout_score": 100,
+    "v33_architecture_cases": 135,
+    "v33_hidden_generalization": "50/50",
+    "v33_release_holdout": "45/50",
+    "v33_release_holdout_score": 90,
+    "legacy_eval": "1320/1320",
+    "knowledge_records": 200025
+  },
+  "sealed_engine_hash": "b23418653c1f56c7ea5cfba73b0d9db5dbbf5c11c5e1be055e666ff4bf328545",
+  "engine_files": [
+    {
+      "path": "api/chat.js",
+      "sha256": "5394a1653c773739adc58f0dc80210f16a3dfbf380d2e64e96f97b8e7c49e993"
+    },
+    {
+      "path": "api/health.js",
+      "sha256": "9c561984da279202078bb7baeeafa4b91ece18345765a0b90ad9ddf34131ecab"
+    },
+    {
+      "path": "lib/semantic_intelligence_core_v35.js",
+      "sha256": "75c2d59737d2ea0b7cf719188c9a7126627b7fc57d0a576486e6d772ff257d73"
+    },
+    {
+      "path": "lib/advanced_rag_reranker_v36.js",
+      "sha256": "f8fb06779305176b54f7f90ed4c4dd1364074c72e5a431be6be1278addb0bfdc"
+    },
+    {
+      "path": "lib/persistent_memory_v37.js",
+      "sha256": "76f86f3cd3292b91feca275bd1d5597e9674ef660323b85880235f6791925624"
+    },
+    {
+      "path": "lib/product_intelligence_graph_v38.js",
+      "sha256": "55dadfb32f29ac33e9349cb08df30470a8de212b6c38c87326adf40899a45da5"
+    },
+    {
+      "path": "lib/agricultural_diagnostic_engine_v39.js",
+      "sha256": "b8fc19b97d86a27f011b760698bdc1b5590a2b7064018fe82c857a60350d34f2"
+    },
+    {
+      "path": "lib/autonomous_sales_intelligence_v40.js",
+      "sha256": "48caf5de25bd6f9202a622ee807b36f411e63fd0348025169d2a0ca834fa52de"
+    },
+    {
+      "path": "lib/unified_evolution_v40.js",
+      "sha256": "5e2b0f80aeadd62f2201e5e6bebb473a04ad532d482036837afabdfe480397fc"
+    },
+    {
+      "path": "lib/neural_agent.js",
+      "sha256": "c9c7f03d56c12d49a30fe799a248a8a573cf19c60bb32c464ac4f1ee1c6e4ac2"
+    },
+    {
+      "path": "lib/product_intelligence.js",
+      "sha256": "fa75132790a3adb956abf9600a19b4e48965d5a8ce53ef92df76cc5358a5dead"
+    },
+    {
+      "path": "lib/unified_intelligence_v33.js",
+      "sha256": "10c95689c66f1436135387f79a52b4df8e8842aff6c35d9b4330ee814c3f61a4"
+    }
+  ],
+  "reports": {
+    "V40_EVALUATION_REPORT.json": "2b88efdfb5e2c0fa58d683e58174c48c967ee04d98f53c0a013cee0fa07d5f03",
+    "V40_DEVELOPMENT_GENERALIZATION_REPORT.json": "d2038943d28e967a6505be3207d967b4b9ce82a0562c419388ee04a964456686",
+    "V40_SEALED_HOLDOUT_REPORT.json": "598871645137a798f0e0de50702cc50ba4afec1550df04302ec85599e6e150cb"
+  },
+  "ui": {
+    "file": "odoo_ui/ODOO_CHAT_UI_V34_CONTEXT_RESILIENCE_COMPAT_WITH_V40.xml",
+    "compatibility": "API schema preserved; no UI replacement required if V34 Context Resilience is already installed"
+  },
+  "generated_at": "2026-08-22T07:45:00Z"
+}

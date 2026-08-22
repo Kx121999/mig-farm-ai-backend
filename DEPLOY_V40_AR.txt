@@ -1,0 +1,42 @@
+MIG FARM AI V40 — خطوات الرفع
+=============================
+
+هذه حزمة Backend كاملة مبنية فوق V33.2 وليست Patch منفصل.
+
+1) خذ Backup من المشروع المنشور حاليًا على Vercel/Git.
+2) فك ضغط ملف V40 وارفع محتويات مجلد Backend كمشروع الـBackend نفسه.
+3) حافظ على Environment Variables الموجودة لديك، خصوصًا OPENAI_API_KEY وأي إعدادات Odoo/Redis الحالية.
+4) V40 يعمل افتراضيًا. يمكنك ضبط:
+   AI_PIPELINE_V40=true
+   AI_PIPELINE_V33=true
+5) لا تفعّل ODOO_ACTIONS_ENABLED إلا لو أوامر Odoo مجهزة ومقصودة.
+6) بعد Deploy افتح:
+   /api/health
+
+المتوقع:
+version = 40.0.0
+mode = unified_evolution_intelligence_v40
+release = MIG_FARM_AI_V40_UNIFIED_EVOLUTION
+unified_evolution.ready = true
+
+والطبقات التالية ready=true:
+- semantic_core_v35
+- advanced_rag_v36
+- persistent_memory_v37
+- product_graph_v38
+- agricultural_diagnostic_v39
+- autonomous_sales_v40
+
+Rollback سريع إلى V33.2:
+AI_PIPELINE_V40=false
+ثم Redeploy.
+
+واجهة Odoo V34 Context Resilience الحالية متوافقة مع V40 لأن الـAPI schema الأساسي محفوظ. لا تحتاج تغيير الواجهة لو V34 مركبة بالفعل.
+
+اختبارات بعد الرفع:
+1) افتح جلسة جديدة.
+2) اسأل عن منتج ثم: "عدد البذور قد إيه؟"
+3) صحح المنتج: "لا قصدي عتيق" ثم اسأل "والسعر؟"
+4) جرّب تغيير موضوع كامل.
+5) جرّب مشكلة زراعية ثم Follow-up قصير.
+6) تأكد أن السعر/المخزون لا يتم اختلاقهما لو المصدر الحي غير متاح.

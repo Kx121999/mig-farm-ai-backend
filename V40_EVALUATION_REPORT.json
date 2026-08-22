@@ -1,0 +1,21 @@
+{
+  "version": "40.0.0",
+  "release": "MIG_FARM_AI_V40_UNIFIED_EVOLUTION",
+  "started_at": "2026-08-22T07:35:42.188Z",
+  "completed_at": "2026-08-22T07:35:47.112Z",
+  "passed": true,
+  "cases": 141,
+  "checks": [
+    "v35_semantic_followups",
+    "v35_current_turn_correction",
+    "v36_entity_locked_reranking",
+    "v37_multi_layer_memory",
+    "v38_entity_scoped_product_graph",
+    "v39_diagnostic_safety",
+    "v40_no_pressure_sales",
+    "v40_single_orchestrator",
+    "end_to_end_canonical_correction_persistence",
+    "health_contract"
+  ],
+  "output": "MIG_AI_LEARNING {\"event\":\"assistant_turn\",\"session_hash\":\"vzqx65\",\"query_hash\":\"f27z0a\",\"intent\":\"product_search\",\"category\":\"seeds\",\"crop\":\"corn\",\"stage\":\"consider\",\"source\":\"unified_structured_fact_degradation_v33\",\"unresolved\":false,\"evidence\":\"rule_engine\",\"confidence\":\"medium\",\"lead_temperature\":\"cold\",\"word_count\":2,\"has_emirate\":false,\"has_quantity\":false,\"has_area\":false}\nMIG_AI_LEARNING {\"event\":\"assistant_turn\",\"session_hash\":\"vzqx65\",\"query_hash\":\"b05dr\",\"intent\":\"correction\",\"category\":\"seeds\",\"crop\":\"corn\",\"stage\":\"consider\",\"source\":\"unified_structured_fact_degradation_v33\",\"unresolved\":false,\"evidence\":\"rule_engine\",\"confidence\":\"medium\",\"lead_temperature\":\"cold\",\"word_count\":3,\"has_emirate\":false,\"has_quantity\":false,\"has_area\":false}\nMIG_AI_LEARNING {\"event\":\"assistant_turn\",\"session_hash\":\"vzqx65\",\"query_hash\":\"f27z0a\",\"intent\":\"product_search\",\"category\":\"seeds\",\"crop\":\"corn\",\"stage\":\"consider\",\"source\":\"unified_structured_fact_degradation_v33\",\"unresolved\":false,\"evidence\":\"rule_engine\",\"confidence\":\"medium\",\"lead_temperature\":\"cold\",\"word_count\":2,\"has_emirate\":false,\"has_quantity\":false,\"has_area\":false}\nMIG_AI_LEARNING {\"event\":\"assistant_turn\",\"session_hash\":\"vzqx65\",\"query_hash\":\"1abv35z\",\"intent\":\"unknown\",\"category\":\"seeds\",\"crop\":\"corn\",\"stage\":\"explore\",\"source\":\"unified_validation_safe_fallback_v33\",\"unresolved\":true,\"evidence\":\"clarification\",\"confidence\":\"low\",\"lead_temperature\":\"cold\",\"word_count\":1,\"has_emirate\":false,\"has_quantity\":false,\"has_area\":false}\nV40 unified evolution PASS — 141 cases\n"
+}

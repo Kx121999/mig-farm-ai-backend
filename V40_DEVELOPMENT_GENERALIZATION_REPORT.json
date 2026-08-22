@@ -1,0 +1,414 @@
+{
+  "version": "40.0.0",
+  "dataset": "development_generalization_v40_after_failure_driven_fix",
+  "created_after_initial_v40_implementation": true,
+  "used_for_development": true,
+  "production_prompt_exposure": false,
+  "engine_modified_after_first_run": true,
+  "total": 70,
+  "passed": 70,
+  "failed": 0,
+  "score": 100,
+  "quality_gate": {
+    "target": 95,
+    "passed": true
+  },
+  "cases": [
+    {
+      "id": "h01",
+      "passed": true,
+      "expected": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "h02",
+      "passed": true,
+      "expected": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "h03",
+      "passed": true,
+      "expected": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "h04",
+      "passed": true,
+      "expected": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "h05",
+      "passed": true,
+      "expected": "price",
+      "actual": "price"
+    },
+    {
+      "id": "h06",
+      "passed": true,
+      "expected": "price",
+      "actual": "price"
+    },
+    {
+      "id": "h07",
+      "passed": true,
+      "expected": "price",
+      "actual": "price"
+    },
+    {
+      "id": "h08",
+      "passed": true,
+      "expected": "price",
+      "actual": "price"
+    },
+    {
+      "id": "h09",
+      "passed": true,
+      "expected": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "h10",
+      "passed": true,
+      "expected": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "h11",
+      "passed": true,
+      "expected": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "h12",
+      "passed": true,
+      "expected": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "h13",
+      "passed": true,
+      "expected": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "h14",
+      "passed": true,
+      "expected": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "h15",
+      "passed": true,
+      "expected": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "h16",
+      "passed": true,
+      "expected": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "h17",
+      "passed": true,
+      "expected": "dosage",
+      "actual": "dosage"
+    },
+    {
+      "id": "h18",
+      "passed": true,
+      "expected": "dosage",
+      "actual": "dosage"
+    },
+    {
+      "id": "h19",
+      "passed": true,
+      "expected": "dosage",
+      "actual": "dosage"
+    },
+    {
+      "id": "h20",
+      "passed": true,
+      "expected": "dosage",
+      "actual": "dosage"
+    },
+    {
+      "id": "h21",
+      "passed": true,
+      "expected": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "h22",
+      "passed": true,
+      "expected": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "h23",
+      "passed": true,
+      "expected": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "h24",
+      "passed": true,
+      "expected": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "c1",
+      "passed": true,
+      "entity": "عتيق"
+    },
+    {
+      "id": "c2",
+      "passed": true,
+      "entity": "عتيق F1"
+    },
+    {
+      "id": "c3",
+      "passed": true,
+      "entity": "مزيونة"
+    },
+    {
+      "id": "c4",
+      "passed": true,
+      "entity": "مياسة"
+    },
+    {
+      "id": "c5",
+      "passed": true,
+      "entity": "الصنف عتيق"
+    },
+    {
+      "id": "r1",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r2",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r3",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r4",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r5",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r6",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r7",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "r8",
+      "passed": true,
+      "top": "hidden-atiq",
+      "query": "هو بكام | canonical_entity=باذنجان عاتق كلاسيكي F1 sku=401161F1 | intent=price"
+    },
+    {
+      "id": "m1",
+      "passed": true,
+      "facts": 4
+    },
+    {
+      "id": "m2",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "m3",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "m4",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "m5",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "m6",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "m7",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "m8",
+      "passed": true,
+      "facts": 5
+    },
+    {
+      "id": "g1",
+      "passed": true,
+      "nodes": 2,
+      "edges": 2
+    },
+    {
+      "id": "g2",
+      "passed": true,
+      "nodes": 2,
+      "edges": 2
+    },
+    {
+      "id": "g3",
+      "passed": true,
+      "nodes": 2,
+      "edges": 2
+    },
+    {
+      "id": "g4",
+      "passed": true,
+      "nodes": 2,
+      "edges": 2
+    },
+    {
+      "id": "g5",
+      "passed": true,
+      "nodes": 2,
+      "edges": 2
+    },
+    {
+      "id": "g6",
+      "passed": true,
+      "nodes": 2,
+      "edges": 2
+    },
+    {
+      "id": "d1",
+      "passed": true,
+      "mode": "differential_diagnosis",
+      "missing": []
+    },
+    {
+      "id": "d2",
+      "passed": true,
+      "mode": "visual_diagnosis",
+      "missing": []
+    },
+    {
+      "id": "d3",
+      "passed": true,
+      "mode": "regulated_dosage",
+      "missing": [
+        "verified_label_or_product_identity"
+      ]
+    },
+    {
+      "id": "d4",
+      "passed": true,
+      "mode": "differential_diagnosis",
+      "missing": [
+        "crop"
+      ]
+    },
+    {
+      "id": "sT1",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "sB1",
+      "passed": true,
+      "mode": "browse_no_pressure"
+    },
+    {
+      "id": "sT2",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "sB2",
+      "passed": true,
+      "mode": "browse_no_pressure"
+    },
+    {
+      "id": "sT3",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "sB3",
+      "passed": true,
+      "mode": "browse_no_pressure"
+    },
+    {
+      "id": "sT4",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "sB4",
+      "passed": true,
+      "mode": "browse_no_pressure"
+    },
+    {
+      "id": "sT5",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "sB5",
+      "passed": true,
+      "mode": "browse_no_pressure"
+    },
+    {
+      "id": "e1",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "e2",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "e3",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "e4",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "e5",
+      "passed": true,
+      "version": "40.0.0"
+    }
+  ]
+}

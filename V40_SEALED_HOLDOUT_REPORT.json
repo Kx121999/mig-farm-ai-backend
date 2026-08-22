@@ -1,0 +1,293 @@
+{
+  "version": "40.0.0",
+  "release": "MIG_FARM_AI_V40_UNIFIED_EVOLUTION",
+  "dataset": "sealed_holdout_v40_g",
+  "locked_before_first_execution": true,
+  "engine_frozen_before_dataset_execution": true,
+  "engine_hash_sha256": "b23418653c1f56c7ea5cfba73b0d9db5dbbf5c11c5e1be055e666ff4bf328545",
+  "no_engine_change_after_result_required": true,
+  "production_prompt_exposure": false,
+  "total": 51,
+  "passed": 51,
+  "failed": 0,
+  "score": 100,
+  "quality_gate": {
+    "target": 95,
+    "passed": true
+  },
+  "results": [
+    {
+      "id": "sh01",
+      "passed": true,
+      "expect": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "sh02",
+      "passed": true,
+      "expect": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "sh03",
+      "passed": true,
+      "expect": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "sh04",
+      "passed": true,
+      "expect": "pack_size",
+      "actual": "pack_size"
+    },
+    {
+      "id": "sh05",
+      "passed": true,
+      "expect": "price",
+      "actual": "price"
+    },
+    {
+      "id": "sh06",
+      "passed": true,
+      "expect": "price",
+      "actual": "price"
+    },
+    {
+      "id": "sh07",
+      "passed": true,
+      "expect": "price",
+      "actual": "price"
+    },
+    {
+      "id": "sh08",
+      "passed": true,
+      "expect": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "sh09",
+      "passed": true,
+      "expect": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "sh10",
+      "passed": true,
+      "expect": "availability",
+      "actual": "availability"
+    },
+    {
+      "id": "sh11",
+      "passed": true,
+      "expect": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "sh12",
+      "passed": true,
+      "expect": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "sh13",
+      "passed": true,
+      "expect": "suitability",
+      "actual": "suitability"
+    },
+    {
+      "id": "sh14",
+      "passed": true,
+      "expect": "dosage",
+      "actual": "dosage"
+    },
+    {
+      "id": "sh15",
+      "passed": true,
+      "expect": "dosage",
+      "actual": "dosage"
+    },
+    {
+      "id": "sh16",
+      "passed": true,
+      "expect": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "sh17",
+      "passed": true,
+      "expect": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "sh18",
+      "passed": true,
+      "expect": "product_details",
+      "actual": "product_details"
+    },
+    {
+      "id": "sc1",
+      "passed": true,
+      "entity": "مزيونة"
+    },
+    {
+      "id": "sc2",
+      "passed": true,
+      "entity": "عتيق F1"
+    },
+    {
+      "id": "sc3",
+      "passed": true,
+      "entity": "مياسة مش التاني"
+    },
+    {
+      "id": "sc4",
+      "passed": true,
+      "entity": "الصنف الأبيض"
+    },
+    {
+      "id": "sr1",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sr2",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sr3",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sr4",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sr5",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sr6",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sr7",
+      "passed": true,
+      "top": "sealed-b"
+    },
+    {
+      "id": "sm1",
+      "passed": true,
+      "episodes": 1
+    },
+    {
+      "id": "sm2",
+      "passed": true,
+      "episodes": 2
+    },
+    {
+      "id": "sm3",
+      "passed": true,
+      "episodes": 3
+    },
+    {
+      "id": "sm4",
+      "passed": true,
+      "episodes": 4
+    },
+    {
+      "id": "sm5",
+      "passed": true,
+      "episodes": 5
+    },
+    {
+      "id": "sm6",
+      "passed": true,
+      "episodes": 6
+    },
+    {
+      "id": "sg1",
+      "passed": true,
+      "nodes": 2
+    },
+    {
+      "id": "sg2",
+      "passed": true,
+      "nodes": 2
+    },
+    {
+      "id": "sg3",
+      "passed": true,
+      "nodes": 2
+    },
+    {
+      "id": "sg4",
+      "passed": true,
+      "nodes": 2
+    },
+    {
+      "id": "sd1",
+      "passed": true,
+      "mode": "differential_diagnosis"
+    },
+    {
+      "id": "sd2",
+      "passed": true,
+      "mode": "visual_diagnosis"
+    },
+    {
+      "id": "sd3",
+      "passed": true,
+      "mode": "regulated_dosage"
+    },
+    {
+      "id": "sd4",
+      "passed": true,
+      "mode": "differential_diagnosis"
+    },
+    {
+      "id": "ss1",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "ss2",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "ss3",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "ss4",
+      "passed": true,
+      "mode": "technical_first"
+    },
+    {
+      "id": "se1",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "se2",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "se3",
+      "passed": true,
+      "version": "40.0.0"
+    },
+    {
+      "id": "se4",
+      "passed": true,
+      "version": "40.0.0"
+    }
+  ]
+}
