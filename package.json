@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "31.0.0",
+  "version": "33.0.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM AI with the V32 natural-conversation layer: whole-utterance understanding, grounded generation, help and frustration speech acts, false product-memory guards, truth safety and 400 MB GitHub knowledge",
+  "description": "MIG FARM AI V33 unified semantic intelligence: one context-aware orchestration pipeline, structured product truth, RAG evidence, reranking, validation, traceability and 400 MB GitHub knowledge",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
@@ -15,7 +15,14 @@
     "autonomous:eval": "node tools/run_v30_evals.mjs",
     "meaning:eval": "node tools/run_v31_evals.mjs",
     "final:eval": "node tools/run_final_evals.mjs",
+    "intelligence:eval": "node tools/run_v33_evals.mjs",
+    "intelligence:hidden-eval": "node tools/run_v33_hidden_evals.mjs",
+    "intelligence:sealed-eval": "node tools/run_v33_sealed_holdout.mjs",
+    "intelligence:final-holdout": "node tools/run_v33_final_holdout.mjs",
+    "intelligence:locked-holdout": "node tools/run_v33_locked_holdout.mjs",
+    "intelligence:final-locked-holdout": "node tools/run_v33_final_locked_holdout.mjs",
+    "intelligence:release-holdout": "node tools/run_v33_release_holdout.mjs",
     "enterprise:sync": "node tools/sync_v28_vector_store.mjs",
-    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run autonomous:eval && npm run meaning:eval && npm run final:eval && npm run validate && npm test"
+    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run autonomous:eval && npm run meaning:eval && npm run final:eval && npm run intelligence:eval && npm run intelligence:hidden-eval && npm run intelligence:release-holdout && npm run validate && npm test"
   }
 }

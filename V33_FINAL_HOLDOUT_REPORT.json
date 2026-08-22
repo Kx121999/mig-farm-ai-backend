@@ -1,0 +1,23 @@
+{
+  "version": "33.0",
+  "dataset": "final_sealed_holdout_c",
+  "sealed_before_execution": true,
+  "production_prompt_exposure": false,
+  "provider": "deterministic_emergency_fallback",
+  "total": 60,
+  "passed": 59,
+  "failed": 1,
+  "score": 98.33,
+  "quality_gate": {
+    "target": 90,
+    "passed": true
+  },
+  "failures": [
+    {
+      "expected": "thanks",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    }
+  ]
+}

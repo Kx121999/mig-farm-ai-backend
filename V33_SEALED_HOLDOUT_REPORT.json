@@ -1,0 +1,16 @@
+{
+  "version": "33.0",
+  "dataset": "sealed_post_fix_holdout_b",
+  "created_after_mechanism_fix": true,
+  "production_prompt_exposure": false,
+  "provider": "deterministic_emergency_fallback",
+  "total": 60,
+  "passed": 60,
+  "failed": 0,
+  "score": 100,
+  "quality_gate": {
+    "target": 90,
+    "passed": true
+  },
+  "failures": []
+}

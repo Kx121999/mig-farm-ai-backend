@@ -1,0 +1,25 @@
+{
+  "version": "33.0",
+  "dataset": "locked_holdout_d",
+  "locked_before_first_execution": true,
+  "no_post_result_engine_changes": true,
+  "production_prompt_exposure": false,
+  "provider": "deterministic_emergency_fallback",
+  "total": 50,
+  "passed": 49,
+  "failed": 1,
+  "score": 98,
+  "quality_gate": {
+    "target": 90,
+    "passed": true
+  },
+  "failures": [
+    {
+      "case_id": "locked-007",
+      "expected": "identity",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "version": "33.0",
+  "dataset": "final_locked_holdout_e",
+  "locked_before_first_execution": true,
+  "engine_frozen_before_dataset_creation": true,
+  "no_post_result_engine_changes": true,
+  "production_prompt_exposure": false,
+  "provider": "deterministic_emergency_fallback",
+  "total": 50,
+  "passed": 44,
+  "failed": 6,
+  "score": 88,
+  "quality_gate": {
+    "target": 90,
+    "passed": false
+  },
+  "failures": [
+    {
+      "case_id": "final-locked-002",
+      "expected": "help_request",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    },
+    {
+      "case_id": "final-locked-007",
+      "expected": "identity",
+      "actual": "help_request",
+      "provider": "deterministic_guard",
+      "classification": "wrong_tool_routing"
+    },
+    {
+      "case_id": "final-locked-030",
+      "expected": "diagnosis",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    },
+    {
+      "case_id": "final-locked-043",
+      "expected": "order_status",
+      "actual": "shipping",
+      "provider": "deterministic_guard",
+      "classification": "wrong_tool_routing"
+    },
+    {
+      "case_id": "final-locked-047",
+      "expected": "hours",
+      "actual": "branches",
+      "provider": "deterministic_fallback",
+      "classification": "wrong_tool_routing"
+    },
+    {
+      "case_id": "final-locked-048",
+      "expected": "returns",
+      "actual": "agriculture_general",
+      "provider": "deterministic_fallback",
+      "classification": "wrong_tool_routing"
+    }
+  ]
+}

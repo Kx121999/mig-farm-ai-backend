@@ -1,0 +1,54 @@
+{
+  "version": "33.0",
+  "dataset": "release_holdout_f",
+  "locked_before_first_execution": true,
+  "engine_frozen_before_dataset_creation": true,
+  "no_post_result_engine_changes": true,
+  "production_prompt_exposure": false,
+  "provider": "deterministic_emergency_fallback",
+  "total": 50,
+  "passed": 45,
+  "failed": 5,
+  "score": 90,
+  "quality_gate": {
+    "target": 90,
+    "passed": true
+  },
+  "failures": [
+    {
+      "case_id": "release-008",
+      "expected": "identity",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    },
+    {
+      "case_id": "release-014",
+      "expected": "shipping",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    },
+    {
+      "case_id": "release-025",
+      "expected": "diagnosis",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    },
+    {
+      "case_id": "release-028",
+      "expected": "diagnosis",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    },
+    {
+      "case_id": "release-030",
+      "expected": "diagnosis",
+      "actual": "unknown",
+      "provider": "deterministic_fallback",
+      "classification": "intent_understanding_failure"
+    }
+  ]
+}

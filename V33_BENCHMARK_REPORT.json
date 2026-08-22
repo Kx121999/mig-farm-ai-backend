@@ -1,0 +1,48 @@
+{
+  "version": "33.0",
+  "generated_at": "2026-08-20T16:44:47.184Z",
+  "architecture_cases": 135,
+  "provider_pipeline_test": "mocked_responses_api",
+  "suites": [
+    {
+      "suite": "tests/v33_unified_intelligence.mjs",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "suite": "tests/v33_provider_api.mjs",
+      "passed": true,
+      "status": 0
+    }
+  ],
+  "quality_gate": {
+    "passed": true
+  },
+  "baseline_observation": {
+    "session": [
+      "بدور على بذور بتنجان ثمرتها رفيعة وطويلة",
+      "طب الكيس يعد كام",
+      "لا أنا أقصد الصنف الأبيض",
+      "وده عدده إيه"
+    ],
+    "before": {
+      "relevant_turns": 0,
+      "continuity_turns": 0,
+      "observed_sources": [
+        "live_migfarm_seeds",
+        "v29_specific_clarification"
+      ],
+      "notes": "Measured before V33 integration in the local emergency path; first result mixed unrelated catalog categories and three follow-ups lost the entity."
+    },
+    "after": {
+      "relevant_turns": 4,
+      "continuity_turns": 3,
+      "source": "unified_structured_*_v33",
+      "notes": "Measured after V33 integration with the same four-turn local emergency conversation."
+    }
+  },
+  "limitations": [
+    "Local environment has no production OPENAI_API_KEY; provider behavior is exercised with the same Responses API contract using a deterministic mock.",
+    "Live Odoo exact price and stock still require Odoo credentials and remain unguessed when unavailable."
+  ]
+}
