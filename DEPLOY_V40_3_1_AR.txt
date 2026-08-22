@@ -1,0 +1,22 @@
+MIG FARM AI V40.3.1 — Deployment-Safe Provider Resilience
+=========================================================
+
+سبب الإصدار:
+- V40.3 أضاف api/provider-health.js كـ Function مستقلة.
+- على Vercel Hobby هذا قد يرفع عدد Functions إلى حد المنصة/المشكلة المعروفة عند الحد.
+- V40.3.1 يدمج فحص OpenAI داخل api/health.js ولا يضيف Function جديدة.
+- عدد API Functions عاد إلى 11 مثل V40 الذي تم نشره بنجاح.
+
+الرفع:
+1) استخدم هذه الحزمة بدل V40.3.
+2) ارفع المشروع كاملًا إلى نفس مشروع mig-farm-ai-backend.
+3) حافظ على متغيرات البيئة الحالية:
+   OPENAI_API_KEY
+   UNIFIED_SEMANTIC_V33_ENABLED=true
+   AI_PIPELINE_V40=true
+4) Redeploy Production.
+5) افتح /api/health وتأكد من version/mode.
+6) لفحص OpenAI حيًا افتح:
+   /api/health?provider=1
+
+لا يوجد /api/provider-health في هذا الإصدار عمدًا لتجنب إنشاء Serverless Function إضافية.

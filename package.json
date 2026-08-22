@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "40.3.0",
+  "version": "40.3.1",
   "private": true,
   "type": "module",
-  "description": "MIG FARM AI V40.3 provider-resilience hotfix over V40 unified evolution",
+  "description": "MIG FARM AI V40.3.1 deployment-safe provider resilience hotfix over V40 unified evolution",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",

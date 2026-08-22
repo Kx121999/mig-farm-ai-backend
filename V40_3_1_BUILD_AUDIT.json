@@ -1,0 +1,27 @@
+{
+  "version": "40.3.1",
+  "release": "V40.3.1_DEPLOYMENT_SAFE_PROVIDER_RESILIENCE",
+  "api_function_count": 11,
+  "api_functions": [
+    "api/admin-auth.js",
+    "api/admin-dashboard.js",
+    "api/admin-export.js",
+    "api/admin/knowledge-gaps.js",
+    "api/chat-stream.js",
+    "api/chat.js",
+    "api/health.js",
+    "api/index.js",
+    "api/knowledge.js",
+    "api/learning.js",
+    "api/metrics.js"
+  ],
+  "standalone_provider_health_route": false,
+  "provider_probe_route": "/api/health?provider=1",
+  "tests": {
+    "provider_resilience": "13/13 PASS",
+    "v40_unified_evolution": "141 PASS",
+    "development_generalization": "70/70 PASS",
+    "sealed_holdout": "51/51 PASS"
+  },
+  "deployment_fix": "provider health merged into existing health function to avoid adding an extra Vercel Function"
+}
