@@ -1,0 +1,41 @@
+{
+  "version": "41.0.0",
+  "release": "MIG_FARM_AI_V41_FINAL_PRODUCTION_CLOSURE",
+  "required_env": [
+    "OPENAI_API_KEY",
+    "UNIFIED_SEMANTIC_V33_ENABLED=true",
+    "AI_PIPELINE_V40=true",
+    "AI_PIPELINE_V41=true"
+  ],
+  "optional_env": [
+    "OPENAI_FALLBACK_MODEL",
+    "PROVIDER_V41_CIRCUIT_FAILURES",
+    "PROVIDER_V41_CIRCUIT_MS"
+  ],
+  "rollback": "AI_PIPELINE_V41=false",
+  "odoo_ui_change_required": false,
+  "changed_files": [
+    ".env.example",
+    "package.json",
+    "api/chat.js",
+    "api/health.js",
+    "lib/provider_gateway_v41.js",
+    "lib/production_closure_v41.js",
+    "lib/neural_agent.js",
+    "lib/llm_first_orchestrator_v31.js",
+    "lib/final_production_os.js",
+    "lib/enterprise_retrieval_v28.js",
+    "lib/provider_health_v40.js",
+    "tests/v41_provider_gateway.mjs",
+    "tests/v41_production_closure.mjs",
+    "tests/v41_api_e2e.mjs",
+    "tests/v41_provider_api.mjs",
+    "tools/run_all_tests.mjs",
+    "tools/run_v33_evals.mjs",
+    "tools/run_v41_production_e2e.mjs",
+    "tools/validate_release.mjs",
+    "V33_BENCHMARK_REPORT.json",
+    "V40_EVALUATION_REPORT.json",
+    "V40_SEALED_HOLDOUT_REPORT.json"
+  ]
+}

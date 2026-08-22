@@ -1,0 +1,22 @@
+MIG FARM AI V41 — FINAL PRODUCTION CLOSURE
+
+1) لا تغير كود Odoo. V41 Backend فقط.
+2) ارفع محتويات MIG_FARM_AI_V41_CHANGED_FILES_ONLY.zip إلى نفس المسارات في GitHub.
+3) في Vercel > Settings > Environment Variables أضف:
+   AI_PIPELINE_V41 = true   (Production)
+4) اترك المتغيرات الحالية:
+   AI_PIPELINE_V40 = true
+   UNIFIED_SEMANTIC_V33_ENABLED = true
+   OPENAI_API_KEY = المفتاح الحالي
+5) OPENAI_FALLBACK_MODEL اختياري. لا تضف قيمة إلا لو عندك موديل احتياطي مؤكد.
+6) اعمل Redeploy لآخر Production deployment.
+7) افتح /api/health. المطلوب:
+   version: 41.0.0
+   mode: final_production_closure_v41
+   production_closure_v41.enabled: true
+   universal_canned_final_response: false
+8) افتح /api/health?provider=1. المطلوب ok:true.
+9) جرب من شات Odoo: انتا مين / كيفك / عندكم بذور باذنجان / الطويل / كام بذرة / لا قصدي عتيق / والسعر؟
+10) Rollback: AI_PIPELINE_V41=false ثم Redeploy.
+
+مهم: لا تحذف V40/V33. في V41 أصبحوا طبقات أساس/rollback وليسوا مسارات نهائية متنافسة.

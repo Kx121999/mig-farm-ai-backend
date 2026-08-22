@@ -1,0 +1,80 @@
+{
+  "version": "41.0.0",
+  "release": "MIG_FARM_AI_V41_FINAL_PRODUCTION_CLOSURE",
+  "generated_at": "2026-08-22T10:06:00.014863+00:00",
+  "architecture": {
+    "single_user_facing_orchestrator": true,
+    "legacy_response_engines": "rollback_only_when_AI_PIPELINE_V41_false",
+    "allowed_response_origins": [
+      "LLM",
+      "LLM_PLUS_RAG",
+      "STRUCTURED_DATA",
+      "SEMANTIC_DEGRADED"
+    ],
+    "universal_canned_final_response": false
+  },
+  "provider_gateway": {
+    "single_responses_api_callsite": true,
+    "direct_callsite": "lib/provider_gateway_v41.js",
+    "retry": true,
+    "model_fallback": true,
+    "circuit_breaker": true,
+    "live_probe": true
+  },
+  "tests": {
+    "v41_provider_gateway": "pass",
+    "v41_production_closure": "pass",
+    "v41_api_e2e": "5/5 pass",
+    "v41_provider_api": "pass",
+    "v40_unified_evolution": "141 pass",
+    "v40_generalization": "70/70",
+    "v40_sealed_holdout": "51/51",
+    "v33_unified_intelligence": "135 pass",
+    "v33_provider_api": "pass",
+    "release_validator": "pass",
+    "legacy_evals": "1320/1320",
+    "knowledge_records": 200025,
+    "v33_locked_unseen": "45/50 (90%)"
+  },
+  "production_network_e2e": {
+    "status": "pending_deploy",
+    "runner": "tools/run_v41_production_e2e.mjs"
+  },
+  "github_write_attempt": {
+    "status": "blocked",
+    "reason": "403 Resource not accessible by integration"
+  },
+  "changed_files": [
+    ".env.example",
+    "package.json",
+    "api/chat.js",
+    "api/health.js",
+    "lib/provider_gateway_v41.js",
+    "lib/production_closure_v41.js",
+    "lib/neural_agent.js",
+    "lib/llm_first_orchestrator_v31.js",
+    "lib/final_production_os.js",
+    "lib/enterprise_retrieval_v28.js",
+    "lib/provider_health_v40.js",
+    "tests/v41_provider_gateway.mjs",
+    "tests/v41_production_closure.mjs",
+    "tests/v41_api_e2e.mjs",
+    "tests/v41_provider_api.mjs",
+    "tools/run_all_tests.mjs",
+    "tools/run_v33_evals.mjs",
+    "tools/run_v41_production_e2e.mjs",
+    "tools/validate_release.mjs",
+    "V33_BENCHMARK_REPORT.json",
+    "V40_EVALUATION_REPORT.json",
+    "V40_SEALED_HOLDOUT_REPORT.json"
+  ],
+  "critical_file_sha256": {
+    "api/chat.js": "965989dfe4924f4bcea667aa648442b18861abb180c9f92da4f163990acee775",
+    "api/health.js": "f7fdccb1af00ed3973b1917fc6bf1d56055e694876db2a1118d97b7cdba8269f",
+    "lib/provider_gateway_v41.js": "24eff7eccee535397e8acabc37f60dfbda05aeca372e1c0cc260bc48b66bf1cb",
+    "lib/production_closure_v41.js": "1663ac74ca6a35523ab2536da5ccbba5e93cd708cff2e9ce5634e578f82bde68",
+    "lib/neural_agent.js": "cbb627a3c93f5ef9e77eaf7a4bcea3faafb237cc13a09b9657b40ff123af6458",
+    "lib/llm_first_orchestrator_v31.js": "066846f5d62db01a5cfaf18afe8d911a04c8f2c3b55b76cdfbfb2caf6c3dfc01",
+    "package.json": "53c733aebae73c9cc7b6189bc27aa8858f115f69a17bb194e1056298facebd8c"
+  }
+}
