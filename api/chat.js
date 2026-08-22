@@ -966,7 +966,9 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       source:force?"unified_neural_generation_v33":"neural_multimodal_visual_recognition_sales_v22_5",results:products,evidence:evidenceItems,retrieval,plan
     };
   }catch(error){
-    console.error("V22.5 multimodal neural fallback:",error?.message);
+    const detail=cleanText(error?.message||"neural_provider_failure",240);
+    console.error("V22.5 multimodal neural fallback:",detail);
+    if(force) throw new Error(`neural_provider_failure:${detail}`);
     return null;
   }
 }

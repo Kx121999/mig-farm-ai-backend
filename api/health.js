@@ -8,7 +8,7 @@ const VERSION=V40_ENABLED?"40.0.0":V33_ENABLED?"33.2.0":"31.0.0";
 const MODE=V40_ENABLED?"unified_evolution_intelligence_v40":V33_ENABLED?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
 const RELEASE=V40_ENABLED?"MIG_FARM_AI_V40_UNIFIED_EVOLUTION":V33_ENABLED?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS";
 const FEATURES=[
-  "semantic_intelligence_core_v35","advanced_hybrid_rag_reranking_v36","persistent_multi_layer_memory_v37","canonical_product_intelligence_graph_v38","differential_agricultural_diagnostic_engine_v39","autonomous_no_pressure_sales_intelligence_v40",
+  "provider_live_probe_v40_3","social_provider_resilience_v40_3","semantic_intelligence_core_v35","advanced_hybrid_rag_reranking_v36","persistent_multi_layer_memory_v37","canonical_product_intelligence_graph_v38","differential_agricultural_diagnostic_engine_v39","autonomous_no_pressure_sales_intelligence_v40",
   "single_user_facing_intelligence_pipeline","correction_goal_supersession","pending_action_state_priority","active_product_subject_lock","legacy_pipeline_explicit_rollback_only","current_message_highest_priority",
   "explicit_conversation_state","semantic_reference_resolution","contextual_query_rewriting","semantic_retrieval_routing",
   "rag_evidence_not_final_answer","bounded_tool_generation","answer_relevance_validation","grounding_validation","entity_consistency_validation","bounded_regeneration","trace_id_observability",
@@ -47,7 +47,7 @@ export async function GET(){
     const final=finalProductionHealth();
     return Response.json({
       ok:true,status:"healthy",service:"MIG FARM AI — UNIFIED EVOLUTION INTELLIGENCE",version:VERSION,mode:MODE,
-      release:RELEASE,runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
+      release:RELEASE,hotfix:"V40.3_PROVIDER_RESILIENCE",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
       features:FEATURES,
       unified_evolution:unifiedEvolutionHealthV40(),
       unified_intelligence:unifiedIntelligenceHealthV33(),
