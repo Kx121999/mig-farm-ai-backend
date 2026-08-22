@@ -28,8 +28,10 @@ for(const path of jsonFiles)JSON.parse(readFileSync(path,"utf8"));
 const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
-if(health.mode!=="llm_first_semantic_orchestrator_v31")throw new Error(`Unexpected mode: ${health.mode}`);
-if(health.release!=="FINAL_PRODUCTION_OS"||health.final_production_os?.ready!==true)throw new Error("FINAL_PRODUCTION_OS missing");
+if(health.mode!=="unified_semantic_intelligence_v33")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.release!=="UNIFIED_SEMANTIC_INTELLIGENCE_V33"||health.unified_intelligence?.ready!==true)throw new Error("UNIFIED_SEMANTIC_INTELLIGENCE_V33 missing");
+if(health.unified_intelligence?.architecture!=="single_semantic_orchestrator"||health.unified_intelligence?.legacy_pipeline!=="rollback_only")throw new Error("V33 single-pipeline contract missing");
+if(health.final_production_os?.ready!==true)throw new Error("FINAL_PRODUCTION_OS compatibility layer missing");
 if(health.llm_first_orchestrator?.version!=="31.0"||health.llm_first_orchestrator?.ready!==true)throw new Error("V31 LLM-first semantic orchestrator missing");
 if(health.natural_conversation?.version!=="32.0"||health.natural_conversation?.ready!==true)throw new Error("V32 natural conversation layer missing");
 if(health.autonomous_customer_os?.version!=="30.0"||health.autonomous_customer_os?.ready!==true)throw new Error("V30 autonomous customer OS missing");
@@ -70,7 +72,13 @@ const meaningEvalReport=JSON.parse(readFileSync(join(root,"evals","v31_eval_repo
 if(meaningEvalReport.status!=="pass"||meaningEvalReport.passed!==meaningEvalReport.total)throw new Error("V31 LLM-first meaning eval report is not passing");
 const finalEvalReport=JSON.parse(readFileSync(join(root,"evals","final_eval_report.json"),"utf8"));
 if(finalEvalReport.status!=="pass"||finalEvalReport.passed!==finalEvalReport.total||finalEvalReport.total<1000)throw new Error("FINAL_PRODUCTION_OS eval report is not passing 1000+ scenarios");
+const v33Benchmark=JSON.parse(readFileSync(join(root,"V33_BENCHMARK_REPORT.json"),"utf8"));
+if(v33Benchmark.quality_gate?.passed!==true)throw new Error("V33 architecture benchmark is not passing");
+const hiddenGeneralization=JSON.parse(readFileSync(join(root,"V33_HIDDEN_GENERALIZATION_REPORT.json"),"utf8"));
+if(hiddenGeneralization.quality_gate?.passed!==true)throw new Error("V33 hidden generalization report is not passing");
+const releaseHoldout=JSON.parse(readFileSync(join(root,"V33_RELEASE_HOLDOUT_REPORT.json"),"utf8"));
+if(releaseHoldout.quality_gate?.passed!==true||releaseHoldout.score<90||releaseHoldout.no_post_result_engine_changes!==true)throw new Error("V33 locked release holdout is below 90% or was not kept sealed");
 const vercelIgnore=readFileSync(join(root,".vercelignore"),"utf8");
 if(!vercelIgnore.includes("knowledge_v27/packs/**"))throw new Error("400 MB packs must remain outside Vercel function bundles");
 
-console.log(`MIG FARM FINAL_PRODUCTION_OS validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, ${finalEvalReport.passed}/${finalEvalReport.total} final evals, V${health.version}`);
+console.log(`MIG FARM UNIFIED_SEMANTIC_INTELLIGENCE_V33 validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, ${finalEvalReport.passed}/${finalEvalReport.total} legacy evals, ${releaseHoldout.passed}/${releaseHoldout.total} locked unseen cases, V${health.version}`);

@@ -9,7 +9,8 @@ const files=readdirSync(testsDir).filter(name=>name.endsWith(".mjs")).sort((a,b)
 let passed=0;
 for(const file of files){
   const path=join(testsDir.pathname,file);
-  const result=spawnSync(process.execPath,[path],{cwd:root.pathname,stdio:"inherit",env:process.env});
+  const v33=file.startsWith("v33_");
+  const result=spawnSync(process.execPath,[path],{cwd:root.pathname,stdio:"inherit",env:{...process.env,AI_PIPELINE_V33:v33?"true":"false"}});
   if(result.status!==0){
     console.error(`\nFAILED: ${file}`);
     process.exit(result.status||1);
@@ -17,4 +18,3 @@ for(const file of files){
   passed+=1;
 }
 console.log(`\nMIG FARM test runner PASS — ${passed}/${files.length} suites`);
-
