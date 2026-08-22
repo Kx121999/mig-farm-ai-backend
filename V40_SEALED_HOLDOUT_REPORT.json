@@ -4,7 +4,7 @@
   "dataset": "sealed_holdout_v40_g",
   "locked_before_first_execution": true,
   "engine_frozen_before_dataset_execution": true,
-  "engine_hash_sha256": "b23418653c1f56c7ea5cfba73b0d9db5dbbf5c11c5e1be055e666ff4bf328545",
+  "engine_hash_sha256": "b2ba43d24163f0bc84be0b1bfecba9ab38627c033b8922c3e042227abb30f4c2",
   "no_engine_change_after_result_required": true,
   "production_prompt_exposure": false,
   "total": 51,

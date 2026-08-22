@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "40.0.0",
+  "version": "40.3.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM AI V40 unified evolution: V35 semantic core + V36 advanced RAG/reranking + V37 persistent memory + V38 product graph + V39 agricultural diagnostics + V40 autonomous sales intelligence over the proven V33.2 core",
+  "description": "MIG FARM AI V40.3 provider-resilience hotfix over V40 unified evolution",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",

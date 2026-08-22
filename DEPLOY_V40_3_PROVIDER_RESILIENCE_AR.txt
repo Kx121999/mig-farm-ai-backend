@@ -1,0 +1,60 @@
+MIG FARM AI — V40.3 Provider Resilience Hotfix
+==============================================
+
+الهدف
+-----
+هذا Hotfix للـBackend فقط. لا تغيّر كود Odoo Chat إذا كانت الواجهة الحالية تعمل.
+
+ما تم إصلاحه
+-------------
+1) إضافة اختبار حي لمزوّد OpenAI بدل الاكتفاء بأن OPENAI_API_KEY موجود.
+2) إضافة endpoint جديد: /api/provider-health
+3) عند فشل OpenAI مؤقتًا، المحادثات الاجتماعية/التحية/السؤال عن الحال تستخدم Safe Direct Reply طبيعي بدل رسالة "التحليل الذكي غير متاح".
+4) أخطاء Neural Provider في V40/V33 لا يتم ابتلاعها بصمت في force-mode؛ يتم تمرير سبب آمن إلى trace/fallback metadata.
+5) لا تغيير على V35-V40 architecture ولا RAG ولا product graph ولا Odoo UI.
+
+الرفع
+-----
+1) ارفع محتويات الحزمة كمشروع backend نفسه على GitHub/Vercel.
+2) احتفظ بمتغيرات Production الحالية.
+3) تأكد من:
+   OPENAI_API_KEY=<your key>
+   AI_PIPELINE_V40=true
+   AI_PIPELINE_V33=true
+   UNIFIED_SEMANTIC_V33_ENABLED=true
+4) Redeploy للـProduction.
+
+بعد الرفع
+---------
+افتح:
+https://mig-farm-ai-backend.vercel.app/api/health
+
+المتوقع:
+version = 40.0.0
+mode = unified_evolution_intelligence_v40
+hotfix = V40.3_PROVIDER_RESILIENCE
+
+ثم افتح:
+https://mig-farm-ai-backend.vercel.app/api/provider-health
+
+النتائج المهمة:
+- HTTP 200 + ok=true: المفتاح والموديل وOpenAI Responses API يعملون فعليًا.
+- invalid_or_revoked_api_key: المفتاح غير صالح أو تم إلغاؤه.
+- quota_or_billing: مشكلة Credits/Billing/Quota على OpenAI API.
+- rate_limited: Rate limit مؤقت.
+- model_or_endpoint_not_found: الموديل غير متاح للحساب؛ اضبط OPENAI_MODEL=gpt-5-mini ثم Redeploy.
+- timeout: مزود OpenAI لم يرد داخل مهلة التشخيص.
+
+اختبار الشات
+------------
+ابدأ Session جديدة واختبر:
+- كيفك
+- شلونك
+- عامل ايه
+- عندكم بذور باذنجان؟
+- مياسة كام بذرة؟
+
+مهم
+----
+لا تُدخل OPENAI_API_KEY داخل Odoo أو الواجهة.
+لا تغيّر XML الخاص بالشات لهذا Hotfix.
