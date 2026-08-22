@@ -1,15 +1,17 @@
 import { finalProductionHealth, finalProductionSnapshot } from "../lib/final_production_os.js";
 import { unifiedIntelligenceHealthV33, isUnifiedIntelligenceEnabledV33 } from "../lib/unified_intelligence_v33.js";
 import { unifiedEvolutionHealthV40, isUnifiedEvolutionEnabledV40 } from "../lib/unified_evolution_v40.js";
-import { probeOpenAIProviderV40 } from "../lib/provider_health_v40.js";
+import { probeProviderGatewayV41, providerGatewayHealthV41 } from "../lib/provider_gateway_v41.js";
+import { productionClosureHealthV41, isProductionClosureEnabledV41 } from "../lib/production_closure_v41.js";
 
+const V41_ENABLED=isProductionClosureEnabledV41();
 const V40_ENABLED=isUnifiedEvolutionEnabledV40();
 const V33_ENABLED=isUnifiedIntelligenceEnabledV33();
-const VERSION=V40_ENABLED?"40.0.0":V33_ENABLED?"33.2.0":"31.0.0";
-const MODE=V40_ENABLED?"unified_evolution_intelligence_v40":V33_ENABLED?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
-const RELEASE=V40_ENABLED?"MIG_FARM_AI_V40_UNIFIED_EVOLUTION":V33_ENABLED?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS";
+const VERSION=V41_ENABLED?"41.0.0":V40_ENABLED?"40.0.0":V33_ENABLED?"33.2.0":"31.0.0";
+const MODE=V41_ENABLED?"final_production_closure_v41":V40_ENABLED?"unified_evolution_intelligence_v40":V33_ENABLED?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
+const RELEASE=V41_ENABLED?"MIG_FARM_AI_V41_FINAL_PRODUCTION_CLOSURE":V40_ENABLED?"MIG_FARM_AI_V40_UNIFIED_EVOLUTION":V33_ENABLED?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS";
 const FEATURES=[
-  "provider_live_probe_v40_4","current_turn_provider_resilience_v40_4","social_identity_resilience_v40_4","semantic_intelligence_core_v35","advanced_hybrid_rag_reranking_v36","persistent_multi_layer_memory_v37","canonical_product_intelligence_graph_v38","differential_agricultural_diagnostic_engine_v39","autonomous_no_pressure_sales_intelligence_v40",
+  "final_production_closure_v41","single_response_orchestrator_v41","provider_gateway_v41","provider_retry_and_circuit_breaker_v41","response_origin_contract_v41","zero_universal_canned_fallback_v41","provider_live_probe_v41","current_turn_provider_resilience_v40_4","social_identity_resilience_v40_4","semantic_intelligence_core_v35","advanced_hybrid_rag_reranking_v36","persistent_multi_layer_memory_v37","canonical_product_intelligence_graph_v38","differential_agricultural_diagnostic_engine_v39","autonomous_no_pressure_sales_intelligence_v40",
   "single_user_facing_intelligence_pipeline","correction_goal_supersession","pending_action_state_priority","active_product_subject_lock","legacy_pipeline_explicit_rollback_only","current_message_highest_priority",
   "explicit_conversation_state","semantic_reference_resolution","contextual_query_rewriting","semantic_retrieval_routing",
   "rag_evidence_not_final_answer","bounded_tool_generation","answer_relevance_validation","grounding_validation","entity_consistency_validation","bounded_regeneration","trace_id_observability",
@@ -47,13 +49,14 @@ export async function GET(request){
   try{
     const url=new URL(request?.url||"https://health.local/api/health");
     if(["1","true","live"].includes(String(url.searchParams.get("provider")||"").toLowerCase())){
-      const provider=await probeOpenAIProviderV40();
-      return Response.json({service:"MIG FARM AI Provider Health",hotfix:"V40.4_CURRENT_TURN_PROVIDER_RESILIENCE",...provider,time:new Date().toISOString()},{status:provider.ok?200:503,headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"}});
+      const provider=await probeProviderGatewayV41();
+      return Response.json({service:"MIG FARM AI Provider Health",release:"V41_FINAL_PRODUCTION_CLOSURE",...provider,time:new Date().toISOString()},{status:provider.ok?200:503,headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"}});
     }
     const final=finalProductionHealth();
     return Response.json({
       ok:true,status:"healthy",service:"MIG FARM AI — UNIFIED EVOLUTION INTELLIGENCE",version:VERSION,mode:MODE,
-      release:RELEASE,hotfix:"V40.4_CURRENT_TURN_PROVIDER_RESILIENCE",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
+      release:RELEASE,hotfix:"V41_FINAL_PRODUCTION_CLOSURE",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
+      production_closure_v41:productionClosureHealthV41(),provider_gateway_v41:providerGatewayHealthV41(),
       features:FEATURES,
       unified_evolution:unifiedEvolutionHealthV40(),
       unified_intelligence:unifiedIntelligenceHealthV33(),

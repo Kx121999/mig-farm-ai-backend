@@ -130,10 +130,12 @@ import {
 import {
   runUnifiedEvolutionV40, unifiedEvolutionHealthV40, isUnifiedEvolutionEnabledV40, rerankCandidatesV40
 } from "../lib/unified_evolution_v40.js";
+import { runProductionClosureV41, isProductionClosureEnabledV41 } from "../lib/production_closure_v41.js";
 
+const V41_ENABLED=isProductionClosureEnabledV41();
 const V40_ENABLED=isUnifiedEvolutionEnabledV40();
-const VERSION=V40_ENABLED?"40.0.0":isUnifiedIntelligenceEnabledV33()?"33.2.0":"31.0.0";
-const MODE=V40_ENABLED?"unified_evolution_intelligence_v40":isUnifiedIntelligenceEnabledV33()?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
+const VERSION=V41_ENABLED?"41.0.0":V40_ENABLED?"40.0.0":isUnifiedIntelligenceEnabledV33()?"33.2.0":"31.0.0";
+const MODE=V41_ENABLED?"final_production_closure_v41":V40_ENABLED?"unified_evolution_intelligence_v40":isUnifiedIntelligenceEnabledV33()?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -1386,6 +1388,30 @@ export async function POST(request){
     });
   }
 
+  // V41 FINAL PRODUCTION CLOSURE: one user-facing response orchestrator.
+  // V40/V33/legacy routes remain below only as explicit rollback paths when AI_PIPELINE_V41=false.
+  if(isProductionClosureEnabledV41()){
+    const closureTurnState={...state};
+    const unified=await runProductionClosureV41({
+      message,conversationId:sessionId,state:closureTurnState,history,meaningFrame:meaningFrameV31,semanticFrame,analysis,
+      selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,visionFrame,
+      salesTurn,conversionDecision,autonomousPlan:autonomousPlanV30,
+      generate:async context=>tryV22NeuralAgent({
+        analysis,state:{...closureTurnState,intelligence_v33:context.active_state},message,history,locale,profile,cognition,
+        persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,
+        currentProduct:selectedProductContext||null,sessionId,images,visionFrame,semanticFrame,autonomousPlanV30,meaningFrameV31,
+        force:true,unifiedContextV33:context,allowedToolsV33:[...new Set([...(context.route?.allowed_tools||[]),...(context.diagnostic_v39?.allowed_tools||[])])],validationRepairV33:context.validation_repair
+      }),
+      fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:closureTurnState,history,locale,visionFrame,humanTurn,sessionId})
+    });
+    if(debugAuthorized)unified.payload.ai_debug={version:"41.0.0",trace_id:unified.trace_v41?.trace_id||unified.trace_v40?.trace_id||null,response_origin:unified.response_origin_v41||null,meaning:{provider:meaningFrameV31?.provider||null,primary_intent:meaningFrameV31?.primary_intent||"unknown",intents:meaningFrameV31?.intents||[],domain:meaningFrameV31?.domain||"unclear",topic_relationship:meaningFrameV31?.topic_relationship||"unclear",reference:meaningFrameV31?.reference||null},active_state:unified.conversation_state,route:unified.route,rewritten_query:unified.evolution_v40?.retrieval_v36?.query||unified.rewritten_query,validation:unified.validation_v40||unified.validation,source:unified.source};
+    closureTurnState.intelligence_v33=unified.conversation_state;
+    closureTurnState.intelligence_v40=unified.conversation_state;
+    closureTurnState.intelligence_v41={trace_id:unified.trace_v41?.trace_id||null,response_origin:unified.response_origin_v41||null,version:"41.0.0"};
+    closureTurnState.persistent_memory_v37=unified.conversation_state?.persistent_memory_v37||closureTurnState.persistent_memory_v37;
+    return await makeResponse({payload:unified.payload,cors,sessionId,state:closureTurnState,analysis,signals,profile,message,source:unified.source,results:unified.results,locale,cognition,retrieval:unified.retrieval,plan:unified.plan});
+  }
+
   // V40 is the single user-facing evolution pipeline by default. It extends the
   // proven V33.2 semantic core with V35–V40 capabilities while keeping V33 as
   // an explicit rollback path when AI_PIPELINE_V40=false.
@@ -1461,7 +1487,8 @@ export async function POST(request){
 
   // V27: execute supported compound business + product questions in the user's
   // original order before a single-intent router or a stale product lock can win.
-  const compound=isExplicitActionCommandV27(message)||!allowLegacyCompoundV31(meaningFrameV31)?null:await executeCustomerBrainCompoundV27({customerFrame,analysis,state:turnState,message,history,locale,sessionId});
+  const compoundAllowedV41=Boolean(customerFrame?.is_multi_intent&&customerFrame?.can_execute_deterministically)||allowLegacyCompoundV31(meaningFrameV31);
+  const compound=isExplicitActionCommandV27(message)||!compoundAllowedV41?null:await executeCustomerBrainCompoundV27({customerFrame,analysis,state:turnState,message,history,locale,sessionId});
   if(compound)return await makeResponse({payload:compound.payload,cors,sessionId,state:turnState,analysis,signals,profile,message,source:compound.source,results:compound.results,locale,cognition});
 
   // Visual evidence priority: an image-only turn or genuine visual follow-up must
