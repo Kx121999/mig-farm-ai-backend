@@ -1,6 +1,6 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "33.0.0",
+  "version": "33.2.0",
   "private": true,
   "type": "module",
   "description": "MIG FARM AI V33 unified semantic intelligence: one context-aware orchestration pipeline, structured product truth, RAG evidence, reranking, validation, traceability and 400 MB GitHub knowledge",

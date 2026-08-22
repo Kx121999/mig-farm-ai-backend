@@ -1,0 +1,14 @@
+{
+  "version": "33.2.0",
+  "release": "UNIFIED_SEMANTIC_INTELLIGENCE_V33",
+  "generated_at": "2026-08-22T06:43:59.297Z",
+  "files": {
+    "package.json": "96819b1d17a1a8f83c8aee7fe487e97f6dd8a5c546524ea490efbff8ba8d1f54",
+    "api/chat.js": "a561413a2bc17d0b0c0376b4f293431424a8a4eb380226a79973cda77774dd61",
+    "api/health.js": "a4df62d33daf612a7495b673aea266471719022e243777267f5e295253e7b7a1",
+    "lib/llm_first_orchestrator_v31.js": "72e9e3bc1c48ff5b87227afb17c57f61a570533a5dca2e25dc97fa63042cffed",
+    "lib/unified_intelligence_v33.js": "e4e23f4ba568c5f46c20224573ad03d8393991e7087d72f2a513c18162f945f1",
+    "lib/autonomous_action_os.js": "454c1467d788be3bec295b18f76f01f0bc638262df4222cd7ab984be91adc03b",
+    "tests/v33_2_semantic_regression.mjs": "b6c591d041fd18d64c0b3c3d4a24464c8a10bde6aae5828c6576c69c455f358d"
+  }
+}

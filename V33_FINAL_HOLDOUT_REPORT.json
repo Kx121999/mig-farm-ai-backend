@@ -1,5 +1,5 @@
 {
-  "version": "33.0",
+  "version": "33.2.0",
   "dataset": "final_sealed_holdout_c",
   "sealed_before_execution": true,
   "production_prompt_exposure": false,

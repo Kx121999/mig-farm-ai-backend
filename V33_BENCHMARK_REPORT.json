@@ -1,6 +1,6 @@
 {
-  "version": "33.0",
-  "generated_at": "2026-08-20T16:44:47.184Z",
+  "version": "33.2.0",
+  "generated_at": "2026-08-22T06:41:08.613Z",
   "architecture_cases": 135,
   "provider_pipeline_test": "mocked_responses_api",
   "suites": [
