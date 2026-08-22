@@ -1,7 +1,11 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { spawnSync } from "node:child_process";
-import { GET } from "../api/health.js";
+
+process.env.AI_PIPELINE_V41="true";
+process.env.AI_PIPELINE_V40="true";
+process.env.AI_PIPELINE_V33="true";
+const { GET }=await import("../api/health.js");
 
 const root=new URL("..",import.meta.url).pathname;
 const skip=new Set([".git","node_modules"]);
@@ -28,8 +32,13 @@ for(const path of jsonFiles)JSON.parse(readFileSync(path,"utf8"));
 const pkg=JSON.parse(readFileSync(join(root,"package.json"),"utf8"));
 const health=await (await GET()).json();
 if(pkg.version!==health.version)throw new Error(`Version mismatch: package=${pkg.version}, health=${health.version}`);
-if(health.mode!=="unified_evolution_intelligence_v40")throw new Error(`Unexpected mode: ${health.mode}`);
-if(health.release!=="MIG_FARM_AI_V40_UNIFIED_EVOLUTION"||health.unified_evolution?.ready!==true)throw new Error("MIG_FARM_AI_V40_UNIFIED_EVOLUTION missing");
+if(health.mode!=="final_production_closure_v41")throw new Error(`Unexpected mode: ${health.mode}`);
+if(health.release!=="MIG_FARM_AI_V41_FINAL_PRODUCTION_CLOSURE"||health.production_closure_v41?.ready!==true||health.production_closure_v41?.enabled!==true)throw new Error("MIG_FARM_AI_V41_FINAL_PRODUCTION_CLOSURE missing");
+if(health.production_closure_v41?.universal_canned_final_response!==false)throw new Error("V41 universal canned response guard is not active");
+if(health.production_closure_v41?.legacy_response_engines!=="rollback_only_when_AI_PIPELINE_V41_false")throw new Error("Legacy response engines are not rollback-only under V41");
+if(!Array.isArray(health.production_closure_v41?.allowed_response_origins)||health.production_closure_v41.allowed_response_origins.includes("STATIC_FAQ_FINAL"))throw new Error("V41 response-origin contract invalid");
+if(health.provider_gateway_v41?.ready!==true)throw new Error("V41 provider gateway missing");
+if(health.unified_evolution?.ready!==true)throw new Error("MIG_FARM_AI_V40_UNIFIED_EVOLUTION compatibility base missing");
 for(const layer of ["semantic_core_v35","advanced_rag_v36","persistent_memory_v37","product_graph_v38","agricultural_diagnostic_v39","autonomous_sales_v40"]){if(health.unified_evolution?.layers?.[layer]?.ready!==true)throw new Error(`V40 layer missing: ${layer}`);}
 if(health.unified_intelligence?.ready!==true||health.unified_intelligence?.architecture!=="single_semantic_orchestrator"||health.unified_intelligence?.legacy_pipeline!=="rollback_only")throw new Error("V33 proven base compatibility missing");
 if(health.final_production_os?.ready!==true)throw new Error("FINAL_PRODUCTION_OS compatibility layer missing");
@@ -88,4 +97,4 @@ if(releaseHoldout.quality_gate?.passed!==true||releaseHoldout.score<90||releaseH
 const vercelIgnore=readFileSync(join(root,".vercelignore"),"utf8");
 if(!vercelIgnore.includes("knowledge_v27/packs/**"))throw new Error("400 MB packs must remain outside Vercel function bundles");
 
-console.log(`MIG FARM V40 UNIFIED EVOLUTION validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, ${finalEvalReport.passed}/${finalEvalReport.total} legacy evals, ${releaseHoldout.passed}/${releaseHoldout.total} locked unseen cases, V${health.version}`);
+console.log(`MIG FARM V41 FINAL PRODUCTION CLOSURE validation PASS — ${scripts.length} scripts, ${jsonFiles.length} JSON files, ${health.conversation_knowledge.records} knowledge records, ${finalEvalReport.passed}/${finalEvalReport.total} legacy evals, ${releaseHoldout.passed}/${releaseHoldout.total} locked unseen cases, V${health.version}`);
