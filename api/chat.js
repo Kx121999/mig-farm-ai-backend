@@ -569,11 +569,29 @@ function applyVariantContinuityV40(candidates=[],priorActive=null){
   });
 }
 
-async function groundedUnifiedFallbackV33({context={},analysis={},state={},history=[],locale="ar",visionFrame=null}={}){
+function currentTurnProviderResilienceV40({message="",analysis={},state={},humanTurn=null,sessionId="",locale="ar"}={}){
+  const intents=[analysis?.v31_primary_intent,analysis?.semantic_intent,analysis?.intent].map(x=>cleanText(x||"",60)).filter(Boolean);
+  const socialSet=new Set(["greeting","wellbeing","thanks","goodbye","acknowledgment","negative_ack","identity","human","help_request"]);
+  const intent=intents.find(x=>socialSet.has(x))||null;
+  const socialMode=["social","browse_only_social"].includes(humanTurn?.mode);
+  if(!intent&&!socialMode)return null;
+  const safeState=quarantineCurrentTurnStateV27(state||{});
+  if(intent){
+    const forced={...analysis,intent,semantic_intent:intent,semantic_intents:[intent],v31_primary_intent:intent};
+    const direct=directReply(forced,safeState,message,sessionId);
+    if(direct?.reply)return {payload:{reply:direct.reply,display_reply:direct.reply,quick_replies:direct.quick_replies||[],suggested_actions:direct.actions||[],provider_resilience:true},source:"unified_current_turn_provider_resilience_v40_4",results:[],evidence:[]};
+  }
+  const fallback=safeCurrentTurnFallback(message,{...(humanTurn||{}),mode:socialMode?humanTurn.mode:"social",current_topic:{...(humanTurn?.current_topic||{}),intent:intent||humanTurn?.current_topic?.intent||""}});
+  return fallback?{payload:{reply:fallback,display_reply:fallback,provider_resilience:true},source:"unified_current_turn_provider_resilience_v40_4",results:[],evidence:[]}:null;
+}
+
+async function groundedUnifiedFallbackV33({context={},analysis={},state={},history=[],locale="ar",visionFrame=null,humanTurn=null,sessionId=""}={}){
   const route=context?.route||{},activeState=context?.active_state||{},intent=route.primary_intent||"unknown",effectiveIntent=route.corrected_goal_intent||intent;
   const v40Context=context?.evolution_v40||null;
   const active=(activeState.active_products||[]).find(x=>x.entity_id===activeState.active_product_id)||(activeState.active_products||[])[0]||null;
   const identifier=cleanText(active?.sku||active?.external_id||active?.name||context.rewritten_query||context.current_message,900);
+  const currentTurnResilience=currentTurnProviderResilienceV40({message:context.current_message||"",analysis,state,humanTurn,sessionId,locale});
+  if(currentTurnResilience)return currentTurnResilience;
   if(route.kind==="multimodal"){
     const guidance=buildVisualGuidance({frame:visionFrame,activeContext:state?.active_visual_context||{},audit:{}});
     const reply=guidance?.retake?.ask_one||visualContextFallback({frame:visionFrame,activeContext:state?.active_visual_context||{}});
@@ -1384,7 +1402,7 @@ export async function POST(request){
           currentProduct:selectedProductContext||null,sessionId,images,visionFrame,semanticFrame,autonomousPlanV30,meaningFrameV31,
           force:true,unifiedContextV33:context,allowedToolsV33:[...new Set([...(context.route?.allowed_tools||[]),...(context.diagnostic_v39?.allowed_tools||[])])],validationRepairV33:context.validation_repair
         }),
-        fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:evolutionTurnState,history,locale,visionFrame})
+        fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:evolutionTurnState,history,locale,visionFrame,humanTurn,sessionId})
       });
       if(debugAuthorized)unified.payload.ai_debug={version:"40.0.0",trace_id:unified.trace_v40?.trace_id||unified.trace?.trace_id||null,meaning:{provider:meaningFrameV31?.provider||null,primary_intent:meaningFrameV31?.primary_intent||"unknown",intents:meaningFrameV31?.intents||[],domain:meaningFrameV31?.domain||"unclear",topic_relationship:meaningFrameV31?.topic_relationship||"unclear",reference:meaningFrameV31?.reference||null},active_state:unified.conversation_state,route:unified.route,rewritten_query:unified.evolution_v40?.retrieval_v36?.query||unified.rewritten_query,retrieval:{result_count:unified.results?.length||0,evidence_count:unified.evidence?.length||0,assessment:unified.evolution_v40?.evidence_v36||null},validation:unified.validation_v40||unified.validation,layers:unified.evolution_v40||null,source:unified.source};
       evolutionTurnState.intelligence_v33=unified.conversation_state;
@@ -1393,6 +1411,8 @@ export async function POST(request){
       return await makeResponse({payload:unified.payload,cors,sessionId,state:evolutionTurnState,analysis,signals,profile,message,source:unified.source,results:unified.results,locale,cognition,retrieval:unified.retrieval,plan:unified.plan});
     }catch(error){
       console.error("V40 unified evolution failed",error?.message);
+      const resilient=currentTurnProviderResilienceV40({message,analysis,state:turnState,humanTurn,sessionId,locale});
+      if(resilient)return await makeResponse({payload:{...resilient.payload,__unified_v40:true,unified_evolution_v40:{version:"40.0.0",route:"provider_resilience",validation:{accepted:true,score:100},fallback_reason:"pipeline_exception"}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:resilient.source,locale,cognition});
       const reply=locale==="en"?"I received your message, but the intelligence service is temporarily unavailable. Please retry in a moment.":"وصلتني رسالتك، لكن خدمة الفهم الذكي متوقفة مؤقتًا. جرّب إعادة المحاولة بعد لحظة بدل ما أرد عليك بتخمين.";
       return await makeResponse({payload:{reply,display_reply:reply,__unified_v40:true,unified_evolution_v40:{version:"40.0.0",route:"safe_failure",validation:{accepted:true,score:100},fallback_reason:"pipeline_exception"}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:"unified_pipeline_safe_failure_v40",locale,cognition});
     }
@@ -1416,13 +1436,15 @@ export async function POST(request){
           currentProduct:selectedProductContext||null,sessionId,images,visionFrame,semanticFrame,autonomousPlanV30,meaningFrameV31,
           force:true,unifiedContextV33:context,allowedToolsV33:context.route?.allowed_tools||[],validationRepairV33:context.validation_repair
         }),
-        fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:unifiedTurnState,history,locale,visionFrame})
+        fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:unifiedTurnState,history,locale,visionFrame,humanTurn,sessionId})
       });
       if(debugAuthorized)unified.payload.ai_debug={version:"33.2.0",trace_id:unified.trace?.trace_id||null,stages:unified.trace?.stages||[],meaning:{provider:meaningFrameV31?.provider||null,primary_intent:meaningFrameV31?.primary_intent||"unknown",intents:meaningFrameV31?.intents||[],domain:meaningFrameV31?.domain||"unclear",topic_relationship:meaningFrameV31?.topic_relationship||"unclear",reference:meaningFrameV31?.reference||null},active_state:unified.conversation_state,route:unified.route,rewritten_query:unified.rewritten_query,retrieval:{result_count:unified.results?.length||0,evidence_count:unified.evidence?.length||0},validation:unified.validation,source:unified.source};
       unifiedTurnState.intelligence_v33=unified.conversation_state;
       return await makeResponse({payload:unified.payload,cors,sessionId,state:unifiedTurnState,analysis,signals,profile,message,source:unified.source,results:unified.results,locale,cognition,retrieval:unified.retrieval,plan:unified.plan});
     }catch(error){
       console.error("V33 unified intelligence failed",error?.message);
+      const resilient=currentTurnProviderResilienceV40({message,analysis,state:turnState,humanTurn,sessionId,locale});
+      if(resilient)return await makeResponse({payload:{...resilient.payload,__unified_v33:true,unified_intelligence_v33:{trace_id:`ai_${Date.now()}`,route:"provider_resilience",validation:{accepted:true,score:100,grounded:true,entity_consistent:true,current_message_used:true},fallback_reason:"pipeline_exception"}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:resilient.source,locale,cognition});
       const reply=locale==="en"?"I received your message, but the intelligence service is temporarily unavailable. Please retry in a moment.":"وصلتني رسالتك، لكن خدمة الفهم الذكي متوقفة مؤقتًا. جرّب إعادة المحاولة بعد لحظة بدل ما أرد عليك بتخمين.";
       return await makeResponse({payload:{reply,display_reply:reply,__unified_v33:true,unified_intelligence_v33:{trace_id:`ai_${Date.now()}`,route:"safe_failure",validation:{accepted:true,score:100,grounded:true,entity_consistent:true,current_message_used:true},fallback_reason:"pipeline_exception"}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:"unified_pipeline_safe_failure_v33",locale,cognition});
     }
