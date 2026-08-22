@@ -1,0 +1,60 @@
+[
+  {"message":"وريني منين أمسك أول خطوة","expected_intent":"help_request"},
+  {"message":"محتاج توجيه عشان ما ألخبطش","expected_intent":"help_request"},
+  {"message":"خلينا نفهمها بالتدريج","expected_intent":"help_request"},
+  {"message":"أنا حاير؛ دلني أعمل إيه","expected_intent":"help_request"},
+
+  {"message":"هل المجيب نظام ذكي؟","expected_intent":"identity"},
+  {"message":"أنا بتعامل مع بوت؟","expected_intent":"identity"},
+  {"message":"اشرحلي أنت بتعمل إيه هنا","expected_intent":"identity"},
+  {"message":"مين وراء الإجابة اللي بشوفها؟","expected_intent":"identity"},
+
+  {"message":"كيف أوصل إلى معرضكم؟","expected_intent":"branches"},
+  {"message":"وين أقرب محل تابع لكم؟","expected_intent":"branches"},
+  {"message":"هل فيه فرع أقدر أزوره في دبي؟","expected_intent":"branches"},
+  {"message":"موقع المتجر الرئيسي لو سمحت","expected_intent":"branches"},
+
+  {"message":"بتبعتوا الطلبات للفجيرة؟","expected_intent":"shipping"},
+  {"message":"الشحن للمنزل متوفر في العين؟","expected_intent":"shipping"},
+  {"message":"أقدر أخلي المشتريات توصل لعجمان؟","expected_intent":"shipping"},
+  {"message":"هل ترسلون الطرود إلى أم القيوين؟","expected_intent":"shipping"},
+
+  {"message":"أريد حساس لمتابعة رطوبة الأرض","expected_intent":"product_search"},
+  {"message":"رشحلي مضخة تناسب شبكة تنقيط صغيرة","expected_intent":"product_search"},
+  {"message":"وريني أصناف بذور تتحمل الصوبة","expected_intent":"product_search"},
+  {"message":"عاوز شبك يقلل حرارة الشمس","expected_intent":"product_search"},
+  {"message":"ابحثلي عن جهاز يشغل الري بمواعيد","expected_intent":"product_search"},
+  {"message":"هل يوجد مقياس للأملاح في الماء؟","expected_intent":"product_search"},
+
+  {"message":"أوراق الطماطم بهتانها بين العروق","expected_intent":"diagnosis"},
+  {"message":"الشتلات مائلة والجذور لونها داكن","expected_intent":"diagnosis"},
+  {"message":"ورق الكوسة مغطى بطبقة كأنها بودرة","expected_intent":"diagnosis"},
+  {"message":"طرف ثمرة الفلفل بدأ يسود","expected_intent":"diagnosis"},
+  {"message":"النموات الصغيرة خرجت متلخبطة وملتوية","expected_intent":"diagnosis"},
+  {"message":"في حشرات دقيقة تتحرك وراء الورقة","expected_intent":"diagnosis"},
+  {"message":"أطراف الأوراق جافة وبنية","expected_intent":"diagnosis"},
+  {"message":"النخلة نموها واقف والسعف شاحب","expected_intent":"diagnosis"},
+
+  {"message":"لا تعتمد الكبير؛ اعتمد المقاس الأصغر","expected_intent":"correction","product_context":true},
+  {"message":"بدّل اختياري من الأول إلى الثالث","expected_intent":"correction","product_context":true},
+  {"message":"تصحيح: أنا أتكلم عن الخيار لا الطماطم","expected_intent":"correction","product_context":true},
+  {"message":"راجع الحالة، الزراعة في صوبة وليست مكشوفة","expected_intent":"correction","product_context":true},
+
+  {"message":"أشكرك جدًا","expected_intent":"thanks"},
+  {"message":"ما قصرتوا","expected_intent":"thanks"},
+  {"message":"جزاكم الله خيرًا","expected_intent":"thanks"},
+  {"message":"كل الامتنان ليك","expected_intent":"thanks"},
+
+  {"message":"ساعات العمل تبدأ متى؟","expected_intent":"hours"},
+  {"message":"عندي مشتريات وأحتاج أرجعها","expected_intent":"returns"},
+  {"message":"كم نسبة الخلط بالماء؟","expected_intent":"dosage","product_context":true},
+  {"message":"الاختيار ده يصلح للحقل المفتوح؟","expected_intent":"suitability","product_context":true},
+  {"message":"وين وصلت شحنتي الآن؟","expected_intent":"order_status"},
+  {"message":"هل تقبلون الدفع الإلكتروني؟","expected_intent":"payment"},
+  {"message":"الصنف الحالي متوفر دلوقتي؟","expected_intent":"availability","product_context":true},
+  {"message":"تكلفة العبوة المختارة قد إيه؟","expected_intent":"price","product_context":true},
+  {"message":"إلى أي ساعة يظل الفرع مفتوحًا؟","expected_intent":"hours"},
+  {"message":"أريد استبدال طلب وصل تالفًا","expected_intent":"returns"},
+  {"message":"محتاج مقدار الاستخدام لكل لتر","expected_intent":"dosage","product_context":true},
+  {"message":"هل المنتج المختار مناسب للبيت المحمي؟","expected_intent":"suitability","product_context":true}
+]

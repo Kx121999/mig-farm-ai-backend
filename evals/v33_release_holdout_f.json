@@ -1,0 +1,60 @@
+[
+  {"message":"مش فاهم أتحرك إزاي من هنا","expected_intent":"help_request"},
+  {"message":"ساعدني أوصل للنتيجة على مراحل","expected_intent":"help_request"},
+  {"message":"أنا تايه؛ وجّهني لأول حاجة أعملها","expected_intent":"help_request"},
+  {"message":"أبغى شرح يمشي معي خطوة خطوة","expected_intent":"help_request"},
+
+  {"message":"ما مهمتك كمساعد ذكي؟","expected_intent":"identity"},
+  {"message":"إنت إنسان بيكتب ولا برنامج؟","expected_intent":"identity"},
+  {"message":"عرفني بنفسك قبل ما نسأل","expected_intent":"identity"},
+  {"message":"مين المسؤول عن الرد عليّ؟","expected_intent":"identity"},
+
+  {"message":"هات مكان أقرب معرض عندكم","expected_intent":"branches"},
+  {"message":"أي عنوان أروح له في الشارقة؟","expected_intent":"branches"},
+  {"message":"وين ألاقي محل MIG FARM؟","expected_intent":"branches"},
+  {"message":"أبي لوكيشن الفرع الموجود بالعين","expected_intent":"branches"},
+
+  {"message":"تبعتوا الأغراض لأبوظبي ولا لأ؟","expected_intent":"shipping"},
+  {"message":"ممكن الطلب يجي لبيتي في دبي؟","expected_intent":"shipping"},
+  {"message":"هل في شحن للمشتريات خارج الإمارة؟","expected_intent":"shipping"},
+  {"message":"أريدكم ترسلون الطرد للفجيرة","expected_intent":"shipping"},
+
+  {"message":"محتاج جهاز يتحكم في الري تلقائيًا","expected_intent":"product_search"},
+  {"message":"وريني خرطوم مناسب لطلمبة قوية","expected_intent":"product_search"},
+  {"message":"أبحث عن شبكة تظليل للزرع","expected_intent":"product_search"},
+  {"message":"عندكم مقياس يفحص ماء الري؟","expected_intent":"product_search"},
+  {"message":"أبغي بذور بامية تتحمل الحرارة","expected_intent":"product_search"},
+  {"message":"رشحلي مغذي للنمو الورقي","expected_intent":"product_search"},
+
+  {"message":"ورق الخيار شاحب والعروق أكثر خضارًا","expected_intent":"diagnosis"},
+  {"message":"جذر الشتلة داكن وريحته غريبة","expected_intent":"diagnosis"},
+  {"message":"الثمار عليها سواد من الناحية السفلية","expected_intent":"diagnosis"},
+  {"message":"في مسحوق أبيض فوق ورقة العنب","expected_intent":"diagnosis"},
+  {"message":"النبات ذابل والأرض لسه مبلولة","expected_intent":"diagnosis"},
+  {"message":"حاجات صغيرة تمشي أسفل الأوراق","expected_intent":"diagnosis"},
+  {"message":"النمو الحديث ملتوي ومكرمش","expected_intent":"diagnosis"},
+  {"message":"طرف ورق النخيل بقى جاف","expected_intent":"diagnosis"},
+
+  {"message":"لا، غيّر المحدد إلى الصنف الثالث","expected_intent":"correction","product_context":true},
+  {"message":"صحح الحجم: الصغير وليس الكبير","expected_intent":"correction","product_context":true},
+  {"message":"قصدي محصول البامية بدل الفلفل","expected_intent":"correction","product_context":true},
+  {"message":"راجع البيئة وخليها زراعة مكشوفة","expected_intent":"correction","product_context":true},
+
+  {"message":"جزيل الشكر","expected_intent":"thanks"},
+  {"message":"يعطيكم العافية جميعًا","expected_intent":"thanks"},
+  {"message":"مشكور على المعلومة","expected_intent":"thanks"},
+  {"message":"ربنا يجزيك خير","expected_intent":"thanks"},
+
+  {"message":"أوقات العمل الرسمية متى؟","expected_intent":"hours"},
+  {"message":"عندي منتج وأرغب في استرجاعه","expected_intent":"returns"},
+  {"message":"ما نسبة التخفيف لكل لتر؟","expected_intent":"dosage","product_context":true},
+  {"message":"هل ده مناسب للزراعة المحمية؟","expected_intent":"suitability","product_context":true},
+  {"message":"طلبي وصل لأي مرحلة؟","expected_intent":"order_status"},
+  {"message":"هل الدفع بالتحويل مقبول؟","expected_intent":"payment"},
+  {"message":"العبوة الحالية موجودة الآن؟","expected_intent":"availability","product_context":true},
+  {"message":"كم تكلفة المنتج اللي اخترته؟","expected_intent":"price","product_context":true},
+  {"message":"المعرض يقفل في أي وقت؟","expected_intent":"hours"},
+  {"message":"أحتاج تبديل طلب معيب","expected_intent":"returns"},
+  {"message":"مقدار الخلط في لتر ماء إيه؟","expected_intent":"dosage","product_context":true},
+  {"message":"المنتج الحالي يصلح للحقل؟","expected_intent":"suitability","product_context":true}
+]

@@ -1,0 +1,60 @@
+[
+  {"message":"مب فاهم وش الخطوة الجاية","expected_intent":"help_request"},
+  {"message":"دلّني على البداية الصح","expected_intent":"help_request"},
+  {"message":"أحتاج منك شرح بسيط بالتدريج","expected_intent":"help_request"},
+  {"message":"أنا محتار وعاوزك توجهني","expected_intent":"help_request"},
+
+  {"message":"إنت مهمتك إيه في الصفحة؟","expected_intent":"identity"},
+  {"message":"هل أنت موظف أم روبوت؟","expected_intent":"identity"},
+  {"message":"ما وظيفة المساعد الذكي ده؟","expected_intent":"identity"},
+  {"message":"قول لي مين صاحب الإجابات","expected_intent":"identity"},
+
+  {"message":"أعطني لوكيشن أقرب فرع","expected_intent":"branches"},
+  {"message":"وين ألقى معرضكم في العين؟","expected_intent":"branches"},
+  {"message":"أقدر أزور أي محل لكم في دبي؟","expected_intent":"branches"},
+  {"message":"محتاج عنوان نقطة البيع","expected_intent":"branches"},
+
+  {"message":"هل تبعثون المشتريات للشارقة؟","expected_intent":"shipping"},
+  {"message":"أريد الطلب يوصلني في أبوظبي","expected_intent":"shipping"},
+  {"message":"التوصيل متاح براس الخيمة؟","expected_intent":"shipping"},
+  {"message":"تشحنوا الأغراض حتى باب المنزل؟","expected_intent":"shipping"},
+
+  {"message":"عايز تايمر ينظم مواعيد الري","expected_intent":"product_search"},
+  {"message":"أبحث عن مضخة لخط مياه صغير","expected_intent":"product_search"},
+  {"message":"هل عندكم حساس رطوبة زراعي؟","expected_intent":"product_search"},
+  {"message":"وريني فلاتر تناسب نظام التنقيط","expected_intent":"product_search"},
+  {"message":"أبغي صنف خيار للبيت المحمي","expected_intent":"product_search"},
+  {"message":"رشح سمادًا للمجموع الخضري","expected_intent":"product_search"},
+
+  {"message":"الورق الجديد أصفر بين العروق","expected_intent":"diagnosis"},
+  {"message":"جذور الطماطم غامقة وفيها عفن","expected_intent":"diagnosis"},
+  {"message":"ثمار الفلفل اسودت عند الطرف","expected_intent":"diagnosis"},
+  {"message":"في بودرة فاتحة على أوراق النبات","expected_intent":"diagnosis"},
+  {"message":"الشتلة ذابلة مع إن التربة رطبة","expected_intent":"diagnosis"},
+  {"message":"حشرة دقيقة تتحرك تحت الورق","expected_intent":"diagnosis"},
+  {"message":"النمو الصغير متجعد ومش طبيعي","expected_intent":"diagnosis"},
+  {"message":"سعف النخيل ناشف من الحواف","expected_intent":"diagnosis"},
+
+  {"message":"لا، صحح الاختيار وخليه الثاني","expected_intent":"correction","product_context":true},
+  {"message":"استبدل العبوة الكبيرة بالصغيرة","expected_intent":"correction","product_context":true},
+  {"message":"أنا أقصد فلفل وليس خيار","expected_intent":"correction","product_context":true},
+  {"message":"عدّل البيئة إلى بيت محمي","expected_intent":"correction","product_context":true},
+
+  {"message":"مشكورين على المجهود","expected_intent":"thanks"},
+  {"message":"تسلم يا غالي","expected_intent":"thanks"},
+  {"message":"ممتن جدًا للرد","expected_intent":"thanks"},
+  {"message":"الله يبارك فيكم","expected_intent":"thanks"},
+
+  {"message":"مواعيد الدوام إيه؟","expected_intent":"hours"},
+  {"message":"كيف أسترجع مشترياتي؟","expected_intent":"returns"},
+  {"message":"جرعة المنتج لكل لتر كام؟","expected_intent":"dosage","product_context":true},
+  {"message":"ده مناسب للزراعة داخل صوبة؟","expected_intent":"suitability","product_context":true},
+  {"message":"فين وصلت الشحنة بتاعتي؟","expected_intent":"order_status"},
+  {"message":"هل البطاقة وسيلة دفع مقبولة؟","expected_intent":"payment"},
+  {"message":"هل الاختيار الحالي في المخزون؟","expected_intent":"availability","product_context":true},
+  {"message":"ثمن المنتج المختار حاليًا؟","expected_intent":"price","product_context":true},
+  {"message":"الفرع بيفتح الساعة كام؟","expected_intent":"hours"},
+  {"message":"عايز أبدل منتج اشتريته","expected_intent":"returns"},
+  {"message":"معدل الاستخدام مع الماء كم؟","expected_intent":"dosage","product_context":true},
+  {"message":"الصنف اللي بنتكلم عنه ينفع للصوبة؟","expected_intent":"suitability","product_context":true}
+]
