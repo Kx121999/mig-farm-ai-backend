@@ -1,10 +1,12 @@
 import { finalProductionHealth, finalProductionSnapshot } from "../lib/final_production_os.js";
-import { unifiedIntelligenceHealthV33 } from "../lib/unified_intelligence_v33.js";
+import { unifiedIntelligenceHealthV33, isUnifiedIntelligenceEnabledV33 } from "../lib/unified_intelligence_v33.js";
 
-const VERSION="33.0.0";
-const MODE="unified_semantic_intelligence_v33";
+const V33_ENABLED=isUnifiedIntelligenceEnabledV33();
+const VERSION=V33_ENABLED?"33.2.0":"31.0.0";
+const MODE=V33_ENABLED?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
+const RELEASE=V33_ENABLED?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS";
 const FEATURES=[
-  "single_user_facing_intelligence_pipeline","legacy_pipeline_explicit_rollback_only","current_message_highest_priority",
+  "single_user_facing_intelligence_pipeline","correction_goal_supersession","pending_action_state_priority","active_product_subject_lock","legacy_pipeline_explicit_rollback_only","current_message_highest_priority",
   "explicit_conversation_state","semantic_reference_resolution","contextual_query_rewriting","semantic_retrieval_routing",
   "rag_evidence_not_final_answer","bounded_tool_generation","answer_relevance_validation","grounding_validation","entity_consistency_validation","bounded_regeneration","trace_id_observability",
   "final_production_os","whole_utterance_contract","meaning_before_keyword_routing","llm_primary_natural_answer",
@@ -42,7 +44,7 @@ export async function GET(){
     const final=finalProductionHealth();
     return Response.json({
       ok:true,status:"healthy",service:"MIG FARM AI — UNIFIED SEMANTIC INTELLIGENCE",version:VERSION,mode:MODE,
-      release:"UNIFIED_SEMANTIC_INTELLIGENCE_V33",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
+      release:RELEASE,runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
       features:FEATURES,
       unified_intelligence:unifiedIntelligenceHealthV33(),
       final_production_os:{...final,snapshot:finalProductionSnapshot()},
