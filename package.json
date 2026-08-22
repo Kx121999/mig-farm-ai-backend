@@ -1,9 +1,9 @@
 {
   "name": "mig-farm-ai-backend",
-  "version": "40.3.1",
+  "version": "40.4.0",
   "private": true,
   "type": "module",
-  "description": "MIG FARM AI V40.3.1 deployment-safe provider resilience hotfix over V40 unified evolution",
+  "description": "MIG FARM AI V40.4 current-turn provider resilience over unified evolution",
   "scripts": {
     "test": "node tools/run_all_tests.mjs",
     "validate": "node tools/validate_release.mjs",
@@ -23,10 +23,11 @@
     "intelligence:final-locked-holdout": "node tools/run_v33_final_locked_holdout.mjs",
     "intelligence:release-holdout": "node tools/run_v33_release_holdout.mjs",
     "enterprise:sync": "node tools/sync_v28_vector_store.mjs",
-    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run autonomous:eval && npm run meaning:eval && npm run final:eval && npm run intelligence:eval && npm run intelligence:hidden-eval && npm run intelligence:release-holdout && npm run evolution:eval && npm run evolution:generalization && npm run evolution:sealed-holdout && npm run validate && npm test",
+    "release:check": "npm run knowledge:validate && npm run enterprise:manifest && npm run enterprise:eval && npm run conversation:eval && npm run autonomous:eval && npm run meaning:eval && npm run final:eval && npm run intelligence:eval && npm run intelligence:hidden-eval && npm run intelligence:release-holdout && npm run evolution:eval && npm run evolution:generalization && npm run evolution:sealed-holdout && npm run evolution:provider-resilience && npm run validate && npm test",
     "evolution:test": "node tests/v40_unified_evolution.mjs",
     "evolution:eval": "node tools/run_v40_evals.mjs",
     "evolution:sealed-holdout": "node tools/run_v40_sealed_holdout.mjs",
-    "evolution:generalization": "node tools/run_v40_development_generalization.mjs"
+    "evolution:generalization": "node tools/run_v40_development_generalization.mjs",
+    "evolution:provider-resilience": "node tests/v40_4_current_turn_provider_resilience.mjs"
   }
 }

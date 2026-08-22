@@ -1,0 +1,30 @@
+{
+  "package_version": "40.4.0",
+  "core_api_version": "40.0.0",
+  "hotfix": "V40.4_CURRENT_TURN_PROVIDER_RESILIENCE",
+  "root_cause": [
+    "V40 intercepted all messages before current-turn social/identity routes",
+    "provider failure on conversation-only route fell through to generic degradedReply",
+    "V40.3.1 health advertised social resilience but runtime unified path did not implement it"
+  ],
+  "fixes": [
+    "semantic-intent current-turn provider fallback inside V40/V33 unified failure path",
+    "identity variants including انتا مين / مين انتا / منو انت",
+    "wellbeing variants including كيفك / شلونك / ازيك",
+    "meaning timeout default 12000 ms",
+    "neural answer timeout default 18000 ms",
+    "generic social turns no longer receive intelligence-unavailable canned response"
+  ],
+  "api_function_count": 11,
+  "standalone_provider_health_route": false,
+  "provider_probe": "/api/health?provider=1",
+  "tests": {
+    "v40_unified_evolution": "141 PASS",
+    "v40_development_generalization": "70/70 PASS",
+    "v40_sealed_holdout": "51/51 PASS",
+    "v40_3_provider_probe": "13 PASS",
+    "v40_4_current_turn_provider_resilience": "7/7 PASS",
+    "syntax_checks": "PASS"
+  },
+  "live_provider_probe_not_executed_locally": true
+}
