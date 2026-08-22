@@ -1,8 +1,12 @@
 import { finalProductionHealth, finalProductionSnapshot } from "../lib/final_production_os.js";
+import { unifiedIntelligenceHealthV33 } from "../lib/unified_intelligence_v33.js";
 
-const VERSION="31.0.0";
-const MODE="llm_first_semantic_orchestrator_v31";
+const VERSION="33.0.0";
+const MODE="unified_semantic_intelligence_v33";
 const FEATURES=[
+  "single_user_facing_intelligence_pipeline","legacy_pipeline_explicit_rollback_only","current_message_highest_priority",
+  "explicit_conversation_state","semantic_reference_resolution","contextual_query_rewriting","semantic_retrieval_routing",
+  "rag_evidence_not_final_answer","bounded_tool_generation","answer_relevance_validation","grounding_validation","entity_consistency_validation","bounded_regeneration","trace_id_observability",
   "final_production_os","whole_utterance_contract","meaning_before_keyword_routing","llm_primary_natural_answer",
   "natural_help_request_understanding","frustration_support","false_product_reference_guard","non_factual_social_bypass",
   "contextual_crop_symptom_recovery","arbitrary_crop_entity_memory","deterministic_diagnosis_fallback",
@@ -37,9 +41,10 @@ export async function GET(){
   try{
     const final=finalProductionHealth();
     return Response.json({
-      ok:true,status:"healthy",service:"MIG FARM AI — FINAL PRODUCTION OS",version:VERSION,mode:MODE,
-      release:"FINAL_PRODUCTION_OS",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
+      ok:true,status:"healthy",service:"MIG FARM AI — UNIFIED SEMANTIC INTELLIGENCE",version:VERSION,mode:MODE,
+      release:"UNIFIED_SEMANTIC_INTELLIGENCE_V33",runtime:"nodejs_serverless",health_strategy:"lightweight_no_heavy_module_initialization",
       features:FEATURES,
+      unified_intelligence:unifiedIntelligenceHealthV33(),
       final_production_os:{...final,snapshot:finalProductionSnapshot()},
       llm_first_orchestrator:descriptor("31.0",{priority:"full_utterance_before_legacy_routes",configured:configured("OPENAI_API_KEY"),provider:configured("OPENAI_API_KEY")?"openai_responses_api":"deterministic_emergency_fallback",model:intentModel(),structured_output:true,legacy_keyword_router:"fallback_only",crop_symptom_recovery:true,universal_problem_engine_version:"31.2",universal_problem_recovery:true,multi_turn_diagnostic_memory:true}),
       natural_conversation:descriptor("32.0",{help_request:true,frustration_support:true,false_product_reference_guard:true,unknown_factual_wording_disabled_for_social_turns:true}),
@@ -66,6 +71,6 @@ export async function GET(){
       privacy:{secrets_returned:false,raw_transcripts:false,raw_session_ids:false},time:new Date().toISOString()
     },{headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"}});
   }catch(error){
-    return Response.json({ok:false,status:"degraded",service:"MIG FARM AI — FINAL PRODUCTION OS",version:VERSION,mode:MODE,error:"health_probe_failed",detail:String(error?.message||"unknown").slice(0,160),time:new Date().toISOString()},{status:503,headers:{"Cache-Control":"no-store, max-age=0"}});
+    return Response.json({ok:false,status:"degraded",service:"MIG FARM AI — UNIFIED SEMANTIC INTELLIGENCE",version:VERSION,mode:MODE,error:"health_probe_failed",detail:String(error?.message||"unknown").slice(0,160),time:new Date().toISOString()},{status:503,headers:{"Cache-Control":"no-store, max-age=0"}});
   }
 }

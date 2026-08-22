@@ -1,6 +1,6 @@
 import { searchProducts, searchSitePages, siteOrigin, fetchProduct } from "../lib/site.js";
 import { cleanText, safeLocale, safePageUrl, jsonResponse, normalizeAr, tokenize } from "../lib/utils.js";
-import { BUSINESS, CATEGORIES, GREENHOUSE_KNOWLEDGE, TONE } from "../lib/brain.js";
+import { BUSINESS, CATEGORIES, CROPS, GREENHOUSE_KNOWLEDGE, TONE } from "../lib/brain.js";
 import {
   analyzeTurn, mergeState, updateState, directReply, productMemoryReply,
   ambiguousContextReply, isClearlyOffDomain, pick
@@ -124,9 +124,12 @@ import {
   createFinalTurnContract, finalizeProductionResponse,
   finalProductionHealth, finalProductionSnapshot
 } from "../lib/final_production_os.js";
+import {
+  runUnifiedIntelligenceV33, unifiedIntelligenceHealthV33, isUnifiedIntelligenceEnabledV33, rerankCandidatesV33
+} from "../lib/unified_intelligence_v33.js";
 
-const VERSION="31.0.0";
-const MODE="llm_first_semantic_orchestrator_v31";
+const VERSION=isUnifiedIntelligenceEnabledV33()?"33.0.0":"31.0.0";
+const MODE=isUnifiedIntelligenceEnabledV33()?"unified_semantic_intelligence_v33":"llm_first_semantic_orchestrator_v31";
 const DEFAULT_ORIGINS=["https://www.migfarm.com","https://migfarm.com","https://edu-mig-for-agriculture.odoo.com"];
 const rateBuckets=globalThis.__migV7Rate || new Map();
 globalThis.__migV7Rate=rateBuckets;
@@ -140,11 +143,12 @@ function corsHeaders(origin){
   return {
     ...(approved?{"Access-Control-Allow-Origin":origin}:{}),
     "Access-Control-Allow-Methods":"POST, OPTIONS",
-    "Access-Control-Allow-Headers":"Content-Type",
+    "Access-Control-Allow-Headers":"Content-Type, X-AI-Debug-Token",
     "Access-Control-Max-Age":"86400","Vary":"Origin"
   };
 }
 function isAllowedOrigin(origin){ return !origin || allowedOrigins().includes(origin); }
+function secureEqualV33(a="",b=""){const x=String(a),y=String(b);if(!x||x.length!==y.length)return false;let diff=0;for(let i=0;i<x.length;i++)diff|=x.charCodeAt(i)^y.charCodeAt(i);return diff===0;}
 function rateLimit(key){
   const now=Date.now(),windowMs=60000,max=65,current=rateBuckets.get(key);
   if(rateBuckets.size>5000){ for(const [k,b] of rateBuckets){ if(now-b.startedAt>windowMs*5) rateBuckets.delete(k); } }
@@ -261,15 +265,26 @@ function sourceNeedsLearning(source=""){
   return /(fallback|no_live|clarify|repair|off_domain)/.test(String(source||""));
 }
 
+function editDistanceV33(a="",b=""){
+  const x=normalizeAr(a),y=normalizeAr(b),row=Array.from({length:y.length+1},(_,i)=>i);
+  for(let i=1;i<=x.length;i++){let previous=row[0];row[0]=i;for(let j=1;j<=y.length;j++){const saved=row[j];row[j]=Math.min(row[j]+1,row[j-1]+1,previous+(x[i-1]===y[j-1]?0:1));previous=saved;}}
+  return row[y.length];
+}
+function fuzzyProductQueryV33(value=""){
+  const words=cleanText(value,1000).split(/\s+/),concepts=[];
+  for(const [key,item] of Object.entries(CROPS))for(const label of [item?.labelAr,key,...(item?.aliases||[])]){const text=cleanText(label,80);if(text&&/^[\p{L}]+$/u.test(text))concepts.push({text,key});}
+  return words.map(word=>{const normalized=normalizeAr(word).replace(/[^\p{L}\p{N}]/gu,"");if(normalized.length<4)return word;let best=null;for(const item of concepts){const target=normalizeAr(item.text);if(Math.abs(target.length-normalized.length)>2)continue;const distance=editDistanceV33(normalized,target),ratio=distance/Math.max(normalized.length,target.length);if(ratio<=.3&&(!best||ratio<best.ratio))best={...item,ratio};}return best?CROPS[best.key]?.labelAr||best.text:word;}).join(" ");
+}
+
 async function makeResponse({payload={},status=200,cors={},sessionId,state,analysis,signals,profile,message,source="",results=[],locale="ar",cognition=null,decision=null,retrieval=null,plan=null}){
+  const unifiedV33=payload?.__unified_v33===true;
   const semanticFrame=state?.__semantic_frame||null;
   const conversationalReasoning=state?.__conversation_reasoning_v29||analysis?.__conversation_reasoning_v29||null;
   const meaningFrameV31=state?.__llm_first_meaning_v31||analysis?.__llm_first_meaning_v31||null;
   const autonomousCustomerPlan=state?.__autonomous_customer_os_v30||analysis?.__autonomous_customer_os_v30||buildAutonomousCustomerPlanV30({message,analysis,semanticFrame,reasoning:conversationalReasoning,state,profile,cognition,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
   const customerFrame=state?.__customer_brain_v27||buildCustomerBrainFrameV27({message,analysis,semanticFrame,state});
   const enterprisePlan=createSupervisorPlanV28({message,frame:customerFrame,analysis,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
-  payload=composeNaturalResponseV29({payload,reasoning:conversationalReasoning,source});
-  payload=enforceResponseQuality(payload);
+  if(!unifiedV33){payload=composeNaturalResponseV29({payload,reasoning:conversationalReasoning,source});payload=enforceResponseQuality(payload);}
   const frame=cognition||buildCognitiveFrame({message,analysis,state,profile});
   const executionPlan=plan||buildHybridPlan({message,analysis,cognition:frame,state,profile});
   const retrievalBundle=retrieval||fuseRetrieval({
@@ -279,27 +294,38 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   });
 
   const evidence=evidenceSummary({source,payload,results,analysis});
-  const review=criticReview({payload,source,results,evidence,cognition:frame,retrieval:retrievalBundle,plan:executionPlan});
-  payload=enforceCustomerResponseV27(enforceResponseQuality(applyCriticGuard(payload,review)),customerFrame);
-  let customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
-  const supervision=superviseResponseV28({payload,plan:enterprisePlan,frame:customerFrame,source,audit:customerAudit});
-  payload=supervision.payload;
-  customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
-  const enterpriseReview={...supervision.review,quality_score:customerAudit.score,passed:Boolean(supervision.review?.passed&&customerAudit.passed),missing_tasks:customerAudit.missing_tasks||[],flags:[...new Set([...(supervision.review?.flags||[]),...(customerAudit.dose_claim_risk?["unsafe_dosage_claim"]:[]),...(customerAudit.stale_context_risk?["stale_context"]:[])])]};
-  const confidenceAssessment=evaluateConfidenceGatewayV30({payload,plan:autonomousCustomerPlan,source,results,audit:customerAudit,review:enterpriseReview,evidence,reasoning:conversationalReasoning});
-  payload=enforceConfidenceGatewayV30({payload,assessment:confidenceAssessment,reasoning:conversationalReasoning});
-  const meaningAlignment=auditMeaningAlignmentV31({message,frame:meaningFrameV31,payload,source});
-  payload=enforceMeaningAlignmentV31({payload,frame:meaningFrameV31,audit:meaningAlignment});
-  const finalReview=await finalizeProductionResponse({
-    message,payload,meaningFrame:meaningFrameV31||{},analysis,state,results,evidence,source,
-    hasImages:Boolean(state?.__current_vision_frame?.has_visual_context),
-    startedAt:Number(state?.__v28_request_started_at)||Date.now()
-  });
-  payload=finalReview.payload;
+  let review,customerAudit,supervision,enterpriseReview,confidenceAssessment,meaningAlignment,finalReview;
+  if(unifiedV33){
+    const unifiedValidation=payload?.unified_intelligence_v33?.validation||{};
+    review={passed:unifiedValidation.accepted!==false,score:Number(unifiedValidation.score)||0,flags:[],source:"unified_validator_v33"};
+    customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
+    supervision={payload,review:{passed:review.passed,score:review.score,flags:[],source:"bypassed_for_single_v33_pipeline"}};
+    enterpriseReview={...supervision.review,quality_score:review.score,passed:review.passed,missing_tasks:[],flags:[]};
+    confidenceAssessment={version:"33.0",decision:review.passed?"send":"safe_degradation",confidence:Number(review.score||0)/100,source:"unified_validator_v33",reasons:[]};
+    meaningAlignment={version:"33.0",passed:unifiedValidation.current_message_used!==false,score:Number(unifiedValidation.score)||0,flags:[],source:"unified_validator_v33",enforced:false};
+    const unifiedContract=createFinalTurnContract({message,meaningFrame:meaningFrameV31||{},analysis,state,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context)});
+    finalReview={payload:{...payload,final_production_os:true},contract:unifiedContract,truth:{source,live:{price_verified:false,availability_verified:false},label:{verified:false},action:{verified:false},business:{verified:false},products:[]},audit:{passed:review.passed,score:review.score,flags:[],hard_blocks:[],source:"unified_validator_v33"},critic:{used:false,reason:"single_pipeline_validation_v33"},latency_ms:Math.max(0,Date.now()-(Number(state?.__v28_request_started_at)||Date.now()))};
+    payload=finalReview.payload;
+  }else{
+    review=criticReview({payload,source,results,evidence,cognition:frame,retrieval:retrievalBundle,plan:executionPlan});
+    payload=enforceCustomerResponseV27(enforceResponseQuality(applyCriticGuard(payload,review)),customerFrame);
+    customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
+    supervision=superviseResponseV28({payload,plan:enterprisePlan,frame:customerFrame,source,audit:customerAudit});
+    payload=supervision.payload;
+    customerAudit=auditCustomerResponseV27({reply:payload?.reply||payload?.display_reply||"",frame:customerFrame,source,state});
+    enterpriseReview={...supervision.review,quality_score:customerAudit.score,passed:Boolean(supervision.review?.passed&&customerAudit.passed),missing_tasks:customerAudit.missing_tasks||[],flags:[...new Set([...(supervision.review?.flags||[]),...(customerAudit.dose_claim_risk?["unsafe_dosage_claim"]:[]),...(customerAudit.stale_context_risk?["stale_context"]:[])])]};
+    confidenceAssessment=evaluateConfidenceGatewayV30({payload,plan:autonomousCustomerPlan,source,results,audit:customerAudit,review:enterpriseReview,evidence,reasoning:conversationalReasoning});
+    payload=enforceConfidenceGatewayV30({payload,assessment:confidenceAssessment,reasoning:conversationalReasoning});
+    meaningAlignment=auditMeaningAlignmentV31({message,frame:meaningFrameV31,payload,source});
+    payload=enforceMeaningAlignmentV31({payload,frame:meaningFrameV31,audit:meaningAlignment});
+    finalReview=await finalizeProductionResponse({message,payload,meaningFrame:meaningFrameV31||{},analysis,state,results,evidence,source,hasImages:Boolean(state?.__current_vision_frame?.has_visual_context),startedAt:Number(state?.__v28_request_started_at)||Date.now()});
+    payload=finalReview.payload;
+  }
 
   const next=updateState(state,analysis,message,source,results,payload);
-  next.v=31;
-  next.final_release="FINAL_PRODUCTION_OS";
+  next.v=unifiedV33?33:31;
+  next.final_release=unifiedV33?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS";
+  if(unifiedV33&&state?.intelligence_v33)next.intelligence_v33=state.intelligence_v33;
   next.dialogue_v29=updateDialogueStateV29({previous:state,next,analysis,message,source,payload,reasoning:conversationalReasoning});
   delete next.__v28_request_started_at;
   next.customer_brain_memory=mergeCustomerMemoryV27(state?.customer_brain_memory||{},customerFrame,next.turn);
@@ -335,7 +361,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
   const neuralModel=String(payload?.neural_model||"");
   const neuralResponseId=String(payload?.neural_response_id||"");
   if(payload && typeof payload==="object"){
-    delete payload.neural_trace; delete payload.neural_model; delete payload.neural_response_id;
+    delete payload.neural_trace; delete payload.neural_model; delete payload.neural_response_id;delete payload.__unified_v33;
   }
 
   const nextProfile=mergeCustomerProfile(profile,signals,analysis,next);
@@ -422,6 +448,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
       conversation_reasoning:conversationReasoningHealthV29(),
       llm_first_orchestrator:llmFirstHealthV31(),
       natural_conversation:naturalConversationHealthV32(),
+      unified_intelligence:unifiedIntelligenceHealthV33(),
       final_production_os:finalProductionHealth(),
       autonomous_customer_os:autonomousCustomerOSHealthV30(),
       customer_digital_twin:customerDigitalTwinHealthV30(),
@@ -443,7 +470,7 @@ async function makeResponse({payload={},status=200,cors={},sessionId,state,analy
     customer_memory:{...customerMemoryHealthV27(),current:next.customer_brain_memory},
     response_auditor:{...responseAuditorHealthV27(),current:customerAudit},
     conversation_knowledge:customerKnowledgeHealthV27(),
-    enterprise_platform:{version:"31.0",release:"FINAL_PRODUCTION_OS",final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),natural_conversation:naturalConversationHealthV32(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
+    enterprise_platform:{version:unifiedV33?"33.0":"31.0",release:unifiedV33?"UNIFIED_SEMANTIC_INTELLIGENCE_V33":"FINAL_PRODUCTION_OS",unified_intelligence:unifiedIntelligenceHealthV33(),final_production_os:finalProductionHealth(),llm_first_orchestrator:llmFirstHealthV31(),natural_conversation:naturalConversationHealthV32(),autonomous_customer_os:autonomousCustomerOSHealthV30(),conversation_reasoning:conversationReasoningHealthV29(),supervisor:{plan:enterprisePlan,review:enterpriseReview},retrieval:enterpriseRetrievalHealthV28(),telemetry:{...enterpriseTelemetryHealthV28(),write:enterpriseTelemetry}},
     final_production:{...finalProductionHealth(),current:{contract:finalReview.contract,truth:finalReview.truth,audit:finalReview.audit,critic:finalReview.critic,latency_ms:finalReview.latency_ms},snapshot:finalProductionSnapshot()},
     llm_first_orchestrator:{...llmFirstHealthV31(),current:meaningFrameClientV31(meaningFrameV31||{})},
     meaning_alignment:{...meaningAlignment},
@@ -502,11 +529,53 @@ async function searchCatalog(analysis,state,message,history){
   return {products,categoryKey,query};
 }
 
+async function groundedUnifiedFallbackV33({context={},analysis={},state={},history=[],locale="ar",visionFrame=null}={}){
+  const route=context?.route||{},activeState=context?.active_state||{},intent=route.primary_intent||"unknown";
+  const active=(activeState.active_products||[]).find(x=>x.entity_id===activeState.active_product_id)||(activeState.active_products||[])[0]||null;
+  const identifier=cleanText(active?.sku||active?.external_id||active?.name||context.rewritten_query||context.current_message,900);
+  if(route.kind==="multimodal"){
+    const guidance=buildVisualGuidance({frame:visionFrame,activeContext:state?.active_visual_context||{},audit:{}});
+    const reply=guidance?.retake?.ask_one||visualContextFallback({frame:visionFrame,activeContext:state?.active_visual_context||{}});
+    return {payload:{reply,display_reply:reply,vision:{...(visionFrame||{}),engine:visionHealth(),fallback:true},visual_guidance:guidance},source:"unified_visual_safe_degradation_v33",results:[],evidence:[]};
+  }
+  if(["product_exact","product_discovery","commerce"].includes(route.kind)){
+    const relationship=cleanText(context.meaning?.topic_relationship||"",40),isCorrection=Boolean(activeState.last_correction)||relationship==="correction"||intent==="correction";
+    const uncertainNewTopic=relationship==="new_topic"&&cleanText(context.meaning?.domain||"",40)==="unclear"&&intent==="unknown";
+    const categoryContext=cleanText(active?.category||(activeState.visible_products||[])[0]?.category||"",180);
+    const semanticQuery=fuzzyProductQueryV33(`${context.rewritten_query||context.current_message||identifier}${categoryContext?` | الفئة النشطة: ${categoryContext}`:""}`);
+    const previous=(activeState.visible_products||[]).map(item=>getProductDossier(item.sku||item.external_id||item.name,{includeFull:false,includeHtml:false})).filter(Boolean);
+    const retrieved=searchProductDossiers(semanticQuery,{limit:10,category:analysis?.category?.key||state?.category||""});
+    const contextualFollowup=previous.length>0&&(relationship!=="new_topic"||uncertainNewTopic)&&(route.kind==="product_exact"||activeState.last_reference_resolution?.resolved||context.meaning?.reference?.requires_context);
+    const candidates=isCorrection?[...previous.map(x=>({...x,score:100})),...retrieved]:contextualFollowup?previous.map(x=>({...x,score:400})):retrieved;
+    const dossiers=rerankCandidatesV33({query:semanticQuery,candidates,conversationState:activeState,meaningFrame:context.meaning,limit:6});
+    if(route.kind==="product_discovery"&&dossiers.length){
+      const rows=dossiers.slice(0,4).map(item=>{const facts=getStructuredProductFacts(item.sku||item.external_id||item.name);return {item,facts,points:conciseVerifiedFacts(facts?.explicit_facts||[]).slice(0,2)};});
+      const reply=`أقرب نتائج موثقة لطلبك من بيانات MIG FARM:\n${rows.map(({item,points},index)=>`${index+1}. ${item.name}${points.length?` — ${points.join("، ")}`:""}`).join("\n")}\n\nلو تقصد واحدًا منهم بالاسم، أكمل عليه مباشرة.`;
+      const results=rows.map(({item})=>({name:item.name,sku:item.sku,external_id:item.external_id,category:item.category,description:conciseProductDescription(item.sales_description||item.ecommerce_description||""),source:"product_dossier_v20"}));
+      return {payload:{reply,display_reply:reply,results},source:"unified_structured_product_degradation_v33",results,evidence:rows.map(({item,facts})=>({source_id:item.external_id,entity_id:item.external_id,entity_name:item.name,facts:facts?.explicit_facts||[],source:"product_dossier_v20"}))};
+    }
+    const dossier=contextualFollowup&&dossiers[0]?dossiers[0]:(getProductDossier(identifier,{includeFull:false,includeHtml:false})||dossiers[0]||null);
+    if(dossier){
+      const facts=getStructuredProductFacts(dossier.sku||dossier.external_id||dossier.name),points=conciseVerifiedFacts(facts?.explicit_facts||[]);
+      if(["price","availability","purchase"].includes(intent))return null;
+      const reply=intent==="dosage"?`${dossier.name}: ما عنديش جرعة موثقة من ملصق مسجل أقدر أقولها بأمان. ابعت صورة واضحة للملصق عشان أراجعها من غير تخمين.`:points.length?`${dossier.name}${dossier.sku?` (${dossier.sku})`:""}\n• ${points.join("\n• ")}`:`لقيت ${dossier.name}، لكن التفصيلة اللي بتسأل عنها مش موجودة بشكل موثّق في بيانات المنتج. مش هخمّنها.`;
+      const results=[{name:dossier.name,sku:dossier.sku,external_id:dossier.external_id,category:dossier.category,description:conciseProductDescription(dossier.sales_description||"")}];
+      return {payload:{reply,display_reply:reply,results},source:"unified_structured_fact_degradation_v33",results,evidence:[{source_id:dossier.external_id,entity_id:dossier.external_id,entity_name:dossier.name,facts:facts?.explicit_facts||[],source:"product_dossier_v20"}]};
+    }
+  }
+  if(route.kind==="technical"){
+    const description=[activeState.active_crop?`المحصول ${activeState.active_crop}`:"",activeState.active_environment?`الزراعة ${activeState.active_environment}`:"",activeState.active_problem?.description||"",context.current_message].filter(Boolean).join(" — ");
+    const diagnosis=diagnoseAgriculturalProblem(description,{analysis,state,profile:state?.customer_profile||{}});
+    if(diagnosis?.handled){const hypotheses=(diagnosis.hypotheses||[]).slice(0,3).map((x,index)=>`${index+1}. ${x.hypothesis}`).join("\n"),checks=(diagnosis.first_steps||[]).slice(0,3).map(x=>`• ${x}`).join("\n"),question=cleanText((diagnosis.clarification_questions||[])[0]||"",300);const reply=`من الوصف، الاحتمالات الأقرب هي:\n${hypotheses||"محتاج معلومة إضافية قبل ترتيب الأسباب."}${checks?`\n\nافحص أولًا:\n${checks}`:""}${question?`\n\n${question}`:""}`;return {payload:{reply,display_reply:reply},source:"unified_differential_degradation_v33",results:[],evidence:diagnosis.hypotheses||[]};}
+  }
+  return null;
+}
 
-async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null,semanticFrame=null,autonomousPlanV30=null,meaningFrameV31=null}){
+
+async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,cognition,persistentSnapshot={},retrievalRoute=null,agriculturalContext=null,salesTurn=null,humanTurn=null,conversionDecision=null,currentProduct=null,sessionId="",images=[],visionFrame=null,semanticFrame=null,autonomousPlanV30=null,meaningFrameV31=null,force=false,unifiedContextV33=null,allowedToolsV33=null,validationRepairV33=null}){
   const plan=buildHybridPlan({message,analysis,cognition,state,profile});
   const mission=buildCommerceMission({message,analysis,cognition,state,profile,locale});
-  if(!semanticFrame?.compound?.is_multi_intent && !shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn,image_count:images.length,semanticFrame}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
+  if(!force&&!semanticFrame?.compound?.is_multi_intent && !shouldUseAdaptiveSalesAgent(message,salesTurn) && !shouldUseNeuralAgent({message,analysis,cognition,plan,salesTurn,image_count:images.length,semanticFrame}) && !["bundle","budget_optimize","solution_plan","compare","purchase"].includes(mission.kind)) return null;
 
   const isolated=humanTurn?.context_policy?.scope==="current_turn_isolated";
   const zeroTools=humanTurn?.tool_policy?.mode==="zero_tools";
@@ -531,10 +600,16 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       return {query:found.query,category:found.categoryKey,products:enrichLiveProductsWithDossiers(live,{descriptionChars:1000})};
     },
     search_product_dossiers:async args=>{
-      const query=cleanText(args?.query||message,1200);
+      const query=fuzzyProductQueryV33(cleanText(args?.query||unifiedContextV33?.rewritten_query||message,1200));
       const limit=Math.max(1,Math.min(10,Number(args?.limit)||6));
       const category=cleanText(args?.category||analysis?.category?.key||state?.category||"",120);
-      return {query,product_intelligence:productIntelligenceHealth(),products:searchProductDossiers(query,{limit,category,descriptionChars:2800})};
+      const prior=(unifiedContextV33?.active_state?.visible_products||[]).map(item=>getProductDossier(item.sku||item.external_id||item.name,{includeFull:false,includeHtml:false})).filter(Boolean);
+      const retrieved=searchProductDossiers(query,{limit:Math.min(12,limit*2),category,descriptionChars:2800});
+      const relationship=cleanText(unifiedContextV33?.meaning?.topic_relationship||"",40),isCorrection=Boolean(unifiedContextV33?.active_state?.last_correction)||relationship==="correction";
+      const contextual=prior.length>0&&relationship!=="new_topic"&&(unifiedContextV33?.meaning?.reference?.requires_context||unifiedContextV33?.route?.kind==="product_exact");
+      const candidates=isCorrection?[...prior.map(x=>({...x,score:100})),...retrieved]:contextual?prior.map(x=>({...x,score:400})):retrieved;
+      const products=rerankCandidatesV33({query,candidates,conversationState:unifiedContextV33?.active_state||{},meaningFrame:unifiedContextV33?.meaning||{},limit});
+      return {query,product_intelligence:productIntelligenceHealth(),products,reranked:true};
     },
     get_product_dossier:async args=>{
       const identifier=cleanText(args?.identifier||message,900);
@@ -761,8 +836,8 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
   try{
     const result=await runNeuralAgent({
       message,locale,
-      context:{final_production_contract:state?.__final_turn_contract||null,semantic_frame:semanticFrame,llm_first_meaning_v31:meaningFrameV31,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
-      toolHandlers,images,allowedTools:constrainToolsWithPlanV30(humanTurn?.tool_policy?.allowed,autonomousPlanV30||{})
+      context:{unified_intelligence_v33:unifiedContextV33,validation_repair_v33:validationRepairV33,final_production_contract:state?.__final_turn_contract||null,semantic_frame:semanticFrame,llm_first_meaning_v31:meaningFrameV31,analysis,state,profile:isolated?{}:profile,cognition,graph_context:graphContext,memory_hits:recalled.items||[],persistent_memory_hits:persistentHits,temporal_memory_hits:temporalHits,retrieval_route:retrievalRoute,journey:isolated?null:(persistentSnapshot?.journey||null),autonomous_customer_os_v30:autonomousPlanV30,autonomous_mission:{...mission,tool_budget:autonomousPlanV30?.tool_budget||semanticFrame?.plan?.tool_budget||mission?.tool_budget},agricultural_context:isolated?null:(agriculturalContext||analyzeAgriculturalRequest(message,{analysis,state,profile})),sales_turn:salesTurn,human_conversation:humanTurn,conversion_decision:isolated?null:conversionDecision,vision_context:visionFrame,recent_dialogue:isolated?[]:history.slice(-Math.max(0,Number(humanTurn?.context_policy?.history_turns??8))),current_product:isolated?null:currentProduct},
+      toolHandlers,images,allowedTools:Array.isArray(allowedToolsV33)?allowedToolsV33:constrainToolsWithPlanV30(humanTurn?.tool_policy?.allowed,autonomousPlanV30||{})
     });
     if(!result?.handled||!result.reply) return null;
     const products=enrichLiveProductsWithDossiers(clientProducts(result.products||[]).slice(0,8),{descriptionChars:900});
@@ -775,7 +850,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
     let naturalizerMeta={used:false};
     // V17: one bounded rewrite pass only when the reply is structurally robotic/repetitive.
     // The rewriter is explicitly forbidden from adding or changing facts; commerce verification runs again afterwards.
-    if((conversationQuality.score<86 || conversionQuality.score<86) && result?.reply){
+    if(!force&&(conversationQuality.score<86 || conversionQuality.score<86) && result?.reply){
       const rewritten=await rewriteNaturalSalesReply({reply:safeReply,message,locale,salesTurn,history,semanticFrame});
       if(rewritten?.handled&&rewritten.reply){
         const reverify=verifyCommerceResponse({reply:rewritten.reply,products,mission,portfolio});
@@ -809,6 +884,10 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
       id:String(x?.id||`neural-${i}`),title:String(x?.title||""),answer:String(x?.answer||""),url:String(x?.url||""),
       source:String(x?.source||"neural_tool"),verified:Boolean(x?.verified),score:Number(x?.score||0)
     }));
+    const structuredEvidence=(result.structured_evidence||[]).map((x,i)=>({
+      id:`structured-${i}`,title:String(x?.tool||"verified_tool_output"),source:String(x?.tool||"structured_tool"),verified:true,data:x?.data||{}
+    }));
+    evidenceItems.push(...structuredEvidence);
     const retrieval=fuseRetrieval({message,products,knowledge:evidenceItems.filter(x=>x.source==="github_knowledge"),pages:evidenceItems.filter(x=>x.source==="site_page"),memory:recalled.items||[]});
     return {
       payload:{
@@ -824,7 +903,7 @@ async function tryV22NeuralAgent({analysis,state,message,history,locale,profile,
         visual_evidence:visionFrame?.has_visual_context?{visual_matches:visionAudit.visual_matches.slice(-3),live_visual_verifications:visionAudit.live_visual_verifications.slice(-3),label_guard_results:visionAudit.label_guard_results.slice(-3),retake_advice:visionAudit.retake_advice.slice(-2),visual_action_plans:visionAudit.visual_action_plans.slice(-2)}:undefined,
         visual_guidance:visionFrame?.has_visual_context?buildVisualGuidance({frame:visionFrame,activeContext:state?.active_visual_context||{},audit:visionAudit}):undefined
       },
-      source:"neural_multimodal_visual_recognition_sales_v22_5",results:products,retrieval,plan
+      source:force?"unified_neural_generation_v33":"neural_multimodal_visual_recognition_sales_v22_5",results:products,evidence:evidenceItems,retrieval,plan
     };
   }catch(error){
     console.error("V22.5 multimodal neural fallback:",error?.message);
@@ -1123,6 +1202,7 @@ export async function POST(request){
   const origin=request.headers.get("origin")||""; const cors=corsHeaders(origin);
   if(!isAllowedOrigin(origin)) return jsonResponse({error:"origin_not_allowed"},403,cors);
   let body; try{body=await request.json();}catch{return jsonResponse({error:"invalid_json"},400,cors);}
+  const debugAuthorized=/^(?:1|true|yes|on)$/i.test(String(process.env.AI_DEBUG||""))&&Boolean(process.env.AI_DEBUG_TOKEN)&&body?.ai_debug===true&&secureEqualV33(request.headers.get("x-ai-debug-token")||"",process.env.AI_DEBUG_TOKEN);
 
   const images=normalizeVisionImages(body?.images||body?.attachments||body?.image_inputs||[]);
   const rawMessage=cleanText(body?.message,2500);
@@ -1203,6 +1283,36 @@ export async function POST(request){
 
   const ip=(request.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   if(!rateLimit(`${ip}:${sessionId}`)) return await makeResponse({payload:{reply:locale==="en"?"Too many messages. Try again in a minute.":"رسائل وايد بسرعة 😄 جرّب عقب دقيقة."},status:429,cors,sessionId,state,analysis,signals,profile,message,source:"rate_limit",locale});
+
+  // V33 is the only user-facing intelligence pipeline by default. Older V15–V32
+  // routes below are retained solely as an explicit rollback path when
+  // AI_PIPELINE_V33=false; they never compete with V33 for the final answer.
+  if(isUnifiedIntelligenceEnabledV33()){
+    try{
+      // V33 owns context priority, correction handling and topic isolation. Do not
+      // feed it the legacy V31 quarantine result, because that can erase the very
+      // candidate set a correction or pronoun needs before V33 resolves meaning.
+      const unifiedTurnState={...state};
+      const unified=await runUnifiedIntelligenceV33({
+        message,conversationId:sessionId,state:unifiedTurnState,history,meaningFrame:meaningFrameV31,semanticFrame,analysis,
+        selectedProduct:selectedProductContext,selectedProducts:selectedProductContexts,visionFrame,
+        generate:async context=>tryV22NeuralAgent({
+          analysis,state:{...unifiedTurnState,intelligence_v33:context.active_state},message,history,locale,profile,cognition,
+          persistentSnapshot:persistentRead.snapshot,retrievalRoute,agriculturalContext,salesTurn,humanTurn,conversionDecision,
+          currentProduct:selectedProductContext||null,sessionId,images,visionFrame,semanticFrame,autonomousPlanV30,meaningFrameV31,
+          force:true,unifiedContextV33:context,allowedToolsV33:context.route?.allowed_tools||[],validationRepairV33:context.validation_repair
+        }),
+        fallback:async context=>groundedUnifiedFallbackV33({context,analysis,state:unifiedTurnState,history,locale,visionFrame})
+      });
+      if(debugAuthorized)unified.payload.ai_debug={version:"33.0",trace_id:unified.trace?.trace_id||null,stages:unified.trace?.stages||[],meaning:{provider:meaningFrameV31?.provider||null,primary_intent:meaningFrameV31?.primary_intent||"unknown",intents:meaningFrameV31?.intents||[],domain:meaningFrameV31?.domain||"unclear",topic_relationship:meaningFrameV31?.topic_relationship||"unclear",reference:meaningFrameV31?.reference||null},active_state:unified.conversation_state,route:unified.route,rewritten_query:unified.rewritten_query,retrieval:{result_count:unified.results?.length||0,evidence_count:unified.evidence?.length||0},validation:unified.validation,source:unified.source};
+      unifiedTurnState.intelligence_v33=unified.conversation_state;
+      return await makeResponse({payload:unified.payload,cors,sessionId,state:unifiedTurnState,analysis,signals,profile,message,source:unified.source,results:unified.results,locale,cognition,retrieval:unified.retrieval,plan:unified.plan});
+    }catch(error){
+      console.error("V33 unified intelligence failed",error?.message);
+      const reply=locale==="en"?"I received your message, but the intelligence service is temporarily unavailable. Please retry in a moment.":"وصلتني رسالتك، لكن خدمة الفهم الذكي متوقفة مؤقتًا. جرّب إعادة المحاولة بعد لحظة بدل ما أرد عليك بتخمين.";
+      return await makeResponse({payload:{reply,display_reply:reply,__unified_v33:true,unified_intelligence_v33:{trace_id:`ai_${Date.now()}`,route:"safe_failure",validation:{accepted:true,score:100,grounded:true,entity_consistent:true,current_message_used:true},fallback_reason:"pipeline_exception"}},cors,sessionId,state:turnState,analysis,signals,profile,message,source:"unified_pipeline_safe_failure_v33",locale,cognition});
+    }
+  }
 
   // V31: the full-utterance LLM interpretation is authoritative. Generate the
   // natural answer with bounded tools before any keyword/template route runs.
