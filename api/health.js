@@ -45,9 +45,67 @@ function enabled(name,def=false){const value=process.env[name];return value===un
 function descriptor(version,extra={}){return {version,ready:true,...extra};}
 function intentModel(){const requested=String(process.env.OPENAI_INTENT_MODEL||process.env.OPENAI_MODEL||"gpt-5-mini").trim();return /^gpt-5\.6$/i.test(requested)?"gpt-5-mini":requested;}
 
+async function odooJson2(model,method,body={}){
+  const base=String(process.env.ODOO_BASE_URL||"").trim().replace(/\/+$/,"");
+  const apiKey=String(process.env.ODOO_API_KEY||"").trim();
+  if(!base) throw new Error("missing_env:ODOO_BASE_URL");
+  if(!apiKey) throw new Error("missing_env:ODOO_API_KEY");
+  const response=await fetch(`${base}/json/2/${encodeURIComponent(model)}/${encodeURIComponent(method)}`,{
+    method:"POST",
+    headers:{
+      "Authorization":`bearer ${apiKey}`,
+      "Content-Type":"application/json; charset=utf-8",
+      "User-Agent":"MIG-FARM-Noon-Odoo-Sync/1.0"
+    },
+    body:JSON.stringify(body),
+    cache:"no-store"
+  });
+  const text=await response.text();
+  let data;
+  try{data=text?JSON.parse(text):null;}catch{data={raw:text.slice(0,2000)};}
+  if(!response.ok){
+    const error=new Error(`odoo_api_failed:${response.status}`);
+    error.status=response.status;
+    error.details=data;
+    throw error;
+  }
+  return data;
+}
+
+async function probeOdooInventory(){
+  const fields=["id","name","default_code","qty_available","free_qty","virtual_available","list_price","active"];
+  const products=await odooJson2("product.product","search_read",{
+    context:{lang:"en_US"},
+    domain:[["active","=",true]],
+    fields,
+    limit:5,
+    order:"id desc"
+  });
+  return {
+    ok:true,
+    service:"MIG FARM Odoo Inventory Connection",
+    api:"Odoo JSON-2",
+    base_url:String(process.env.ODOO_BASE_URL||"").trim(),
+    model:"product.product",
+    fields,
+    sample_count:Array.isArray(products)?products.length:0,
+    products:Array.isArray(products)?products:[],
+    secrets_returned:false,
+    time:new Date().toISOString()
+  };
+}
+
 export async function GET(request){
   try{
     const url=new URL(request?.url||"https://health.local/api/health");
+    if(["1","true","live"].includes(String(url.searchParams.get("odoo")||"").toLowerCase())){
+      try{
+        const odoo=await probeOdooInventory();
+        return Response.json(odoo,{status:200,headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, nofollow"}});
+      }catch(error){
+        return Response.json({ok:false,service:"MIG FARM Odoo Inventory Connection",error:String(error?.message||"odoo_probe_failed"),details:error?.details,secrets_returned:false,time:new Date().toISOString()},{status:Number(error?.status)||503,headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff","X-Robots-Tag":"noindex, nofollow"}});
+      }
+    }
     if(["1","true","live"].includes(String(url.searchParams.get("provider")||"").toLowerCase())){
       const provider=await probeProviderGatewayV41();
       return Response.json({service:"MIG FARM AI Provider Health",release:"V41_FINAL_PRODUCTION_CLOSURE",...provider,time:new Date().toISOString()},{status:provider.ok?200:503,headers:{"Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"}});
